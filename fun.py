@@ -10,7 +10,7 @@ if not firebase_admin._apps:
 db = firestore.client()
 fs_data = db.collection("fun")
 settings = db.collection("settings")
-
+ 
 
 class fun(commands.Cog):
     def __init__(self, bot):
