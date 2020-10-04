@@ -50,23 +50,36 @@ class fun(commands.Cog):
         d["chain"][str(ctx.channel.id)] = thing
         last_chain[str(ctx.channel.id)] = None
         fs_data.document(str(ctx.guild.id)).set(d)
-        await ctx.send(f"New chain: {thing}")
+        if thing.startswith("$counting:"):
+            await ctx.send(f"Counting started at: {thing.split(':')[1]}")
+        else:
+            await ctx.send(f"New chain: {thing}")
 
     @commands.Cog.listener()
     async def on_message(self, msg):
+        async def cbreak():
+            if msg.content[1:] == f"chain {d['chain'][str(msg.channel.id)]}":
+                return
+            await msg.channel.send(f"{msg.author.mention} broke the chain! start a new chain with `.chain <thing>`")
+            s = settings.document(str(msg.guild.id)).get().to_dict()
+            if "breakrole" in s:
+                await msg.author.add_roles(msg.guild.get_role(int(s["breakrole"])))
+            del d["chain"][str(msg.channel.id)]
+            fs_data.document(str(msg.guild.id)).set(d)
         d = fs_data.document(str(msg.guild.id)).get().to_dict()
         if d is None or msg.author.bot:
             return
         if str(msg.channel.id) in d["chain"]:
-            if msg.content != d["chain"][str(msg.channel.id)] or msg.author.id == last_chain[str(msg.channel.id)]:
-                if msg.content[1:] == f"chain {d['chain'][str(msg.channel.id)]}":
-                    return
-                await msg.channel.send(f"{msg.author.mention} broke the chain! start a new chain with `.chain <thing>`")
-                s = settings.document(str(msg.guild.id)).get().to_dict()
-                if "breakrole" in s:
-                    await msg.author.add_roles(msg.guild.get_role(int(s["breakrole"])))
-                del d["chain"][str(msg.channel.id)]
-                fs_data.document(str(msg.guild.id)).set(d)
+            if d["chain"][str(msg.channel.id)].startswith("$counting:"):
+                num = int(d["chain"][str(msg.channel.id)].split(":")[1])
+                if msg.content != str(num+1):
+                    await cbreak()
+                else:
+                    num += 1
+                    d["chain"][str(msg.channel.id)] = f"$counting:{num}"
+                    fs_data.document(str(msg.guild.id)).set(d)
+            elif msg.content != d["chain"][str(msg.channel.id)] or msg.author.id == last_chain[str(msg.channel.id)]:
+                await cbreak()
             else:
                 last_chain[str(msg.channel.id)] = msg.author.id
 
