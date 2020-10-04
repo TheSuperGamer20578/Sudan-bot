@@ -11,7 +11,6 @@ db = firestore.client()
 fs_data = db.collection("fun")
 settings = db.collection("settings")
 
-
 class fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
