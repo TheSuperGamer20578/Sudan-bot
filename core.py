@@ -166,6 +166,13 @@ class core(commands.Cog):
         await asyncio.sleep(30)
         await self.bot.change_presence(status=discord.Status.online, activity=activity)
 
+    @commands.command()
+    async def github(self, ctx):
+        embed = discord.Embed(title="Click here to goto my Github", url="https://github.com/TheSuperGamer20578/Sudan-bot", colour=blue)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(core(bot))
