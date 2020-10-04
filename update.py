@@ -3,6 +3,7 @@ from discord.ext import commands
 from subprocess import call
 from core import trusted
 import time
+from asyncio import sleep
 
 
 class update(commands.Cog):
@@ -13,6 +14,7 @@ class update(commands.Cog):
     async def on_message(self, message):
         if message.channel.id == 761747494693765151 and message.embeds:
             if " new commit" in message.embeds[0].title and message.embeds[0].title.startswith("[Sudan-bot:master] "):
+                await sleep(15)
                 call(["git", "pull"])
                 await self.bot.close()
 
