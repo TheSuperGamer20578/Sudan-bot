@@ -1,3 +1,6 @@
+"""
+The core of the bot adds some essential commands and starts the bot you can load as an extension if you want
+"""
 import discord
 import time
 from discord.ext import commands
@@ -9,7 +12,6 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")
-api = config["api"]
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
@@ -26,22 +28,33 @@ green = 0x36eb45
 red = 0xb00e0e
 
 
-def trusted(ctx): return str(ctx.author.id) in fs_data.document("trusted").get().to_dict()["users"]
+def trusted(ctx):
+    """
+    Check to see if the user is trusted
+    """
+    return str(ctx.author.id) in fs_data.document("trusted").get().to_dict()["users"]
 
 
-def mod(ctx): return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["modrole"] in [str(x.id) for
-                                                                                                          x in
-                                                                                                          ctx.author.roles]
+def mod(ctx):
+    """
+    Check to see if the user is a mod
+    """
+    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["modrole"] in [str(i.id) for i in ctx.author.roles]
 
 
-def admin(ctx): return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["adminrole"] in [str(x.id)
-                                                                                                              for x in
-                                                                                                              ctx.author.roles]
+def admin(ctx):
+    """
+    Check to see if the user is an admin
+    """
+    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["adminrole"] in [str(i.id) for i in ctx.author.roles]
 
 
 class core(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    """
+    Contains essential commands
+    """
+    def __init__(self, b):
+        self.bot = b
         self.bot.remove_command("help")
 
     @commands.command()
@@ -69,26 +82,12 @@ class core(commands.Cog):
             await ctx.message.delete()
             await ctx.send(embed=embed)
 
-    # @commands.command()
-    # async def help(self, ctx):
-    #     """
-    #     Shows this command
-    #     """
-    #     await ctx.message.delete()
-    #     embed = discord.Embed(title="Help", colour=blue)
-    #     for cog in self.bot.cogs:
-    #         value = ""
-    #         for command in self.bot.walk_commands():
-    #             if command.cog_name == cog and not command.hidden:
-    #                 value += f"__**{command.name}**__\n{command.help if command.help is not None else ''}\n\n"
-    #         if value == "":
-    #             continue
-    #         embed.add_field(name=cog, value=value)
-    #     await ctx.send(embed=embed)
-
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def load(self, ctx, cog):
+        """
+        Loads or reloads a cog
+        """
         await ctx.message.delete()
         if cog in self.bot.cogs:
             self.bot.unload_extension(cog)
@@ -104,6 +103,9 @@ class core(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def unload(self, ctx, cog):
+        """
+        Unloads a cog
+        """
         await ctx.message.delete()
         try:
             self.bot.unload_extension(cog)
@@ -117,13 +119,16 @@ class core(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def list(self, ctx):
+        """
+        Lists all cogs
+        """
         await ctx.message.delete()
         msg = ""
-        for x in self.bot.cogs:
-            msg += f"✅ {x}\n"
-        for x in os.listdir():
-            if x.endswith(".py") and x[:-3] not in self.bot.cogs and x != "start.py":
-                msg += f"\n❎ {x[:-3]}"
+        for i in self.bot.cogs:
+            msg += f"✅ {i}\n"
+        for i in os.listdir():
+            if i.endswith(".py") and i[:-3] not in self.bot.cogs and i != "start.py":
+                msg += f"\n❎ {i[:-3]}"
         embed = discord.Embed(title="Cogs", description=msg)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -139,10 +144,13 @@ class core(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def trust(self, ctx, user: discord.Member):
+        """
+        Adds or removes a user from trusted list
+        """
         if str(user.id) in fs_data.document("trusted").get().to_dict()["users"]:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is no longer trusted")
             fs_data.document("trusted").set(
-                {"users": [str(x) for x in fs_data.document("trusted").get().to_dict()["users"] if x != str(user.id)]})
+                {"users": [str(i) for i in fs_data.document("trusted").get().to_dict()["users"] if i != str(user.id)]})
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
             d = fs_data.document("trusted").get().to_dict()["users"]
@@ -166,6 +174,9 @@ class core(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        """
+        Sets the status of the bot
+        """
         activity = discord.Activity(type=discord.ActivityType.watching, name="the rise of Sudan and the fall of noobia")
         await self.bot.change_presence(status=discord.Status.dnd, activity=activity)
         await asyncio.sleep(30)
@@ -173,21 +184,26 @@ class core(commands.Cog):
 
     @commands.command()
     async def github(self, ctx):
+        """
+        Links to github
+        """
         embed = discord.Embed(title="Click here to goto my Github", url="https://github.com/TheSuperGamer20578/Sudan-bot", colour=blue)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
 
-def setup(bot):
-    bot.add_cog(core(bot))
+def setup(b):
+    """
+    Initiate cog if loaded as extension
+    """
+    bot.add_cog(core(b))
 
 
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=("&", "/", ".", "sb!", "s!"))  # , commands.when_mentioned))
     bot.add_cog(core(bot))
-    with open("Config/cogs.txt", "r") as f:
-        for x in f.read().split("\n"):
-            if x != "":
-                bot.load_extension(x)
-    bot.run(api["discord"])
+    for x in config["general"]["autoload cogs"].split("\n"):
+        if x != "":
+            bot.load_extension(x)
+    bot.run(config["api"]["discord"])
