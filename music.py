@@ -1,9 +1,12 @@
-import ctypes
+"""
+Basic music functionality
+"""
+from ctypes import util
 import discord
 import youtube_dl
 from discord.ext import commands
 from discord.utils import get
-from core import mod, green, red, trusted
+from .core import mod, green, red, trusted
 import os
 import threading
 import shutil
@@ -11,15 +14,22 @@ import functools
 queue = {}
 np = {}
 if os.name != "nt":
-    discord.opus.load_opus(ctypes.util.find_library('opus'))
+    discord.opus.load_opus(util.find_library('opus'))
     if not discord.opus.is_loaded():
         raise RuntimeError('Opus failed to load')
 
 
-def dj(ctx): return len([x for x in ctx.author.voice.channel.members if not x.bot]) <= 1 or mod(ctx)
+def dj(ctx):
+    """
+    Check to see if user is a mod or in VC alone
+    """
+    return len([x for x in ctx.author.voice.channel.members if not x.bot]) <= 1 or mod(ctx)
 
 
 def add(key, url):
+    """
+    Adds a song to the queue
+    """
     ytdl_options = {
         "format": "bestaudio/best",
         "postprocessors": [{
@@ -30,6 +40,7 @@ def add(key, url):
     }
     with youtube_dl.YoutubeDL(ytdl_options) as ytdl:
         ytdl.download([url])
+    name = None
     for file in os.listdir():
         if file.endswith(".mp3"):
             name = '-'.join(file.split('-')[:-1])
@@ -37,11 +48,13 @@ def add(key, url):
                 os.rename(file, f"music/{key}/{name}.mp3")
             except FileExistsError:
                 pass
-    # noinspection PyUnboundLocalVariable
     queue[str(key)].append(name)
 
 
 def run(self, guild, key):
+    """
+    Plays music from the queue
+    """
     if len(queue[str(key)]):
         voice = get(self.bot.voice_clients, guild=guild)
         voice.play(discord.FFmpegPCMAudio(f"music/{guild.id}/{queue[str(key)][0]}.mp3"), after=lambda e: run(self, guild, key))
@@ -54,6 +67,9 @@ def run(self, guild, key):
 
 
 class music(commands.Cog):
+    """
+    Discord.py cog
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -70,7 +86,7 @@ class music(commands.Cog):
             else:
                 raise commands.CheckFailure()
         else:
-            voice = await channel.connect()
+            await channel.connect()
         queue[str(ctx.guild.id)] = []
         np[str(ctx.guild.id)] = None
         os.makedirs(f"music/{ctx.guild.id}")
@@ -160,14 +176,18 @@ class music(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def rick(self, ctx, guild: int):
+        """
+        Rick-rolls the server with the specified ID
+        """
         voice = get(self.bot.voice_clients, guild=self.bot.get_guild(guild))
         q = [np[str(guild)]]+queue[str(guild)]
         queue[str(guild)] = None
         voice.stop()
-        voice.play(discord.FFmpegPCMAudio("music/rick.mp3"), after=lambda e: run(self, self.bot.get_guild(guild), key))
+        voice.play(discord.FFmpegPCMAudio("music/rick.mp3"), after=lambda e: run(self, self.bot.get_guild(guild), guild))
         queue[str(guild)] = q
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 0.6
+        await ctx.send(f"Rick-rolling {self.bot.get_guild(guild).name}")
 
     @commands.command(aliases=["np"])
     async def nowplaying(self, ctx):
@@ -181,4 +201,7 @@ class music(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initiates cog
+    """
     bot.add_cog(music(bot))
