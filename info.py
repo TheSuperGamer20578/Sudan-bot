@@ -1,8 +1,12 @@
+"""
+Give info about EMC
+STILL A WORK IN PROGRESS
+"""
 import discord
 # import sys
 import queue
 import threading
-import time
+# import time
 from discord.ext import commands, tasks
 
 # sys.path.insert(1, "E:\\Python\\EMC-info\\code\\EMC-info\\src")
@@ -15,12 +19,18 @@ que = queue.Queue()
 
 
 class info(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
         self.update_data.start()
 
     @tasks.loop(seconds=10)
     async def update_data(self):
+        """
+        Updates the data every 10 secs
+        """
         global data
         thread = threading.Thread(target=lambda q: q.put(EMC.get_data()), args=(que,))
         thread.start()
@@ -28,6 +38,9 @@ class info(commands.Cog):
 
     @commands.command(aliases=["t"])
     async def town(self, ctx, town):
+        """
+        Gives info about a town
+        """
         await ctx.message.delete()
         try:
             t = EMC.Town(town, data)
@@ -68,4 +81,7 @@ PVP       : {'🟩' if t.pvp else '🟥'}
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(info(bot))
