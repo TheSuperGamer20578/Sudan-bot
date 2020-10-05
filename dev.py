@@ -1,18 +1,32 @@
+"""
+Several tools to help with development and to track growth
+"""
 import discord
-import base64
 import requests
 import json
-from core import green, red, blue, trusted, purple
+from .core import green, red, trusted, purple
 from discord.ext import commands
-from Config import apikeys
+import configparser
+from requests.auth import HTTPBasicAuth
+
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
+
+auth = HTTPBasicAuth(config["api"]["jira email"], config["api"]["jira key"])
 
 
 class dev(commands.Cog):
+    """
+    Main class for this file
+    """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
+        """
+        Sends message when the bot is added to a server
+        """
         embed = discord.Embed(title="New server!", description=guild.name, colour=green)
         embed.add_field(name="Owner", value=guild.owner.name)
         embed.add_field(name="Members", value=str(len(guild.members)))
@@ -26,19 +40,14 @@ class dev(commands.Cog):
         """
         Makes a suggestion issue on my Jira **DO NOT GIVE NON SERIOUS SUGGESTIONS**
         """
-        # embed = discord.Embed(title="Suggestion", colour=blue, description=suggestion)
-        # embed.add_field(name="Server", value=ctx.guild.name)
-        # embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        # await ctx.message.delete()
-        # await self.bot.get_channel(753495188361707550).send(embed=embed)
-        resp = requests.post(apikeys.jiraurl + "issue", data=json.dumps({"fields": {
+        resp = requests.post(config["api"]["jira url"] + "issue", data=json.dumps({"fields": {
             "project": {"key": "SDB"},
             "summary": suggestion,
             "issuetype": {"name": "Suggestion"},
             "customfield_10103": str(ctx.author.id),
             "customfield_10036": ctx.author.name,
             "customfield_10037": ctx.guild.name
-        }}), auth=apikeys.jira, headers={"Content-Type": "application/json"})
+        }}), auth=auth, headers={"Content-Type": "application/json"})
         i = resp.json()
         embed = discord.Embed(title="Suggestion noted!",
                               description=f"[{i['key']}](https://thesupergamer20578.atlassian.net/browse/{i['key']}): {suggestion}")
@@ -51,19 +60,14 @@ class dev(commands.Cog):
         """
         Reports a bug **DO NOT REPORT NON SERIOUS BUGS**
         """
-        # embed = discord.Embed(title="Bug", colour=red, description=bug)
-        # embed.add_field(name="Server", value=ctx.guild.name)
-        # embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        # await ctx.message.delete()
-        # await self.bot.get_channel(753495213984710706).send(embed=embed)
-        resp = requests.post(apikeys.jiraurl + "issue", data=json.dumps({"fields": {
+        resp = requests.post(config["api"]["jira url"] + "issue", data=json.dumps({"fields": {
             "project": {"key": "SDB"},
             "summary": bug,
             "issuetype": {"name": "Bug"},
             "customfield_10103": str(ctx.author.id),
             "customfield_10036": ctx.author.name,
             "customfield_10037": ctx.guild.name
-        }}), auth=apikeys.jira, headers={"Content-Type": "application/json"})
+        }}), auth=auth, headers={"Content-Type": "application/json"})
         i = resp.json()
         embed = discord.Embed(title="Bug noted!",
                               description=f"[{i['key']}](https://thesupergamer20578.atlassian.net/browse/{i['key']}): {bug}")
@@ -76,7 +80,7 @@ class dev(commands.Cog):
         """
         Displays info on a Jira issue with the provided key
         """
-        resp = requests.get(apikeys.jiraurl + "issue/" + key, auth=apikeys.jira)
+        resp = requests.get(config["api"]["jira url"] + "issue/" + key, auth=auth)
         if not key.startswith("SDB-"):
             raise commands.BadArgument()
         i = resp.json()["fields"]
@@ -111,6 +115,9 @@ class dev(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def leaveserver(self, ctx, guild: int):
+        """
+        Make the bot leave a server
+        """
         guild = self.bot.get_guild(guild)
         await guild.leave()
         embed = discord.Embed(title=f"left {guild.name} owned by: {guild.owner.name}")
@@ -120,4 +127,7 @@ class dev(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initializes the cog
+    """
     bot.add_cog(dev(bot))
