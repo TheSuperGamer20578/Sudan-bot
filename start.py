@@ -3,9 +3,9 @@ A start script to start the bot with a ui it is very useless so use core.py or s
 """
 import os
 import threading
+import configparser
 from discord.ext import commands, tasks
 from termcolor import cprint
-import configparser
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")

@@ -1,15 +1,15 @@
 """
 Handles command errors
 """
-import discord
 import sys
 import traceback
+import asyncio
+import configparser
+from json import dumps
+import requests
+import discord
 from discord.ext import commands
 from core import RED, BLUE
-import asyncio
-import requests
-from json import dumps
-import configparser
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")

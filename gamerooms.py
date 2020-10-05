@@ -2,8 +2,8 @@
 Makes channels on demand only works in one server
 """
 import random
-from discord.ext import commands
 import configparser
+from discord.ext import commands
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")

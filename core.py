@@ -1,13 +1,13 @@
 """
 The core of the bot adds some essential commands and starts the bot you can load as an extension if you want
 """
-import discord
 import time
-from discord.ext import commands
-from datetime import timezone
-from firebase_admin import firestore, credentials, initialize_app
 import asyncio
 import configparser
+from datetime import timezone
+import discord
+from firebase_admin import firestore, credentials, initialize_app
+from discord.ext import commands
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")

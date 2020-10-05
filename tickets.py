@@ -1,12 +1,12 @@
 """
 A ticket system
 """
-import discord
 import random
+import configparser
+import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 from core import RED, GREEN, admin
-import configparser
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")

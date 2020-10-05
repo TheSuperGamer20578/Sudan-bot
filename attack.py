@@ -1,8 +1,8 @@
 import json
-import discord
-import EMC
 import threading
 import asyncio
+import discord
+import EMC
 from discord.ext import commands
 
 with open("Config/attack.json", "r") as f:

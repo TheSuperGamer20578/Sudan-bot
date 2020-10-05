@@ -2,15 +2,15 @@
 Basic music functionality
 """
 from ctypes import util
+import os
+import threading
+import shutil
+import functools
 import discord
 import youtube_dl
 from discord.ext import commands
 from discord.utils import get
 from core import mod, GREEN, RED, trusted
-import os
-import threading
-import shutil
-import functools
 queue = {}
 np = {}
 if os.name != "nt":

@@ -1,11 +1,11 @@
 """
 Automatically updates the bot when there are changes to master
 """
-from discord.ext import commands
 from subprocess import call
-from core import trusted
 import time
 from asyncio import sleep
+from discord.ext import commands
+from core import trusted
 
 
 class update(commands.Cog):

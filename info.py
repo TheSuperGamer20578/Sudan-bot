@@ -2,10 +2,10 @@
 Give info about EMC
 STILL A WORK IN PROGRESS
 """
-import discord
-# import sys
 import queue
 import threading
+import discord
+# import sys
 # import time
 from discord.ext import commands, tasks
 
