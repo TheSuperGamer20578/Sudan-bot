@@ -1,28 +1,44 @@
+"""
+Handles command errors
+"""
 import discord
 import sys
 import traceback
 from discord.ext import commands
-from core import red, blue
+from .core import red, blue
 import asyncio
 import requests
 from json import dumps
-from Config import apikeys
+import configparser
+
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
+
+auth = {"Authorization": f"GenieKey {config['api']['opsgenie']}"}
+
 emcstats = ["t", "res", "n", "online", "alliance"]
 OPS = "https://api.eu.opsgenie.com/v2/"
 
 
 class errors(commands.Cog):
+    """
+    Error handling cog
+    """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        """
+        The part that handles errors
+        """
         if hasattr(ctx.command, 'on_error'):
             return
 
-        cog = ctx.cog
-        if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
-            return
+        # idk what this does but it might be important but pycharm doesnt like it
+        # cog = ctx.cog
+        # if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
+        #     return
 
         error = getattr(error, 'original', error)
 
@@ -55,21 +71,7 @@ class errors(commands.Cog):
 
         else:
             embed = discord.Embed(title="You caused an error!", colour=red)
-            # nl = "\n"
-            # bs = "\\"
-            # tb = [x.split(", ") for x in traceback.format_exception(type(error), error, error.__traceback__)]
             t = traceback.format_exception(type(error), error, error.__traceback__)
-            # t = list(map(lambda x: 'File "' + ", ".join(["/".join(x[0].split("\\")[-2:]).split("/")[-1]] + x[1:]), [x.split(", ") for x in traceback.format_exception(type(error), error, error.__traceback__)]))
-            # eembed = discord.Embed(title="Error", colour=red,
-            #                        description=f"```python\n{nl.join(t).replace('`', '‘')}\n```")
-            # # eembed = discord.Embed(title="Error", colour=red, description=f"```python\n{nl.join(traceback.format_stack()).replace('`', '‘')}\n```")
-            # eembed.add_field(name="Error", inline=False, value=f"```python\n{type(error).__name__}: {error}\n```")
-            # eembed.add_field(name="Server", value=ctx.guild.name)
-            # eembed.add_field(name="Command", value=ctx.command)
-            # eembed.add_field(name="User", value=ctx.author.name)
-            # # print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-            # # traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-            # await self.bot.get_channel(753495157332246548).send(embed=eembed)
             resp = requests.post(OPS+"alerts", dumps({
                 "message": f"Error in {ctx.command}",
                 "description": "\n".join(t),
@@ -77,7 +79,7 @@ class errors(commands.Cog):
                 "entity": "Sudan bot",
                 "source": f"{ctx.guild.name} #{ctx.channel.name}",
                 "details": {"user": f"{ctx.author.name}({ctx.author.nick})", "message": ctx.message.content}
-            }), headers={**apikeys.opsgenie, "Content-Type": "application/json"})
+            }), headers={**auth, "Content-Type": "application/json"})
             if resp.status_code != 202:
                 sys.stderr.write(str(resp.content)+"\n")
 
@@ -90,14 +92,20 @@ class errors(commands.Cog):
 
 
 class log(object):
+    """
+    An attempt to redirect stout and stderr to discord it didnt work i might be able to make it work and goto Opsgenie
+    """
     colour = {"error": red, "info": blue}
     title = {"error": "Error(non-command)", "info": "Info"}
 
-    def __init__(self, bot, type):
-        self.type = type
+    def __init__(self, bot, t):
+        self.type = t
         self.bot = bot
 
     def write(self, buf):
+        """
+        The part that was supposed to send stuff to discord
+        """
         text = buf.rstrip()
         colour = self.colour[self.type]
         title = self.title[self.type]
@@ -107,6 +115,9 @@ class log(object):
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(errors(bot))
     # sys.stdout = log(bot, "info")
     # sys.stderr = log(bot, "error")
