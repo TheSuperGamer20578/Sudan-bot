@@ -3,7 +3,7 @@ Logs stuff
 """
 import discord
 from discord.ext import commands
-from core import trusted, admin, green
+from core import trusted, admin, GREEN
 from firebase_admin import *
 from firebase_admin import firestore
 
@@ -91,7 +91,7 @@ class log(commands.Cog):
             d = {}
         d[t] = channel.id
         fs_data.document(str(ctx.guild.id)).set(d)
-        embed = discord.Embed(title="Log setup", colour=green)
+        embed = discord.Embed(title="Log setup", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)

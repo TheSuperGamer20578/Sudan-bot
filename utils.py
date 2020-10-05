@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import *
 from firebase_admin import firestore
-from core import mod, admin, blue
+from core import mod, admin, BLUE
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
@@ -78,7 +78,7 @@ class utils(commands.Cog):
         """
         Displays how long a member has had their discord account for and how long they have been in the server
         """
-        embed = discord.Embed(title=user.display_name, description=f"**Created:** {user.created_at}\n**Joined:** {user.joined_at}", colour=blue)
+        embed = discord.Embed(title=user.display_name, description=f"**Created:** {user.created_at}\n**Joined:** {user.joined_at}", colour=BLUE)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)

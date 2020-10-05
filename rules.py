@@ -3,7 +3,7 @@ Makes a rule embed will be used to set punishments when moderation is added
 """
 import discord
 from discord.ext import commands
-from core import blue, admin
+from core import BLUE, admin
 from firebase_admin import *
 from firebase_admin import firestore
 
@@ -51,7 +51,7 @@ class rules(commands.Cog):
         Sends rules to the specified channel
         """
         d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        embed = discord.Embed(title="Rules", colour=blue)
+        embed = discord.Embed(title="Rules", colour=BLUE)
         m = ""
         for x in [d[x]["desc"] for x in d if d[x]["cat"] == "ban"]:
             m += f"{x}\n\n"
@@ -86,7 +86,7 @@ class rules(commands.Cog):
         Shows info of a rule
         """
         d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        embed = discord.Embed(title=id, description=d[id]["desc"], colour=blue)
+        embed = discord.Embed(title=id, description=d[id]["desc"], colour=BLUE)
         embed.add_field(name="punishment", value=d[id]["cat"])
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()

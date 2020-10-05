@@ -6,7 +6,7 @@ import re
 from discord.ext import commands
 from firebase_admin import *
 from firebase_admin import firestore
-from core import green
+from core import GREEN
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
@@ -47,7 +47,7 @@ class settings(commands.Cog):
         d[thing] = value
         fs_data.document(str(ctx.guild.id)).set(d)
         await ctx.message.delete()
-        embed = discord.Embed(title="Settings updated", colour=green)
+        embed = discord.Embed(title="Settings updated", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

@@ -6,7 +6,7 @@ import discord
 import youtube_dl
 from discord.ext import commands
 from discord.utils import get
-from core import mod, green, red, trusted
+from core import mod, GREEN, RED, trusted
 import os
 import threading
 import shutil
@@ -90,7 +90,7 @@ class music(commands.Cog):
         queue[str(ctx.guild.id)] = []
         np[str(ctx.guild.id)] = None
         os.makedirs(f"music/{ctx.guild.id}")
-        embed = discord.Embed(title=f"Connected to {channel.name}!", colour=green)
+        embed = discord.Embed(title=f"Connected to {channel.name}!", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -109,9 +109,9 @@ class music(commands.Cog):
             voice.stop()
             await voice.disconnect()
             shutil.rmtree(f"music/{ctx.guild.id}")
-            embed = discord.Embed(title=f"Disconnected from {channel.name}", colour=green)
+            embed = discord.Embed(title=f"Disconnected from {channel.name}", colour=GREEN)
         else:
-            embed = discord.Embed(title="Im not in a VC!", colour=red)
+            embed = discord.Embed(title="Im not in a VC!", colour=RED)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -153,7 +153,7 @@ class music(commands.Cog):
         Changes the volume, there is a limit of 50% volume
         """
         if vol > 50.0:
-            embed = discord.Embed(title="It is unsafe to go that high!", colour=red)
+            embed = discord.Embed(title="It is unsafe to go that high!", colour=RED)
         else:
             voice = get(self.bot.voice_clients, guild=ctx.guild)
             voice.source = discord.PCMVolumeTransformer(voice.source)

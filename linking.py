@@ -6,7 +6,7 @@ from discord.ext import commands
 import requests
 from firebase_admin import *
 from firebase_admin import firestore
-from core import trusted, blue, green
+from core import trusted, BLUE, GREEN
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
@@ -35,7 +35,7 @@ class linking(commands.Cog):
             return
         fs_data.document(str(user.id)).set({"mcname": mc.json()["name"]})
         await ctx.message.delete()
-        embed = discord.Embed(title="Link success", colour=green)
+        embed = discord.Embed(title="Link success", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -50,7 +50,7 @@ class linking(commands.Cog):
         if not fs_data.document(str(ctx.author.id)).get().to_dict():
             fs_data.document(str(ctx.author.id)).set({"mcname": mc.json()["name"]})
             await ctx.message.delete()
-            embed = discord.Embed(title="Link success", colour=green)
+            embed = discord.Embed(title="Link success", colour=GREEN)
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
 
@@ -66,14 +66,14 @@ class linking(commands.Cog):
                 return
             id = mc.json()["id"]
             name_history = requests.get(f"https://api.mojang.com/user/profiles/{id}/names")
-            embed = discord.Embed(title=user.name, description=f"**Current name: **{d['mcname']}", colour=blue)
+            embed = discord.Embed(title=user.name, description=f"**Current name: **{d['mcname']}", colour=BLUE)
             embed.set_thumbnail(url=f"https://crafatar.com/avatars/{id}")
             if d["mcname"] == "TheSuperGamer205":
                 embed.add_field(name="Name history", value="TheSuperGamer205")
             else:
                 embed.add_field(name="Name history", value="\n".join([x["name"] for x in name_history.json()]))
         else:
-            embed = discord.Embed(title=user.name, description="That user hasn't linked there mc account yet!", colour=blue)
+            embed = discord.Embed(title=user.name, description="That user hasn't linked there mc account yet!", colour=BLUE)
         await ctx.message.delete()
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)

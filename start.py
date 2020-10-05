@@ -110,10 +110,10 @@ def loop():
         bot.unload_extension(command.split(" ")[1])
     elif command == "list":
         for x in bot.cogs:
-            cprint(x, "green")
+            cprint(x, "GREEN")
         for x in os.listdir():
             if x.endswith(".py") and x[:-3] not in bot.cogs and x != "start.py":
-                cprint(x[:-3], "red")
+                cprint(x[:-3], "RED")
     else:
         print("Unknown command")
     input("\n\nPress enter to continue")

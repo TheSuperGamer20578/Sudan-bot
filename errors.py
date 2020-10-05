@@ -5,7 +5,7 @@ import discord
 import sys
 import traceback
 from discord.ext import commands
-from core import red, blue
+from core import RED, BLUE
 import asyncio
 import requests
 from json import dumps
@@ -43,34 +43,34 @@ class errors(commands.Cog):
         error = getattr(error, 'original', error)
 
         if isinstance(error, commands.DisabledCommand):
-            embed = discord.Embed(title=f"{ctx.command} is disabled", colour=red)
+            embed = discord.Embed(title=f"{ctx.command} is disabled", colour=RED)
 
         elif isinstance(error, commands.NoPrivateMessage):
             try:
-                embed = discord.Embed(title=f'{ctx.command} can not be used in Private Messages.', colour=red)
+                embed = discord.Embed(title=f'{ctx.command} can not be used in Private Messages.', colour=RED)
                 await ctx.author.send(embed=embed)
                 return
             except discord.HTTPException:
                 return
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
-            embed = discord.Embed(title=f"{ctx.command} needs more arguments", colour=red)
+            embed = discord.Embed(title=f"{ctx.command} needs more arguments", colour=RED)
 
         elif isinstance(error, commands.errors.CheckFailure):
-            embed = discord.Embed(title=f"You do not have permission to use {ctx.command}", colour=red)
+            embed = discord.Embed(title=f"You do not have permission to use {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.errors.CommandNotFound):
             if 656231016385478657 in [x.id for x in ctx.guild.members]:
                 if ctx.message.content.split(" ")[0][1:] in emcstats and ctx.message.content[0] == "/":
                     return
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
-                                  colour=red)
+                                  colour=RED)
 
         elif isinstance(error, commands.BadArgument):
-            embed = discord.Embed(title=f"Invalid argument for {ctx.command}", colour=red)
+            embed = discord.Embed(title=f"Invalid argument for {ctx.command}", colour=RED)
 
         else:
-            embed = discord.Embed(title="You caused an error!", colour=red)
+            embed = discord.Embed(title="You caused an error!", colour=RED)
             t = traceback.format_exception(type(error), error, error.__traceback__)
             resp = requests.post(OPS+"alerts", dumps({
                 "message": f"Error in {ctx.command}",
@@ -95,7 +95,7 @@ class log(object):
     """
     An attempt to redirect stout and stderr to discord it didnt work i might be able to make it work and goto Opsgenie
     """
-    colour = {"error": red, "info": blue}
+    colour = {"error": RED, "info": BLUE}
     title = {"error": "Error(non-command)", "info": "Info"}
 
     def __init__(self, bot, t):

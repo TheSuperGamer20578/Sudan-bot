@@ -21,10 +21,10 @@ except ValueError:
 db = firestore.client()
 fs_data = db.collection("core")
 
-blue = 0x0a8cf0
-purple = 0x6556FF
-green = 0x36eb45
-red = 0xb00e0e
+BLUE = 0x0a8cf0
+PURPLE = 0x6556FF
+GREEN = 0x36eb45
+RED = 0xb00e0e
 
 
 def trusted(ctx):
@@ -62,7 +62,7 @@ class core(commands.Cog):
         Provides help
         """
         if cog == "all":
-            embed = discord.Embed(title="All help", colour=blue)
+            embed = discord.Embed(title="All help", colour=BLUE)
             for cog in self.bot.cogs:
                 if len([command for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]):
                     embed.add_field(name=cog, value="\n".join([f"**{command.name}**{': '+command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]))
@@ -71,12 +71,12 @@ class core(commands.Cog):
             await ctx.send(embed=embed)
             return
         if cog is not None:
-            embed = discord.Embed(title=f"Help for {cog}", colour=blue, description="\n".join([f"**{command.name}**{': '+command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]))
+            embed = discord.Embed(title=f"Help for {cog}", colour=BLUE, description="\n".join([f"**{command.name}**{': ' + command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]))
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.message.delete()
             await ctx.send(embed=embed)
         if cog is None:
-            embed = discord.Embed(title="Help index", colour=blue, description="To see help for everything type `.help all` to see help for a category type `.help <category>`\n\n__**Categories:**__\n"+"\n".join(self.bot.cogs))
+            embed = discord.Embed(title="Help index", colour=BLUE, description="To see help for everything type `.help all` to see help for a category type `.help <category>`\n\n__**Categories:**__\n" + "\n".join(self.bot.cogs))
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.message.delete()
             await ctx.send(embed=embed)
@@ -93,9 +93,9 @@ class core(commands.Cog):
         try:
             self.bot.load_extension(cog)
         except commands.ExtensionNotFound:
-            embed = discord.Embed(title=f"\"{cog}\" was not  found", colour=red)
+            embed = discord.Embed(title=f"\"{cog}\" was not  found", colour=RED)
         else:
-            embed = discord.Embed(title=f"\"{cog}\" was successfully loaded!", colour=green)
+            embed = discord.Embed(title=f"\"{cog}\" was successfully loaded!", colour=GREEN)
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -109,9 +109,9 @@ class core(commands.Cog):
         try:
             self.bot.unload_extension(cog)
         except commands.ExtensionNotLoaded:
-            embed = discord.Embed(title=f"The cog \"{cog}\" is not loaded", colour=red)
+            embed = discord.Embed(title=f"The cog \"{cog}\" is not loaded", colour=RED)
         else:
-            embed = discord.Embed(title=f"The cog \"{cog}\" was successfully unloaded!", colour=green)
+            embed = discord.Embed(title=f"The cog \"{cog}\" was successfully unloaded!", colour=GREEN)
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -167,7 +167,7 @@ class core(commands.Cog):
         await ctx.message.delete()
         embed = discord.Embed(title="Add me to your server by clicking here",
                               url="https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot",
-                              colour=blue)
+                              colour=BLUE)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -186,7 +186,7 @@ class core(commands.Cog):
         """
         Links to github
         """
-        embed = discord.Embed(title="Click here to goto my Github", url="https://github.com/TheSuperGamer20578/Sudan-bot", colour=blue)
+        embed = discord.Embed(title="Click here to goto my Github", url="https://github.com/TheSuperGamer20578/Sudan-bot", colour=BLUE)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)

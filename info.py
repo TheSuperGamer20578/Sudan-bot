@@ -12,7 +12,7 @@ from discord.ext import commands, tasks
 # sys.path.insert(1, "E:\\Python\\EMC-info\\code\\EMC-info\\src")
 import EMC
 
-blue = 0x3357CC
+BLUE = 0x3357CC
 red = 0xb00e0e
 data = None
 que = queue.Queue()
@@ -45,10 +45,10 @@ class info(commands.Cog):
         try:
             t = EMC.Town(town, data)
         except EMC.TownNotFound:
-            embed = discord.Embed(title=f"The town {town} was not found", colour=red)
+            embed = discord.Embed(title=f"The town {town} was not found", colour=RED)
             embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         else:
-            embed = discord.Embed(title=t.name, colour=blue)
+            embed = discord.Embed(title=t.name, colour=BLUE)
             embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
             embed.add_field(name="Mayor", value=f"```{t.mayor.name}```")
             if not t.nationless:

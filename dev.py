@@ -4,7 +4,7 @@ Several tools to help with development and to track growth
 import discord
 import requests
 import json
-from core import green, red, trusted, purple
+from core import GREEN, RED, trusted, PURPLE
 from discord.ext import commands
 import configparser
 from requests.auth import HTTPBasicAuth
@@ -27,7 +27,7 @@ class dev(commands.Cog):
         """
         Sends message when the bot is added to a server
         """
-        embed = discord.Embed(title="New server!", description=guild.name, colour=green)
+        embed = discord.Embed(title="New server!", description=guild.name, colour=GREEN)
         embed.add_field(name="Owner", value=guild.owner.name)
         embed.add_field(name="Members", value=str(len(guild.members)))
         embed.set_author(name=guild.owner.nick if guild.owner.nick else guild.owner.name,
@@ -85,13 +85,13 @@ class dev(commands.Cog):
             raise commands.BadArgument()
         i = resp.json()["fields"]
         if i["issuetype"]["name"] == "Bug":
-            embed = discord.Embed(title=f"Bug: {key}", description=i["summary"], colour=red,
+            embed = discord.Embed(title=f"Bug: {key}", description=i["summary"], colour=RED,
                                   url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         elif i["issuetype"]["name"] == "Suggestion":
-            embed = discord.Embed(title=f"Suggestion: {key}", description=i["summary"], colour=green,
+            embed = discord.Embed(title=f"Suggestion: {key}", description=i["summary"], colour=GREEN,
                                   url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         elif i["issuetype"]["name"] == "Epic":
-            embed = discord.Embed(title=f"Epic: {key}", description=i["summary"], colour=purple,
+            embed = discord.Embed(title=f"Epic: {key}", description=i["summary"], colour=PURPLE,
                                   url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         else:
             raise Exception()

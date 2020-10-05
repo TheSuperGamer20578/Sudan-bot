@@ -6,7 +6,7 @@ import random
 from discord.ext import commands
 from firebase_admin import *
 from firebase_admin import firestore
-from core import red, green, admin
+from core import RED, GREEN, admin
 import configparser
 
 config = configparser.ConfigParser()
@@ -66,7 +66,7 @@ class tickets(commands.Cog):
             return
         d = fs_data.document(str(ctx.guild.id)).get().to_dict()
         if ctx.guild.get_role(int(d["b_role"])) in ctx.author.roles:
-            embed = discord.Embed(title="You are banned from opening tickets!", colour=red)
+            embed = discord.Embed(title="You are banned from opening tickets!", colour=RED)
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed, delete_after=30)
             return
@@ -150,10 +150,10 @@ class tickets(commands.Cog):
         d = fs_data.document(str(ctx.guild.id)).get().to_dict()
         if ctx.guild.get_role(int(d["b_role"])) not in user.roles:
             await ctx.author.add_roles(ctx.guild.get_role(int(d["b_role"])))
-            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been banned from opening tickets!", colour=green)
+            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been banned from opening tickets!", colour=GREEN)
         else:
             await ctx.author.remove_roles(ctx.guild.get_role(int(d["b_role"])))
-            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been unbanned from opening tickets!", colour=green)
+            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been unbanned from opening tickets!", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
