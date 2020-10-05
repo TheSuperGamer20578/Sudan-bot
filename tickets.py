@@ -1,22 +1,34 @@
+"""
+A ticket system
+"""
 import discord
 import random
 from discord.ext import commands
-import firebase_admin
 from firebase_admin import *
 from firebase_admin import firestore
-from core import red, green, admin
+from .core import red, green, admin
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
-fs_data = db.collection("tickets")
+fs_data = db.collection("fun")
+settings = db.collection("settings")
 
 
-def moderator(ctx): return int(fs_data.document(str(ctx.guild.id)).get().to_dict()["m_role"]) in [x.id for x in ctx.author.roles]
+def moderator(ctx):
+    """
+    Check to see if user is a ticket service person
+    """
+    return int(fs_data.document(str(ctx.guild.id)).get().to_dict()["m_role"]) in [x.id for x in ctx.author.roles]
 
 
 class tickets(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
         with open("Config/names.txt", "r") as f:
@@ -146,4 +158,7 @@ class tickets(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(tickets(bot))
