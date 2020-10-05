@@ -60,6 +60,7 @@ class fun(commands.Cog):
         async def cbreak():
             if msg.content[1:] == f"chain {d['chain'][str(msg.channel.id)]}":
                 return
+            await msg.add_reaction("❌")
             await msg.channel.send(f"{msg.author.mention} broke the chain! start a new chain with `.chain <thing>`")
             s = settings.document(str(msg.guild.id)).get().to_dict()
             if "breakrole" in s:
@@ -82,6 +83,10 @@ class fun(commands.Cog):
                 await cbreak()
             else:
                 last_chain[str(msg.channel.id)] = msg.author.id
+                if msg.content == "100":
+                    await msg.add_reaction("💯")
+                else:
+                    await msg.add_reaction("✅")
 
 
 def setup(bot):
