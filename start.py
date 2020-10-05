@@ -1,18 +1,29 @@
-import discord
+"""
+A start script to start the bot with a ui it is very useless so use core.py or start.sh instead if you really want to use this you will need to install termcolor
+"""
 import os
 import threading
 from discord.ext import commands, tasks
 from termcolor import cprint
-from Config import apikeys
+import configparser
+
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
 bot = None
 
 
 def clear():
+    """
+    Clear command
+    """
     os.system("cls")
 
 
-# noinspection SpellCheckingInspection
 def start():
+    """
+    Start menu
+    """
+    global bot
     clear()
     print("""
         +-------------+
@@ -38,6 +49,9 @@ def start():
 
         @tasks.loop(seconds=1)
         async def loops():
+            """
+            Checks to see if the stop command has been executed
+            """
             if "stop" in os.listdir():
                 while "stop" in os.listdir():
                     os.remove("stop")
@@ -45,22 +59,33 @@ def start():
 
         @bot.event
         async def on_ready():
+            """
+            Starts the loop when the bot has started
+            """
             loops.start()
 
-        bot.run(apikeys.discord)
+        bot.run(config["api"]["discord"])
     elif command == "exit":
         pass
     elif command == "safe":
         x = threading.Thread(target=loop)
         x.start()
         bot = commands.Bot(command_prefix="&")
-        bot.run(apikeys.discord)
+        bot.run(config["api"]["discord"])
     else:
         input("INVALID COMMAND")
         return start()
 
 
 def loop():
+    """
+    The loop
+    """
+    global bot
+    if bot is None:
+        # this is here only for the purpose of making pycharm happy
+        bot = commands.Bot(command_prefix="&")
+        return
     clear()
     print("""
         +-------------+
