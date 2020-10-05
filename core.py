@@ -1,19 +1,24 @@
-import os
 import discord
 import time
 from discord.ext import commands
 from datetime import timezone
-import firebase_admin
 from firebase_admin import *
 from firebase_admin import firestore
 import asyncio
-from Config import apikeys
+import configparser
 
-if not firebase_admin._apps:
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
+api = config["api"]
+
+try:
     cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
-fs_data = db.collection("core")
+fs_data = db.collection("fun")
+settings = db.collection("settings")
 
 blue = 0x0a8cf0
 purple = 0x6556FF
@@ -185,4 +190,4 @@ if __name__ == '__main__':
         for x in f.read().split("\n"):
             if x != "":
                 bot.load_extension(x)
-    bot.run(apikeys.discord)
+    bot.run(api["discord"])
