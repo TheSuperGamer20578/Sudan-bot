@@ -1,18 +1,26 @@
+"""
+Makes a rule embed will be used to set punishments when moderation is added
+"""
 import discord
 from discord.ext import commands
-from core import blue, admin
-import firebase_admin
+from .core import blue, admin
 from firebase_admin import *
 from firebase_admin import firestore
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
-fs_data = db.collection("rules")
+fs_data = db.collection("fun")
+settings = db.collection("settings")
 
 
 class rules(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -87,4 +95,7 @@ class rules(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(rules(bot))
