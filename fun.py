@@ -1,18 +1,26 @@
+"""
+Contains fun stuff
+"""
 import discord
 from discord.ext import commands
-import firebase_admin
 from firebase_admin import *
 from firebase_admin import firestore
 last_chain = {}
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
 fs_data = db.collection("fun")
 settings = db.collection("settings")
 
 
 class fun(commands.Cog):
+    """
+    The main class for this file
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -58,7 +66,13 @@ class fun(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg):
+        """
+        Checks to see if chain is broken
+        """
         async def cbreak():
+            """
+            If the chain is broken say so and update DB
+            """
             if msg.content[1:] == f"chain {d['chain'][str(msg.channel.id)]}":
                 return
             await msg.add_reaction("❌")
@@ -91,4 +105,7 @@ class fun(commands.Cog):
 
 
 def setup(bot):
+    """
+    Load extension
+    """
     bot.add_cog(fun(bot))
