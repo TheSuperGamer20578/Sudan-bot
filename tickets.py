@@ -7,6 +7,10 @@ from discord.ext import commands
 from firebase_admin import *
 from firebase_admin import firestore
 from core import red, green, admin
+import configparser
+
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
@@ -30,8 +34,6 @@ class tickets(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        with open("Config/names.txt", "r") as f:
-            self.names = f.read().split("\n")
 
     @commands.command()
     @commands.check(admin)
@@ -68,7 +70,7 @@ class tickets(commands.Cog):
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed, delete_after=30)
             return
-        channel = await ctx.guild.create_text_channel(random.choice(self.names),
+        channel = await ctx.guild.create_text_channel(random.choice(config["general"]["names"].split("\n")),
                                                       category=ctx.guild.get_channel(int(d["category"])),
                                                       overwrites={
                                                           ctx.author: discord.PermissionOverwrite(read_messages=True),
