@@ -1,21 +1,28 @@
+"""
+A global config for the bot
+"""
 import discord
 import re
 from discord.ext import commands
-import firebase_admin
 from firebase_admin import *
 from firebase_admin import firestore
-from core import green
+from .core import green
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
-fs_data = db.collection("settings")
+fs_data = db.collection("fun")
 
 settable = ["modrole", "adminrole", "muterole", "breakrole"]
 
 
 class settings(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -46,4 +53,7 @@ class settings(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(settings(bot))
