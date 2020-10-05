@@ -21,4 +21,4 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pip install -r requirements.txt; pylint -d R0801, C0301 `ls -R|grep .py$|xargs`
+        pip install -r requirements.txt; pylint -d R0801,C0301 `ls -R|grep .py$|xargs`
