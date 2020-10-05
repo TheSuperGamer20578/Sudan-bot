@@ -6,7 +6,7 @@ from discord.ext import commands
 import requests
 from firebase_admin import *
 from firebase_admin import firestore
-from .core import trusted, blue, green
+from core import trusted, blue, green
 
 try:
     cred = credentials.Certificate("Config/firebase.json")

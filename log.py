@@ -3,7 +3,7 @@ Logs stuff
 """
 import discord
 from discord.ext import commands
-from .core import trusted, admin, green
+from core import trusted, admin, green
 from firebase_admin import *
 from firebase_admin import firestore
 

@@ -3,7 +3,7 @@ Automatically updates the bot when there are changes to master
 """
 from discord.ext import commands
 from subprocess import call
-from .core import trusted
+from core import trusted
 import time
 from asyncio import sleep
 

@@ -5,7 +5,7 @@ import discord
 import sys
 import traceback
 from discord.ext import commands
-from .core import red, blue
+from core import red, blue
 import asyncio
 import requests
 from json import dumps

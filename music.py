@@ -6,7 +6,7 @@ import discord
 import youtube_dl
 from discord.ext import commands
 from discord.utils import get
-from .core import mod, green, red, trusted
+from core import mod, green, red, trusted
 import os
 import threading
 import shutil

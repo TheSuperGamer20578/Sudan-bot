@@ -4,7 +4,7 @@ Several tools to help with development and to track growth
 import discord
 import requests
 import json
-from .core import green, red, trusted, purple
+from core import green, red, trusted, purple
 from discord.ext import commands
 import configparser
 from requests.auth import HTTPBasicAuth
