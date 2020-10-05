@@ -4,8 +4,7 @@ Allows users to link their discord to their minecraft account
 import discord
 from discord.ext import commands
 import requests
-from firebase_admin import *
-from firebase_admin import firestore
+from firebase_admin import firestore, credentials, initialize_app
 from core import trusted, BLUE, GREEN
 
 try:

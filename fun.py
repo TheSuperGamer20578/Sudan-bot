@@ -3,8 +3,7 @@ Contains fun stuff
 """
 import discord
 from discord.ext import commands
-from firebase_admin import *
-from firebase_admin import firestore
+from firebase_admin import firestore, credentials, initialize_app
 last_chain = {}
 
 try:

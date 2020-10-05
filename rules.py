@@ -4,8 +4,7 @@ Makes a rule embed will be used to set punishments when moderation is added
 import discord
 from discord.ext import commands
 from core import BLUE, admin
-from firebase_admin import *
-from firebase_admin import firestore
+from firebase_admin import firestore, credentials, initialize_app
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
