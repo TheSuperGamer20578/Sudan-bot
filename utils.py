@@ -1,23 +1,34 @@
+"""
+Provides several utilities
+"""
 import discord
 from discord.ext import commands
-import firebase_admin
 from firebase_admin import *
 from firebase_admin import firestore
-from core import mod, admin, blue
+from .core import mod, admin, blue
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
-fs_data = db.collection("utills")
+fs_data = db.collection("fun")
+settings = db.collection("settings")
 
 
 class utils(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """
+        Delete message if its blank
+        """
         if (len(message.content.replace(" ", "").replace("*", "").replace("_", "")) <= 0) and not (
                 message.author.bot or len(message.attachments) or message.is_system())\
                 and str(message.guild.id) in fs_data.document("no-blank").get().to_dict()["servers"]:
@@ -41,13 +52,6 @@ class utils(commands.Cog):
             fs_data.document("no-blank").set({"servers": d})
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
-
-    # @commands.command()
-    # @commands.has_role("Moderator")
-    # async def clear_webhooks(self, ctx):
-    #     await ctx.send(f"Deleted {len([y for y in await ctx.guild.webhooks() if y.channel_id == ctx.channel.id])} webhooks")
-    #     for x in [y for y in await ctx.guild.webhooks() if y.channel_id == ctx.channel.id]:
-    #         await x.delete()
 
     @commands.command()
     @commands.check(mod)
@@ -82,4 +86,7 @@ class utils(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(utils(bot))
