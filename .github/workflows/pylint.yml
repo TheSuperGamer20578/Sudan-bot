@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  build:
+  standards-check:
 
     runs-on: ubuntu-latest
 
