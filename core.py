@@ -63,7 +63,7 @@ class core(commands.Cog):
         if cog == "all":
             embed = discord.Embed(title="All help", colour=BLUE)
             for cog in self.bot.cogs:
-                if len([command for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]):
+                if len([command for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]) > 0:
                     embed.add_field(name=cog, value="\n".join([f"**{command.name}**{': '+command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]))
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.message.delete()

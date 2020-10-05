@@ -54,22 +54,22 @@ class rules(commands.Cog):
         m = ""
         for x in [d[x]["desc"] for x in d if d[x]["cat"] == "ban"]:
             m += f"{x}\n\n"
-        if len(m):
+        if len(m) > 0:
             embed.add_field(name="Instant ban:", value=m, inline=False)
         m = ""
         for x in [d[x]["desc"] for x in d if d[x]["cat"] == "kick"]:
             m += f"{x}\n\n"
-        if len(m):
+        if len(m) > 0:
             embed.add_field(name="Kick:", value=m, inline=False)
         m = ""
         for x in [d[x]["desc"] for x in d if d[x]["cat"] == "mute"]:
             m += f"{x}\n\n"
-        if len(m):
+        if len(m) > 0:
             embed.add_field(name="Mute:", value=m, inline=False)
         m = ""
         for x in [d[x]["desc"] for x in d if d[x]["cat"] == "warn"]:
             m += f"{x}\n\n"
-        if len(m):
+        if len(m) > 0:
             embed.add_field(name="Warning:", value=m, inline=False)
         for x in [(d[x]["desc"], x) for x in d if d[x]["cat"] == "faq"]:
             embed.add_field(name=x[1], value=x[0], inline=False)

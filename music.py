@@ -55,7 +55,7 @@ def run(self, guild, key):
     """
     Plays music from the queue
     """
-    if len(queue[str(key)]):
+    if len(queue[str(key)]) > 0:
         voice = get(self.bot.voice_clients, guild=guild)
         voice.play(discord.FFmpegPCMAudio(f"music/{guild.id}/{queue[str(key)][0]}.mp3"), after=lambda e: run(self, guild, key))
         np[str(key)] = queue[str(key)][0]
