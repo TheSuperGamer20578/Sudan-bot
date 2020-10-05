@@ -14,7 +14,7 @@ try:
 except ValueError:
     pass
 db = firestore.client()
-fs_data = db.collection("fun")
+fs_data = db.collection("settings")
 
 settable = ["modrole", "adminrole", "muterole", "breakrole"]
 

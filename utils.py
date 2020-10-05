@@ -13,8 +13,7 @@ try:
 except ValueError:
     pass
 db = firestore.client()
-fs_data = db.collection("fun")
-settings = db.collection("settings")
+fs_data = db.collection("utils")
 
 
 class utils(commands.Cog):

@@ -14,8 +14,7 @@ try:
 except ValueError:
     pass
 db = firestore.client()
-fs_data = db.collection("fun")
-settings = db.collection("settings")
+fs_data = db.collection("settings")
 
 
 class moderation_config(commands.Cog):
