@@ -1,27 +1,36 @@
+"""
+Allows users to link their discord to their minecraft account
+"""
 import discord
 from discord.ext import commands
-import firebase_admin
 import requests
-# import base64
-# import json
 from firebase_admin import *
 from firebase_admin import firestore
-from core import trusted, blue, green
+from .core import trusted, blue, green
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
-fs_data = db.collection("linking")
+fs_data = db.collection("fun")
+settings = db.collection("settings")
 
 
 class linking(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
     @commands.check(trusted)
     async def link(self, ctx, user: discord.User, mcname):
+        """
+        Links a user to their minecraft account
+        """
         mc = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{mcname}")
         if mc.status_code != 200:
             return
@@ -33,6 +42,9 @@ class linking(commands.Cog):
 
     @commands.command()
     async def linkme(self, ctx, mcname):
+        """
+        Link to your minecraft account
+        """
         mc = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{mcname}")
         if mc.status_code != 200:
             return
@@ -45,6 +57,9 @@ class linking(commands.Cog):
 
     @commands.command()
     async def whois(self, ctx, user: discord.User):
+        """
+        Gets info about the mentioned user's minecraft account
+        """
         d = fs_data.document(str(user.id)).get().to_dict()
         if d:
             mc = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{d['mcname']}")
@@ -66,6 +81,9 @@ class linking(commands.Cog):
 
     @commands.command()
     async def unlinked(self, ctx):
+        """
+        Displays a list of all unlinked users in this server
+        """
         msg = ""
         for x in ctx.guild.members:
             if x.bot:
@@ -80,4 +98,7 @@ class linking(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(linking(bot))
