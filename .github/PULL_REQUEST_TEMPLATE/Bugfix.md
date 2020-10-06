@@ -1,5 +1,3 @@
-name: Bug fix
-about: this pr fixes a bug
 
 
 # Checklist
