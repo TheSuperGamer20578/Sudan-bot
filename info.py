@@ -5,13 +5,10 @@ STILL A WORK IN PROGRESS
 import queue
 import threading
 import discord
-# import sys
-# import time
 from discord.ext import commands, tasks
+import EMC
 from core import RED
 
-# sys.path.insert(1, "E:\\Python\\EMC-info\\code\\EMC-info\\src")
-import EMC
 
 BLUE = 0x3357CC
 DATA = None
