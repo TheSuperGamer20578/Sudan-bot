@@ -30,9 +30,9 @@ class moderation_config(commands.Cog):
         Set overrides for mute role
         """
         mute = ctx.guild.get_role(int(fs_data.document(str(ctx.guild.id)).get().to_dict()["muterole"]))
-        for x in ctx.guild.channels:
-            x.edit(overwrites={mute: discord.PermissionOverwrite(send_messages=False)})
-            x.edit(overwrites={mute: discord.PermissionOverwrite(speak=False)})
+        for channel in ctx.guild.channels:
+            channel.edit(overwrites={mute: discord.PermissionOverwrite(send_messages=False)})
+            channel.edit(overwrites={mute: discord.PermissionOverwrite(speak=False)})
         await ctx.message.delete()
         embed = discord.Embed(title="mute role overrides set")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)

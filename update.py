@@ -32,10 +32,10 @@ class update(commands.Cog):
         """
         Forces the bot to download an update
         """
-        t = time.time()
+        start_time = time.time()
         msg = await ctx.send("updating...")
         call(["git", "pull"])
-        await msg.edit(f"updating... DONE!(took {time.time()-t}ms)")
+        await msg.edit(f"updating... DONE!(took {time.time()-start_time}ms)")
 
     @commands.command()
     @commands.check(trusted)

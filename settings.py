@@ -35,16 +35,16 @@ class settings(commands.Cog):
         """
         Changes settings
         """
-        m = re.match("^<[@#][!&]?([0-9]{17,18})>$", value)
-        if m:
-            value = m.group(1)
+        match = re.match("^<[@#][!&]?([0-9]{17,18})>$", value)
+        if match:
+            value = match.group(1)
         if thing not in settable:
             raise commands.errors.BadArgument()
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if d is None:
-            d = {}
-        d[thing] = value
-        fs_data.document(str(ctx.guild.id)).set(d)
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if data is None:
+            data = {}
+        data[thing] = value
+        fs_data.document(str(ctx.guild.id)).set(data)
         await ctx.message.delete()
         embed = discord.Embed(title="Settings updated", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)

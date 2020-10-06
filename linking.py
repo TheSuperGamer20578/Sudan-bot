@@ -29,10 +29,10 @@ class linking(commands.Cog):
         """
         Links a user to their minecraft account
         """
-        mc = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{mcname}")
-        if mc.status_code != 200:
+        mc_account = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{mcname}")
+        if mc_account.status_code != 200:
             return
-        fs_data.document(str(user.id)).set({"mcname": mc.json()["name"]})
+        fs_data.document(str(user.id)).set({"mcname": mc_account.json()["name"]})
         await ctx.message.delete()
         embed = discord.Embed(title="Link success", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -43,11 +43,11 @@ class linking(commands.Cog):
         """
         Link to your minecraft account
         """
-        mc = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{mcname}")
-        if mc.status_code != 200:
+        mc_account = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{mcname}")
+        if mc_account.status_code != 200:
             return
         if not fs_data.document(str(ctx.author.id)).get().to_dict():
-            fs_data.document(str(ctx.author.id)).set({"mcname": mc.json()["name"]})
+            fs_data.document(str(ctx.author.id)).set({"mcname": mc_account.json()["name"]})
             await ctx.message.delete()
             embed = discord.Embed(title="Link success", colour=GREEN)
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -58,19 +58,19 @@ class linking(commands.Cog):
         """
         Gets info about the mentioned user's minecraft account
         """
-        d = fs_data.document(str(user.id)).get().to_dict()
-        if d:
-            mc = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{d['mcname']}")
-            if mc.status_code != 200:
+        data = fs_data.document(str(user.id)).get().to_dict()
+        if data:
+            mc_account = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{data['mcname']}")
+            if mc_account.status_code != 200:
                 return
-            id = mc.json()["id"]
-            name_history = requests.get(f"https://api.mojang.com/user/profiles/{id}/names")
-            embed = discord.Embed(title=user.name, description=f"**Current name: **{d['mcname']}", colour=BLUE)
-            embed.set_thumbnail(url=f"https://crafatar.com/avatars/{id}")
-            if d["mcname"] == "TheSuperGamer205":
+            uuid = mc_account.json()["id"]
+            name_history = requests.get(f"https://api.mojang.com/user/profiles/{uuid}/names")
+            embed = discord.Embed(title=user.name, description=f"**Current name: **{data['mcname']}", colour=BLUE)
+            embed.set_thumbnail(url=f"https://crafatar.com/avatars/{uuid}")
+            if data["mcname"] == "TheSuperGamer205":
                 embed.add_field(name="Name history", value="TheSuperGamer205")
             else:
-                embed.add_field(name="Name history", value="\n".join([x["name"] for x in name_history.json()]))
+                embed.add_field(name="Name history", value="\n".join([history["name"] for history in name_history.json()]))
         else:
             embed = discord.Embed(title=user.name, description="That user hasn't linked there mc account yet!", colour=BLUE)
         await ctx.message.delete()
@@ -83,12 +83,12 @@ class linking(commands.Cog):
         Displays a list of all unlinked users in this server
         """
         msg = ""
-        for x in ctx.guild.members:
-            if x.bot:
+        for member in ctx.guild.members:
+            if member.bot:
                 continue
-            d = fs_data.document(str(x.id)).get().to_dict()
-            if d is None:
-                msg += f"{x.mention}\n"
+            data = fs_data.document(str(member.id)).get().to_dict()
+            if data is None:
+                msg += f"{member.mention}\n"
         embed = discord.Embed(title="Unlinked users:", description=msg)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()

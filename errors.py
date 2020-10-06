@@ -60,7 +60,7 @@ class errors(commands.Cog):
             embed = discord.Embed(title=f"You do not have permission to use {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.errors.CommandNotFound):
-            if 656231016385478657 in [x.id for x in ctx.guild.members]:
+            if 656231016385478657 in [member.id for member in ctx.guild.members]:
                 if ctx.message.content.split(" ")[0][1:] in emcstats and ctx.message.content[0] == "/":
                     return
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
@@ -71,10 +71,10 @@ class errors(commands.Cog):
 
         else:
             embed = discord.Embed(title="You caused an error!", colour=RED)
-            t = traceback.format_exception(type(error), error, error.__traceback__)
+            trace = traceback.format_exception(type(error), error, error.__traceback__)
             resp = requests.post(OPS+"alerts", dumps({
                 "message": f"Error in {ctx.command}",
-                "description": "\n".join(t),
+                "description": "\n".join(trace),
                 "alias": f"{type(error)} in {ctx.command} with {len(ctx.args)} arguments",
                 "entity": "Sudan bot",
                 "source": f"{ctx.guild.name} #{ctx.channel.name}",

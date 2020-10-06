@@ -6,8 +6,8 @@ from discord.ext import commands
 class autoroles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open("Config/allies.txt", "r") as f:
-            self.allies = f.read().split("\n")
+        with open("Config/allies.txt", "r") as file:
+            self.allies = file.read().split("\n")
 
     @commands.Cog.listener()
     async def on_message(self, message):

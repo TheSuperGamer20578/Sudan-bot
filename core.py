@@ -37,7 +37,7 @@ def mod(ctx):
     """
     Check to see if the user is a mod
     """
-    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["modrole"] in [str(i.id) for i in ctx.author.roles]
+    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["modrole"] in [str(role.id) for role in ctx.author.roles]
 
 
 def admin(ctx):
@@ -122,11 +122,11 @@ class core(commands.Cog):
         """
         await ctx.message.delete()
         msg = ""
-        for i in self.bot.cogs:
-            msg += f"✅ {i}\n"
-        for i in os.listdir():
-            if i.endswith(".py") and i[:-3] not in self.bot.cogs and i != "start.py":
-                msg += f"\n❎ {i[:-3]}"
+        for cog in self.bot.cogs:
+            msg += f"✅ {cog}\n"
+        for file in os.listdir():
+            if file.endswith(".py") and file[:-3] not in self.bot.cogs and file != "start.py":
+                msg += f"\n❎ {file[:-3]}"
         embed = discord.Embed(title="Cogs", description=msg)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -148,12 +148,12 @@ class core(commands.Cog):
         if str(user.id) in fs_data.document("trusted").get().to_dict()["users"]:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is no longer trusted")
             fs_data.document("trusted").set(
-                {"users": [str(i) for i in fs_data.document("trusted").get().to_dict()["users"] if i != str(user.id)]})
+                {"users": [str(trustee) for trustee in fs_data.document("trusted").get().to_dict()["users"] if i != str(user.id)]})
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
-            d = fs_data.document("trusted").get().to_dict()["users"]
-            d.append(str(user.id))
-            fs_data.document("trusted").set({"users": d})
+            data = fs_data.document("trusted").get().to_dict()["users"]
+            data.append(str(user.id))
+            fs_data.document("trusted").set({"users": data})
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -191,17 +191,17 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
 
-def setup(b):
+def setup(setup_bot):
     """
     Initiate cog if loaded as extension
     """
-    bot.add_cog(core(b))
+    bot.add_cog(core(setup_bot))
 
 
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=("&", "/", ".", "sb!", "s!"))  # , commands.when_mentioned))
     bot.add_cog(core(bot))
-    for x in config["general"]["autoload cogs"].split("\n"):
-        if x != "":
-            bot.load_extension(x)
+    for cog in config["general"]["autoload cogs"].split("\n"):
+        if cog != "":
+            bot.load_extension(cog)
     bot.run(config["api"]["discord"])

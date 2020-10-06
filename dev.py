@@ -48,9 +48,9 @@ class dev(commands.Cog):
             "customfield_10036": ctx.author.name,
             "customfield_10037": ctx.guild.name
         }}), auth=auth, headers={"Content-Type": "application/json"})
-        i = resp.json()
+        issue = resp.json()
         embed = discord.Embed(title="Suggestion noted!",
-                              description=f"[{i['key']}](https://thesupergamer20578.atlassian.net/browse/{i['key']}): {suggestion}")
+                              description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {suggestion}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -68,9 +68,9 @@ class dev(commands.Cog):
             "customfield_10036": ctx.author.name,
             "customfield_10037": ctx.guild.name
         }}), auth=auth, headers={"Content-Type": "application/json"})
-        i = resp.json()
+        issue = resp.json()
         embed = discord.Embed(title="Bug noted!",
-                              description=f"[{i['key']}](https://thesupergamer20578.atlassian.net/browse/{i['key']}): {bug}")
+                              description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {bug}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -83,32 +83,32 @@ class dev(commands.Cog):
         resp = requests.get(config["api"]["jira url"] + "issue/" + key, auth=auth)
         if not key.startswith("SDB-"):
             raise commands.BadArgument()
-        i = resp.json()["fields"]
-        if i["issuetype"]["name"] == "Bug":
-            embed = discord.Embed(title=f"Bug: {key}", description=i["summary"], colour=RED,
+        issue = resp.json()["fields"]
+        if issue["issuetype"]["name"] == "Bug":
+            embed = discord.Embed(title=f"Bug: {key}", description=issue["summary"], colour=RED,
                                   url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
-        elif i["issuetype"]["name"] == "Suggestion":
-            embed = discord.Embed(title=f"Suggestion: {key}", description=i["summary"], colour=GREEN,
+        elif issue["issuetype"]["name"] == "Suggestion":
+            embed = discord.Embed(title=f"Suggestion: {key}", description=issue["summary"], colour=GREEN,
                                   url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
-        elif i["issuetype"]["name"] == "Epic":
-            embed = discord.Embed(title=f"Epic: {key}", description=i["summary"], colour=PURPLE,
+        elif issue["issuetype"]["name"] == "Epic":
+            embed = discord.Embed(title=f"Epic: {key}", description=issue["summary"], colour=PURPLE,
                                   url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         else:
             raise Exception()
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        if i["issuetype"]["name"] != "Epic":
-            embed.add_field(name="Status", value=i["status"]["name"])
-            embed.add_field(name="Priority", value=i["priority"]["name"])
-            embed.add_field(name="Author", value=f"<@{i['customfield_10103']}>({i['customfield_10036']})")
-            embed.add_field(name="Server", value=i["customfield_10037"])
+        if issue["issuetype"]["name"] != "Epic":
+            embed.add_field(name="Status", value=issue["status"]["name"])
+            embed.add_field(name="Priority", value=issue["priority"]["name"])
+            embed.add_field(name="Author", value=f"<@{issue['customfield_10103']}>({issue['customfield_10036']})")
+            embed.add_field(name="Server", value=issue["customfield_10037"])
             try:
-                i["parent"]
+                issue["parent"]
             except KeyError:
                 pass
             else:
                 embed.add_field(name="Epic",
-                                value=f"[{i['parent']['key']}](https://thesupergamer20578.atlassian.net/browse/{i['parent']['key']}): " +
-                                      i["parent"]["fields"]["summary"])
+                                value=f"[{issue['parent']['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['parent']['key']}): " +
+                                      issue["parent"]["fields"]["summary"])
         await ctx.message.delete()
         await ctx.send(embed=embed)
 

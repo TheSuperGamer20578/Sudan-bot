@@ -42,12 +42,12 @@ class utils(commands.Cog):
         if ctx.guild.id in fs_data.document("no-blank").get().to_dict()["servers"]:
             embed = discord.Embed(title="Blank messages will no longer be deleted")
             fs_data.document("no-blank").set(
-                {"servers": [x for x in fs_data.document("no-blank").get().to_dict()["servers"] if x != str(ctx.guild.id)]})
+                {"servers": [guild for guild in fs_data.document("no-blank").get().to_dict()["servers"] if guild != str(ctx.guild.id)]})
         else:
             embed = discord.Embed(title="Blank messages will now be deleted")
-            d = fs_data.document("no-blank").get().to_dict()["servers"]
-            d.append(str(ctx.guild.id))
-            fs_data.document("no-blank").set({"servers": d})
+            data = fs_data.document("no-blank").get().to_dict()["servers"]
+            data.append(str(ctx.guild.id))
+            fs_data.document("no-blank").set({"servers": data})
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -57,15 +57,15 @@ class utils(commands.Cog):
         """
         Sets the slowmode of a channel
         """
-        t = length.split(" ")
+        lens = length.split(" ")
         time = 0
-        for x in t:
-            if x.endswith("s"):
-                time += int(x[:-1])
-            if x.endswith("m"):
-                time += int(x[:-1])*60
-            if x.endswith("h"):
-                time += int(x[:-1])*60*60
+        for period in lens:
+            if period.endswith("s"):
+                time += int(period[:-1])
+            if period.endswith("m"):
+                time += int(period[:-1])*60
+            if period.endswith("h"):
+                time += int(period[:-1])*60*60
         await ctx.message.delete()
         embed = discord.Embed(title=f"Slowmode set to {time} seconds({length})")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)

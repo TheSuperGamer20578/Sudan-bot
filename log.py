@@ -72,24 +72,24 @@ class log(commands.Cog):
         """
         Updates list of invites when a user leaves
         """
-        for x in await member.guild.invites():
-            if x.inviter.id == member.id:
-                await x.delete()
+        for invites in await member.guild.invites():
+            if invites.inviter.id == member.id:
+                await invites.delete()
         self.invites[member.guild.id] = await member.guild.invites()
 
     @commands.command()
     @commands.check(admin)
-    async def log(self, ctx, t, channel: discord.TextChannel):
+    async def log(self, ctx, log_type, channel: discord.TextChannel):
         """
         Tells the bot to log something to a channel
         """
-        if t not in logtypes:
+        if log_type not in logtypes:
             raise commands.BadArgument()
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if d is None:
-            d = {}
-        d[t] = channel.id
-        fs_data.document(str(ctx.guild.id)).set(d)
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if data is None:
+            data = {}
+        data[log_type] = channel.id
+        fs_data.document(str(ctx.guild.id)).set(data)
         embed = discord.Embed(title="Log setup", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
