@@ -2,16 +2,20 @@
 Give info about EMC
 STILL A WORK IN PROGRESS
 """
+# TODO remove this comment and the one below
+# pylint: skip-file
 import queue
 import threading
+
 import discord
 from discord.ext import commands, tasks
 import EMC
+
 from core import RED
 
 
 BLUE = 0x3357CC
-DATA = None
+data = None
 que = queue.Queue()
 
 
@@ -28,10 +32,10 @@ class info(commands.Cog):
         """
         Updates the data every 10 secs
         """
-        global DATA
+        global data
         thread = threading.Thread(target=lambda q: q.put(EMC.get_data()), args=(que,))
         thread.start()
-        DATA = que.get()
+        data = que.get()
 
     @commands.command(aliases=["t"])
     async def town(self, ctx, town_to_find):
@@ -40,7 +44,7 @@ class info(commands.Cog):
         """
         await ctx.message.delete()
         try:
-            town = EMC.Town(town_to_find, DATA)
+            town = EMC.Town(town_to_find, data)
         except EMC.TownNotFound:
             embed = discord.Embed(title=f"The town {town_to_find} was not found", colour=RED)
             embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)

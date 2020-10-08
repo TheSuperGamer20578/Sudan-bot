@@ -2,9 +2,11 @@
 A global config for the bot
 """
 import re
+
 import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
+
 from core import GREEN
 
 try:

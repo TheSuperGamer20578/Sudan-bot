@@ -3,10 +3,12 @@ Several tools to help with development and to track growth
 """
 import json
 import configparser
-import discord
 import requests
+
+import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
+
 from core import GREEN, RED, trusted, PURPLE
 
 config = configparser.ConfigParser()

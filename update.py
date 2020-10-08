@@ -1,10 +1,12 @@
 """
 Automatically updates the bot when there are changes to master
 """
-from subprocess import call
 import time
+from subprocess import call
 from asyncio import sleep
+
 from discord.ext import commands
+
 from core import trusted
 
 

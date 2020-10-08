@@ -3,6 +3,7 @@ Makes channels on demand only works in one server
 """
 import random
 import configparser
+
 from discord.ext import commands
 
 config = configparser.ConfigParser()
@@ -29,7 +30,6 @@ class gamerooms(commands.Cog):
     async def end(self, ctx):
         """Deletes a game room"""
         if ctx.channel.category_id == 719403010597453834:
-            # TODO add logging
             await ctx.channel.delete()
 
 

@@ -7,8 +7,10 @@ import asyncio
 import configparser
 from json import dumps
 import requests
+
 import discord
 from discord.ext import commands
+
 from core import RED, BLUE
 
 config = configparser.ConfigParser()
@@ -42,16 +44,16 @@ class errors(commands.Cog):
 
         error = getattr(error, 'original', error)
 
-        if isinstance(error, commands.DisabledCommand):
-            embed = discord.Embed(title=f"{ctx.command} is disabled", colour=RED)
-
-        elif isinstance(error, commands.NoPrivateMessage):
+        if isinstance(error, commands.NoPrivateMessage):
             try:
                 embed = discord.Embed(title=f'{ctx.command} can not be used in Private Messages.', colour=RED)
                 await ctx.author.send(embed=embed)
                 return
             except discord.HTTPException:
                 return
+
+        if isinstance(error, commands.DisabledCommand):
+            embed = discord.Embed(title=f"{ctx.command} is disabled", colour=RED)
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             embed = discord.Embed(title=f"{ctx.command} needs more arguments", colour=RED)
@@ -91,7 +93,7 @@ class errors(commands.Cog):
         await ctx.send(embed=embed)
 
 
-class log(object):
+class log:
     """
     An attempt to redirect stout and stderr to discord it didnt work i might be able to make it work and goto Opsgenie
     """

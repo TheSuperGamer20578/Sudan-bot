@@ -1,6 +1,12 @@
+"""
+Only works in a singular server and may be unstable
+"""
+# TODO remove this comment and the one below
+# pylint: skip-file
 import json
 import threading
 import asyncio
+
 import discord
 import EMC
 from discord.ext import commands
@@ -12,6 +18,9 @@ with open("Config/attack.json", "r") as file:
 
 
 class attack(commands.Cog):
+    """
+    Alerts when an enemy is within a set area
+    """
     def __init__(self, bot):
         self.invading = {}
         self.bot = bot
@@ -19,6 +28,9 @@ class attack(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        """
+        Send initial messages and set variable
+        """
         await self.bot.get_channel(731402228820213882).purge(limit=1000000)
         for border in borders:
             embed = discord.Embed(title=f"0 Enemy/s near {border}")
@@ -27,8 +39,11 @@ class attack(commands.Cog):
         self.thread.start()
 
     @commands.is_owner()
-    @commands.command()
-    async def attackstart(self, ctx):
+    @commands.command(pass_context=False)
+    async def attackstart(self):
+        """
+        Same as on_ready but for when cog is loaded after startup
+        """
         await self.bot.get_channel(731402228820213882).purge(limit=1000000)
         for border in borders:
             embed = discord.Embed(title=f"0 Enemy/s near {border}")
@@ -39,15 +54,24 @@ class attack(commands.Cog):
     @commands.is_owner()
     @commands.command(pass_context=False)
     async def updateattack(self):
+        """
+        Supposed to reload config for this cog
+        """
         with open("Config/attack.json", "r") as file:
             data = json.loads(file.read())
             enemys = data["enemys"]
             borders = data["borders"]
 
     async def loop(self):
+        """
+        Runs regularly to check if enemies are in set area
+        """
         data = await EMC.a_get_data()
 
         def invader_check(self, resident):
+            """
+            Actually do the check
+            """
             for border in borders:
                 try:
                     if resident.pos == (0.0, 64.0, 0.0):
@@ -89,4 +113,7 @@ class attack(commands.Cog):
 
 
 def setup(bot):
+    """
+    Loads stuff so that it works
+    """
     bot.add_cog(attack(bot))

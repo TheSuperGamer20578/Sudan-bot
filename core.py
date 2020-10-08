@@ -4,7 +4,9 @@ The core of the bot adds some essential commands and starts the bot you can load
 import time
 import asyncio
 import configparser
+import os
 from datetime import timezone
+
 import discord
 from firebase_admin import firestore, credentials, initialize_app
 from discord.ext import commands
@@ -56,25 +58,25 @@ class core(commands.Cog):
         self.bot.remove_command("help")
 
     @commands.command()
-    async def help(self, ctx, cog=None):
+    async def help(self, ctx, page=None):
         """
         Provides help
         """
-        if cog == "all":
+        if page == "all":
             embed = discord.Embed(title="All help", colour=BLUE)
-            for cog in self.bot.cogs:
-                if len([command for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]) > 0:
-                    embed.add_field(name=cog, value="\n".join([f"**{command.name}**{': '+command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]))
+            for cat in self.bot.cogs:
+                if len([command for command in self.bot.walk_commands() if command.cog_name == cat and not command.hidden]) > 0:
+                    embed.add_field(name=cat, value="\n".join([f"**{command.name}**{': ' + command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cat and not command.hidden]))
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.message.delete()
             await ctx.send(embed=embed)
             return
-        if cog is not None:
-            embed = discord.Embed(title=f"Help for {cog}", colour=BLUE, description="\n".join([f"**{command.name}**{': ' + command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == cog and not command.hidden]))
+        if page is not None:
+            embed = discord.Embed(title=f"Help for {page}", colour=BLUE, description="\n".join([f"**{command.name}**{': ' + command.help if command.help is not None else ''}" for command in self.bot.walk_commands() if command.cog_name == page and not command.hidden]))
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.message.delete()
             await ctx.send(embed=embed)
-        if cog is None:
+        if page is None:
             embed = discord.Embed(title="Help index", colour=BLUE, description="To see help for everything type `.help all` to see help for a category type `.help <category>`\n\n__**Categories:**__\n" + "\n".join(self.bot.cogs))
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.message.delete()
@@ -82,35 +84,35 @@ class core(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.check(trusted)
-    async def load(self, ctx, cog):
+    async def load(self, ctx, extension):
         """
         Loads or reloads a cog
         """
         await ctx.message.delete()
-        if cog in self.bot.cogs:
-            self.bot.unload_extension(cog)
+        if extension in self.bot.cogs:
+            self.bot.unload_extension(extension)
         try:
-            self.bot.load_extension(cog)
+            self.bot.load_extension(extension)
         except commands.ExtensionNotFound:
-            embed = discord.Embed(title=f"\"{cog}\" was not  found", colour=RED)
+            embed = discord.Embed(title=f"\"{extension}\" was not  found", colour=RED)
         else:
-            embed = discord.Embed(title=f"\"{cog}\" was successfully loaded!", colour=GREEN)
+            embed = discord.Embed(title=f"\"{extension}\" was successfully loaded!", colour=GREEN)
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
     @commands.check(trusted)
-    async def unload(self, ctx, cog):
+    async def unload(self, ctx, extension):
         """
         Unloads a cog
         """
         await ctx.message.delete()
         try:
-            self.bot.unload_extension(cog)
+            self.bot.unload_extension(extension)
         except commands.ExtensionNotLoaded:
-            embed = discord.Embed(title=f"The cog \"{cog}\" is not loaded", colour=RED)
+            embed = discord.Embed(title=f"The cog \"{extension}\" is not loaded", colour=RED)
         else:
-            embed = discord.Embed(title=f"The cog \"{cog}\" was successfully unloaded!", colour=GREEN)
+            embed = discord.Embed(title=f"The cog \"{extension}\" was successfully unloaded!", colour=GREEN)
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -122,8 +124,8 @@ class core(commands.Cog):
         """
         await ctx.message.delete()
         msg = ""
-        for cog in self.bot.cogs:
-            msg += f"✅ {cog}\n"
+        for extension in self.bot.cogs:
+            msg += f"✅ {extension}\n"
         for file in os.listdir():
             if file.endswith(".py") and file[:-3] not in self.bot.cogs and file != "start.py":
                 msg += f"\n❎ {file[:-3]}"
@@ -148,7 +150,7 @@ class core(commands.Cog):
         if str(user.id) in fs_data.document("trusted").get().to_dict()["users"]:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is no longer trusted")
             fs_data.document("trusted").set(
-                {"users": [str(trustee) for trustee in fs_data.document("trusted").get().to_dict()["users"] if i != str(user.id)]})
+                {"users": [str(trustee) for trustee in fs_data.document("trusted").get().to_dict()["users"] if trustee != str(user.id)]})
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
             data = fs_data.document("trusted").get().to_dict()["users"]

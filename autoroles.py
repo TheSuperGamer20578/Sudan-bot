@@ -1,9 +1,17 @@
+"""
+Only works in a singular server and may be unstable
+"""
+# TODO remove this comment and the one below
+# pylint: skip-file
 import EMC
 import discord
 from discord.ext import commands
 
 
 class autoroles(commands.Cog):
+    """
+    Automatically assigns roles
+    """
     def __init__(self, bot):
         self.bot = bot
         with open("Config/allies.txt", "r") as file:
@@ -11,6 +19,9 @@ class autoroles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """
+        This is where the magic happens
+        """
         if message.channel.id == 675181483199037449:
             await message.delete()
             res = EMC.Resident(message.content)
@@ -38,8 +49,14 @@ class autoroles(commands.Cog):
             #    await message.author.edit(nick=f"{res.name.replace('_', ' ')} | {res.town.name.replace('_', ' ')}")
             else:
                 await message.author.add_roles(message.guild.get_role(role_id=717337758779047966))
-                await message.author.edit(nick=f"{res.name.replace('_', ' ')} | {res.nation.name.replace('_', ' ')}")
+                if res.nation is not None:
+                    await message.author.edit(nick=f"{res.name.replace('_', ' ')} | {res.nation.name.replace('_', ' ')}")
+                else:
+                    await message.author.edit(nick=f"{res.name.replace('_', ' ')}")
 
 
 def setup(bot):
+    """
+    Load stuff so that stuff works
+    """
     bot.add_cog(autoroles(bot))
