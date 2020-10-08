@@ -1,6 +1,8 @@
 """
+DEPRECATION WARNING: this file is deprecated and may be removed if no-one maintains it
 A start script to start the bot with a ui it is very useless so use core.py or start.sh instead if you really want to use this you will need to install termcolor
 """
+# pylint: skip-file
 import os
 import threading
 import configparser
