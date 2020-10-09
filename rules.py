@@ -1,37 +1,44 @@
+"""
+Makes a rule embed will be used to set punishments when moderation is added
+"""
 import discord
 from discord.ext import commands
-from core import blue, admin
-import firebase_admin
-from firebase_admin import *
-from firebase_admin import firestore
+from firebase_admin import firestore, credentials, initialize_app
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+from core import BLUE, admin
+
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
 fs_data = db.collection("rules")
 
 
 class rules(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
     @commands.check(admin)
-    async def rules(self, ctx, operation, id, cat=None, *, desc=None):
+    async def rules(self, ctx, operation, _id, cat=None, *, desc=None):
         """
         Modifies rules
         """
         if operation not in ["remove", "add"] or cat not in ["ban", "kick", "warn", "mute", "faq"]:
             raise commands.errors.BadArgument()
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if d is None:
-            d = {}
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if data is None:
+            data = {}
         if operation == "remove":
-            del d[id]
+            del data[_id]
         elif operation == "add":
-            d[id] = {"cat": cat, "desc": desc}
-        fs_data.document(str(ctx.guild.id)).set(d)
+            data[_id] = {"cat": cat, "desc": desc}
+        fs_data.document(str(ctx.guild.id)).set(data)
         await ctx.message.delete()
         embed = discord.Embed(title="Rules updated")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -43,30 +50,30 @@ class rules(commands.Cog):
         """
         Sends rules to the specified channel
         """
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        embed = discord.Embed(title="Rules", colour=blue)
-        m = ""
-        for x in [d[x]["desc"] for x in d if d[x]["cat"] == "ban"]:
-            m += f"{x}\n\n"
-        if len(m):
-            embed.add_field(name="Instant ban:", value=m, inline=False)
-        m = ""
-        for x in [d[x]["desc"] for x in d if d[x]["cat"] == "kick"]:
-            m += f"{x}\n\n"
-        if len(m):
-            embed.add_field(name="Kick:", value=m, inline=False)
-        m = ""
-        for x in [d[x]["desc"] for x in d if d[x]["cat"] == "mute"]:
-            m += f"{x}\n\n"
-        if len(m):
-            embed.add_field(name="Mute:", value=m, inline=False)
-        m = ""
-        for x in [d[x]["desc"] for x in d if d[x]["cat"] == "warn"]:
-            m += f"{x}\n\n"
-        if len(m):
-            embed.add_field(name="Warning:", value=m, inline=False)
-        for x in [(d[x]["desc"], x) for x in d if d[x]["cat"] == "faq"]:
-            embed.add_field(name=x[1], value=x[0], inline=False)
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        embed = discord.Embed(title="Rules", colour=BLUE)
+        field = ""
+        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "ban"]:
+            field += f"{rule}\n\n"
+        if len(field) > 0:
+            embed.add_field(name="Instant ban:", value=field, inline=False)
+        field = ""
+        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "kick"]:
+            field += f"{rule}\n\n"
+        if len(field) > 0:
+            embed.add_field(name="Kick:", value=field, inline=False)
+        field = ""
+        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "mute"]:
+            field += f"{rule}\n\n"
+        if len(field) > 0:
+            embed.add_field(name="Mute:", value=field, inline=False)
+        field = ""
+        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "warn"]:
+            field += f"{rule}\n\n"
+        if len(field) > 0:
+            embed.add_field(name="Warning:", value=field, inline=False)
+        for rule in [(data[x]["desc"], x) for x in data if data[x]["cat"] == "faq"]:
+            embed.add_field(name=rule[1], value=rule[0], inline=False)
         await ctx.message.delete()
         await channel.send(embed=embed)
         embed = discord.Embed(title=f"Rules sent to #{channel.name}")
@@ -74,17 +81,20 @@ class rules(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def rule(self, ctx, id):
+    async def rule(self, ctx, _id):
         """
         Shows info of a rule
         """
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        embed = discord.Embed(title=id, description=d[id]["desc"], colour=blue)
-        embed.add_field(name="punishment", value=d[id]["cat"])
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        embed = discord.Embed(title=_id, description=data[_id]["desc"], colour=BLUE)
+        embed.add_field(name="punishment", value=data[_id]["cat"])
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(rules(bot))

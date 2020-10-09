@@ -1,26 +1,40 @@
-import discord
+"""
+A ticket system
+"""
 import random
-from discord.ext import commands
-import firebase_admin
-from firebase_admin import *
-from firebase_admin import firestore
-from core import red, green, admin
+import configparser
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase.json")
+import discord
+from discord.ext import commands
+from firebase_admin import firestore, credentials, initialize_app
+
+from core import RED, GREEN, admin
+
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
+
+try:
+    cred = credentials.Certificate("Config/firebase.json")
     initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
 fs_data = db.collection("tickets")
 
 
-def moderator(ctx): return int(fs_data.document(str(ctx.guild.id)).get().to_dict()["m_role"]) in [x.id for x in ctx.author.roles]
+def moderator(ctx):
+    """
+    Check to see if user is a ticket service person
+    """
+    return int(fs_data.document(str(ctx.guild.id)).get().to_dict()["m_role"]) in [role.id for role in ctx.author.roles]
 
 
 class tickets(commands.Cog):
+    """
+    Main class
+    """
     def __init__(self, bot):
         self.bot = bot
-        with open("Config/names.txt", "r") as f:
-            self.names = f.read().split("\n")
 
     @commands.command()
     @commands.check(admin)
@@ -51,18 +65,18 @@ class tickets(commands.Cog):
         await ctx.message.delete()
         if not fs_data.document(str(ctx.guild.id)).get().exists:
             return
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if ctx.guild.get_role(int(d["b_role"])) in ctx.author.roles:
-            embed = discord.Embed(title="You are banned from opening tickets!", colour=red)
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if ctx.guild.get_role(int(data["b_role"])) in ctx.author.roles:
+            embed = discord.Embed(title="You are banned from opening tickets!", colour=RED)
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed, delete_after=30)
             return
-        channel = await ctx.guild.create_text_channel(random.choice(self.names),
-                                                      category=ctx.guild.get_channel(int(d["category"])),
+        channel = await ctx.guild.create_text_channel(random.choice(config["general"]["names"].split("\n")),
+                                                      category=ctx.guild.get_channel(int(data["category"])),
                                                       overwrites={
                                                           ctx.author: discord.PermissionOverwrite(read_messages=True),
                                                           ctx.guild.get_role(
-                                                              int(d["m_role"])): discord.PermissionOverwrite(
+                                                              int(data["m_role"])): discord.PermissionOverwrite(
                                                               read_messages=True),
                                                           ctx.guild.get_role(ctx.guild.id): discord.PermissionOverwrite(
                                                               read_messages=False)
@@ -84,8 +98,8 @@ class tickets(commands.Cog):
             channel = ctx.channel
         if not fs_data.document(str(ctx.guild.id)).get().exists:
             return
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if channel.category_id != int(d["category"]):
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if channel.category_id != int(data["category"]):
             return
         embed = discord.Embed(title=channel.name, description=channel.topic)
         embed.add_field(name="Closed by", value=ctx.author.mention)
@@ -103,8 +117,8 @@ class tickets(commands.Cog):
             channel = ctx.channel
         if not fs_data.document(str(ctx.guild.id)).get().exists:
             return
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if channel.category_id != int(d["category"]):
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if channel.category_id != int(data["category"]):
             return
         await ctx.message.delete()
         await channel.edit(name=summery)
@@ -119,8 +133,8 @@ class tickets(commands.Cog):
             channel = ctx.channel
         if not fs_data.document(str(ctx.guild.id)).get().exists:
             return
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if channel.category_id != int(d["category"]):
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if channel.category_id != int(data["category"]):
             return
         await ctx.message.delete()
         await channel.edit(topic=summery)
@@ -134,16 +148,19 @@ class tickets(commands.Cog):
         await ctx.message.delete()
         if not fs_data.document(str(ctx.guild.id)).get().exists:
             return
-        d = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if ctx.guild.get_role(int(d["b_role"])) not in user.roles:
-            await ctx.author.add_roles(ctx.guild.get_role(int(d["b_role"])))
-            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been banned from opening tickets!", colour=green)
+        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
+        if ctx.guild.get_role(int(data["b_role"])) not in user.roles:
+            await ctx.author.add_roles(ctx.guild.get_role(int(data["b_role"])))
+            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been banned from opening tickets!", colour=GREEN)
         else:
-            await ctx.author.remove_roles(ctx.guild.get_role(int(d["b_role"])))
-            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been unbanned from opening tickets!", colour=green)
+            await ctx.author.remove_roles(ctx.guild.get_role(int(data["b_role"])))
+            embed = discord.Embed(title=f"{user.nick if user.nick else user.name} has successfully been unbanned from opening tickets!", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
 
 def setup(bot):
+    """
+    Initialize cog
+    """
     bot.add_cog(tickets(bot))

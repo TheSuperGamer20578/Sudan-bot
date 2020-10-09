@@ -1,18 +1,32 @@
-import discord
+"""
+DEPRECATION WARNING: this file is deprecated and may be removed if no-one maintains it
+A start script to start the bot with a ui it is very useless so use core.py or start.sh instead if you really want to use this you will need to install termcolor
+"""
+# pylint: skip-file
 import os
 import threading
+import configparser
+
 from discord.ext import commands, tasks
 from termcolor import cprint
-from Config import apikeys
-bot = None
+
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
+BOT = None
 
 
 def clear():
+    """
+    Clear command
+    """
     os.system("cls")
 
 
-# noinspection SpellCheckingInspection
 def start():
+    """
+    Start menu
+    """
+    global BOT
     clear()
     print("""
         +-------------+
@@ -27,40 +41,54 @@ def start():
     command = input("> ")
 
     if command == "start":
-        bot = commands.Bot(command_prefix="&")
-        bot.load_extension("core")
-        with open("Config/cogs.txt", "r") as f:
-            for x in f.read().split("\n"):
-                if x != "":
-                    bot.load_extension(x)
-        x = threading.Thread(target=loop)
-        x.start()
+        BOT = commands.Bot(command_prefix="&")
+        BOT.load_extension("core")
+        with open("Config/cogs.txt", "r") as file:
+            for cog in file.read().split("\n"):
+                if cog != "":
+                    BOT.load_extension(cog)
+        thread = threading.Thread(target=loop)
+        thread.start()
 
         @tasks.loop(seconds=1)
         async def loops():
+            """
+            Checks to see if the stop command has been executed
+            """
             if "stop" in os.listdir():
                 while "stop" in os.listdir():
                     os.remove("stop")
-                await bot.logout()
+                await BOT.logout()
 
-        @bot.event
+        @BOT.event
         async def on_ready():
+            """
+            Starts the loop when the bot has started
+            """
             loops.start()
 
-        bot.run(apikeys.discord)
+        BOT.run(config["api"]["discord"])
     elif command == "exit":
         pass
     elif command == "safe":
-        x = threading.Thread(target=loop)
-        x.start()
-        bot = commands.Bot(command_prefix="&")
-        bot.run(apikeys.discord)
+        thread = threading.Thread(target=loop)
+        thread.start()
+        BOT = commands.Bot(command_prefix="&")
+        BOT.run(config["api"]["discord"])
     else:
         input("INVALID COMMAND")
         return start()
 
 
 def loop():
+    """
+    The loop
+    """
+    global BOT
+    if BOT is None:
+        # this is here only for the purpose of making pycharm happy
+        BOT = commands.Bot(command_prefix="&")
+        return
     clear()
     print("""
         +-------------+
@@ -80,15 +108,15 @@ def loop():
             pass
         return start()
     elif command.split(" ")[0] == "load":
-        bot.load_extension(command.split(" ")[1])
+        BOT.load_extension(command.split(" ")[1])
     elif command.split(" ")[0] == "unload":
-        bot.unload_extension(command.split(" ")[1])
+        BOT.unload_extension(command.split(" ")[1])
     elif command == "list":
-        for x in bot.cogs:
-            cprint(x, "green")
-        for x in os.listdir():
-            if x.endswith(".py") and x[:-3] not in bot.cogs and x != "start.py":
-                cprint(x[:-3], "red")
+        for cog in BOT.cogs:
+            cprint(cog, "GREEN")
+        for cog in os.listdir():
+            if cog.endswith(".py") and cog[:-3] not in BOT.cogs and cog != "start.py":
+                cprint(cog[:-3], "RED")
     else:
         print("Unknown command")
     input("\n\nPress enter to continue")

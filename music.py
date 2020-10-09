@@ -1,25 +1,37 @@
-import ctypes
-import discord
-import youtube_dl
-from discord.ext import commands
-from discord.utils import get
-from core import mod, green, red, trusted
+"""
+Basic music functionality
+"""
+from ctypes import util
 import os
 import threading
 import shutil
 import functools
+
+import discord
+import youtube_dl
+from discord.ext import commands
+from discord.utils import get
+
+from core import mod, GREEN, RED, trusted
 queue = {}
 np = {}
 if os.name != "nt":
-    discord.opus.load_opus(ctypes.util.find_library('opus'))
+    discord.opus.load_opus(util.find_library('opus'))
     if not discord.opus.is_loaded():
         raise RuntimeError('Opus failed to load')
 
 
-def dj(ctx): return len([x for x in ctx.author.voice.channel.members if not x.bot]) <= 1 or mod(ctx)
+def check_dj(ctx):
+    """
+    Check to see if user is a mod or in VC alone
+    """
+    return len([vcuser for vcuser in ctx.author.voice.channel.members if not vcuser.bot]) <= 1 or mod(ctx)
 
 
 def add(key, url):
+    """
+    Adds a song to the queue
+    """
     ytdl_options = {
         "format": "bestaudio/best",
         "postprocessors": [{
@@ -30,6 +42,7 @@ def add(key, url):
     }
     with youtube_dl.YoutubeDL(ytdl_options) as ytdl:
         ytdl.download([url])
+    name = None
     for file in os.listdir():
         if file.endswith(".mp3"):
             name = '-'.join(file.split('-')[:-1])
@@ -37,12 +50,14 @@ def add(key, url):
                 os.rename(file, f"music/{key}/{name}.mp3")
             except FileExistsError:
                 pass
-    # noinspection PyUnboundLocalVariable
     queue[str(key)].append(name)
 
 
 def run(self, guild, key):
-    if len(queue[str(key)]):
+    """
+    Plays music from the queue
+    """
+    if len(queue[str(key)]) > 0:
         voice = get(self.bot.voice_clients, guild=guild)
         voice.play(discord.FFmpegPCMAudio(f"music/{guild.id}/{queue[str(key)][0]}.mp3"), after=lambda e: run(self, guild, key))
         np[str(key)] = queue[str(key)][0]
@@ -54,6 +69,9 @@ def run(self, guild, key):
 
 
 class music(commands.Cog):
+    """
+    Discord.py cog
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -70,17 +88,17 @@ class music(commands.Cog):
             else:
                 raise commands.CheckFailure()
         else:
-            voice = await channel.connect()
+            await channel.connect()
         queue[str(ctx.guild.id)] = []
         np[str(ctx.guild.id)] = None
         os.makedirs(f"music/{ctx.guild.id}")
-        embed = discord.Embed(title=f"Connected to {channel.name}!", colour=green)
+        embed = discord.Embed(title=f"Connected to {channel.name}!", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["l"])
-    @commands.check(dj)
+    @commands.check(check_dj)
     async def leave(self, ctx):
         """
         Makes the bot leave your VC
@@ -93,9 +111,9 @@ class music(commands.Cog):
             voice.stop()
             await voice.disconnect()
             shutil.rmtree(f"music/{ctx.guild.id}")
-            embed = discord.Embed(title=f"Disconnected from {channel.name}", colour=green)
+            embed = discord.Embed(title=f"Disconnected from {channel.name}", colour=GREEN)
         else:
-            embed = discord.Embed(title="Im not in a VC!", colour=red)
+            embed = discord.Embed(title="Im not in a VC!", colour=RED)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -105,20 +123,20 @@ class music(commands.Cog):
         """
         Adds a song to the queue this may take a while especially for longer songs **DO NOT TELL THE BOT TO QUEUE 2 SONGS AT THE SAME TIME**
         """
-        t = threading.Thread(target=add, args=(ctx.guild.id, url))
-        t.start()
-        await self.bot.loop.run_in_executor(None, functools.partial(t.join))
+        thread = threading.Thread(target=add, args=(ctx.guild.id, url))
+        thread.start()
+        await self.bot.loop.run_in_executor(None, functools.partial(thread.join))
         voice = get(self.bot.voice_clients, guild=ctx.guild)
         if not voice.is_playing():
-            t = threading.Thread(target=run, args=(self, ctx.guild, ctx.guild.id))
-            t.start()
+            thread = threading.Thread(target=run, args=(self, ctx.guild, ctx.guild.id))
+            thread.start()
         embed = discord.Embed(title=f"Queued \"{queue[str(ctx.guild.id)][-1]}\"")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["s", "n", "next"])
-    @commands.check(dj)
+    @commands.check(check_dj)
     async def skip(self, ctx):
         """
         Skips the current song
@@ -131,13 +149,13 @@ class music(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["vol", "v"])
-    @commands.check(dj)
+    @commands.check(check_dj)
     async def volume(self, ctx, vol: float):
         """
         Changes the volume, there is a limit of 50% volume
         """
         if vol > 50.0:
-            embed = discord.Embed(title="It is unsafe to go that high!", colour=red)
+            embed = discord.Embed(title="It is unsafe to go that high!", colour=RED)
         else:
             voice = get(self.bot.voice_clients, guild=ctx.guild)
             voice.source = discord.PCMVolumeTransformer(voice.source)
@@ -160,14 +178,18 @@ class music(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(trusted)
     async def rick(self, ctx, guild: int):
+        """
+        Rick-rolls the server with the specified ID
+        """
         voice = get(self.bot.voice_clients, guild=self.bot.get_guild(guild))
-        q = [np[str(guild)]]+queue[str(guild)]
+        queue_temp = [np[str(guild)]]+queue[str(guild)]
         queue[str(guild)] = None
         voice.stop()
-        voice.play(discord.FFmpegPCMAudio("music/rick.mp3"), after=lambda e: run(self, self.bot.get_guild(guild), key))
-        queue[str(guild)] = q
+        voice.play(discord.FFmpegPCMAudio("music/rick.mp3"), after=lambda e: run(self, self.bot.get_guild(guild), guild))
+        queue[str(guild)] = queue_temp
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 0.6
+        await ctx.send(f"Rick-rolling {self.bot.get_guild(guild).name}")
 
     @commands.command(aliases=["np"])
     async def nowplaying(self, ctx):
@@ -181,4 +203,7 @@ class music(commands.Cog):
 
 
 def setup(bot):
+    """
+    Initiates cog
+    """
     bot.add_cog(music(bot))
