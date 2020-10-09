@@ -76,8 +76,7 @@ PVP       : {'🟩' if town.pvp else '🟥'}
                 res_b = residents[len(residents[:1016])+len(residents[:1016].split(", ")[-1])+2:]
                 embed.add_field(name=f"Residents [{len(town.residents)}]", value=f"```{res_a}```", inline=False)
                 embed.add_field(name="\N{zero width space}", value=f"```{res_b}```", inline=False)
-            embed.add_field(name=f"Online residents[{len([resident for resident in town.residents if x.online])}]", value=f"```{online_residents}```",
-                            inline=False)
+            embed.add_field(name=f"Online residents[{len([resident for resident in town.residents if x.online])}]", value=f"```{online_residents}```", inline=False)
         await ctx.send(embed=embed)
 
 
