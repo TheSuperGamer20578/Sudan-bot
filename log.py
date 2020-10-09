@@ -74,9 +74,9 @@ class log(commands.Cog):
         """
         Updates list of invites when a user leaves
         """
-        for invites in await member.guild.invites():
-            if invites.inviter.id == member.id:
-                await invites.delete()
+        for invite in await member.guild.invites():
+            if invite.inviter.id == member.id:
+                await invite.delete()
         self.invites[member.guild.id] = await member.guild.invites()
 
     @commands.command()
