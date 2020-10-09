@@ -44,9 +44,9 @@ def start():
         BOT = commands.Bot(command_prefix="&")
         BOT.load_extension("core")
         with open("Config/cogs.txt", "r") as file:
-            for thread in file.read().split("\n"):
-                if thread != "":
-                    BOT.load_extension(thread)
+            for cog in file.read().split("\n"):
+                if cog != "":
+                    BOT.load_extension(cog)
         thread = threading.Thread(target=loop)
         thread.start()
 
