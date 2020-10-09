@@ -21,5 +21,6 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: |
+        pip install -r requirements.txt
         cd bot
-        pip install -r requirements.txt; pylint --good-names `ls -d *.py -m | sed s/.py//g | sed 's/ //g' | tr -d '\n'` -d R0801,C0301,R0903,R0912 `ls -R|grep .py$|xargs`
+        pylint --good-names `ls -d *.py -m | sed s/.py//g | sed 's/ //g' | tr -d '\n'` -d R0801,C0301,R0903,R0912 `ls -R|grep .py$|xargs`
