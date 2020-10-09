@@ -44,9 +44,9 @@ def start():
         BOT = commands.Bot(command_prefix="&")
         BOT.load_extension("core")
         with open("Config/cogs.txt", "r") as file:
-            for cog in file.read().split("\n"):
-                if cog != "":
-                    BOT.load_extension(cog)
+            for thread in file.read().split("\n"):
+                if thread != "":
+                    BOT.load_extension(thread)
         thread = threading.Thread(target=loop)
         thread.start()
 
@@ -71,8 +71,8 @@ def start():
     elif command == "exit":
         pass
     elif command == "safe":
-        cog = threading.Thread(target=loop)
-        cog.start()
+        thread = threading.Thread(target=loop)
+        thread.start()
         BOT = commands.Bot(command_prefix="&")
         BOT.run(config["api"]["discord"])
     else:
