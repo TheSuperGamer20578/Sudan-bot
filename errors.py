@@ -16,7 +16,7 @@ from core import RED, BLUE
 CONFIG = configparser.ConfigParser()
 CONFIG.read("Config/config.ini")
 
-auth = {"Authorization": f"GenieKey {CONFIG['api']['opsgenie']}"}
+AUTH = {"Authorization": f"GenieKey {CONFIG['api']['opsgenie']}"}
 
 EMCSTATS = ["t", "res", "n", "online", "alliance"]
 OPS = "https://api.eu.opsgenie.com/v2/"
@@ -74,14 +74,14 @@ class errors(commands.Cog):
         else:
             embed = discord.Embed(title="You caused an error!", colour=RED)
             trace = traceback.format_exception(type(error), error, error.__traceback__)
-            resp = requests.post(OPS+"alerts", dumps({
+            resp = requests.post(OPS +"alerts", dumps({
                 "message": f"Error in {ctx.command}",
                 "description": "\n".join(trace),
                 "alias": f"{type(error)} in {ctx.command} with {len(ctx.args)} arguments",
                 "entity": "Sudan bot",
                 "source": f"{ctx.guild.name} #{ctx.channel.name}",
                 "details": {"user": f"{ctx.author.name}({ctx.author.nick})", "message": ctx.message.content}
-            }), headers={**auth, "Content-Type": "application/json"})
+            }), headers={**AUTH, "Content-Type": "application/json"})
             if resp.status_code != 202:
                 sys.stderr.write(str(resp.content)+"\n")
 
