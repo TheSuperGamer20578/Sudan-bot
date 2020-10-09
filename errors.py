@@ -13,10 +13,10 @@ from discord.ext import commands
 
 from core import RED, BLUE
 
-config = configparser.ConfigParser()
-config.read("Config/config.ini")
+CONFIG = configparser.ConfigParser()
+CONFIG.read("Config/config.ini")
 
-auth = {"Authorization": f"GenieKey {config['api']['opsgenie']}"}
+auth = {"Authorization": f"GenieKey {CONFIG['api']['opsgenie']}"}
 
 EMCSTATS = ["t", "res", "n", "online", "alliance"]
 OPS = "https://api.eu.opsgenie.com/v2/"
