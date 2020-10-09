@@ -18,7 +18,7 @@ config.read("Config/config.ini")
 
 auth = {"Authorization": f"GenieKey {config['api']['opsgenie']}"}
 
-emcstats = ["t", "res", "n", "online", "alliance"]
+EMCSTATS = ["t", "res", "n", "online", "alliance"]
 OPS = "https://api.eu.opsgenie.com/v2/"
 
 
@@ -63,7 +63,7 @@ class errors(commands.Cog):
 
         elif isinstance(error, commands.errors.CommandNotFound):
             if 656231016385478657 in [member.id for member in ctx.guild.members]:
-                if ctx.message.content.split(" ")[0][1:] in emcstats and ctx.message.content[0] == "/":
+                if ctx.message.content.split(" ")[0][1:] in EMCSTATS and ctx.message.content[0] == "/":
                     return
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
                                   colour=RED)
