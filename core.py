@@ -166,9 +166,7 @@ class core(commands.Cog):
         Gives invite for you to invite bot to your own server
         """
         await ctx.message.delete()
-        embed = discord.Embed(title="Add me to your server by clicking here",
-                              url="https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot",
-                              colour=BLUE)
+        embed = discord.Embed(title="Add me to your server by clicking here", url="https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot", colour=BLUE)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
