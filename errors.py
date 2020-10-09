@@ -74,7 +74,7 @@ class errors(commands.Cog):
         else:
             embed = discord.Embed(title="You caused an error!", colour=RED)
             trace = traceback.format_exception(type(error), error, error.__traceback__)
-            resp = requests.post(OPS +"alerts", dumps({
+            resp = requests.post(OPS+"alerts", dumps({
                 "message": f"Error in {ctx.command}",
                 "description": "\n".join(trace),
                 "alias": f"{type(error)} in {ctx.command} with {len(ctx.args)} arguments",
