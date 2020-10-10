@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         npm install eslint
-    - name: Analysing the code with pylint
+    - name: Analysing the code with ESlint
       run: |
         cd frontend
         npx eslint `ls -R|grep .js$|xargs`
