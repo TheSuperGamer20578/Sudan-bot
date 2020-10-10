@@ -8,6 +8,7 @@
 		- [ ] I have listed minor bugs that have been added
 - [ ] I have listed all changes that this PR makes
 - [ ] This PR needs no further work
+- [ ] Manual restart and/or configuration required post-merge
 
 <!-- Only tick one in each set -->
 - [ ] This is a major change
