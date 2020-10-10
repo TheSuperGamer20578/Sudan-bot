@@ -1,3 +1,8 @@
+<!-- Put info up here NOT AT THE END -->
+
+
+# Issue
+<!-- If this PR resolves or is related to a jira issue put the issue's key on the next line (eg. SDB-123) delete this heading if this is not applicable -->
 
 
 # Checklist
@@ -17,4 +22,4 @@
 
 - [ ] This is a bug fix
 - [ ] This is an enhancement or new feature
-- [ ] Other: <!-- specify here if you choose this -->
+- [ ] Other: <!-- specify here if you choose this (replace everything between < and >) -->
