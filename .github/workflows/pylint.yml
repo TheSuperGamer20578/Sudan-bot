@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  standards-check:
+  standards-check-py:
 
     runs-on: ubuntu-latest
 
