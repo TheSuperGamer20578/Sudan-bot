@@ -1,0 +1,22 @@
+name: ESlint
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  standards-check-JS:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup node
+      uses: actions/setup-node@v2.1.2
+    - name: Install dependencies
+      run: |
+        npm install eslint
+    - name: Analysing the code with pylint
+      run: |
+        cd frontend
+        npx eslint `ls -R|grep .js$|xargs`
