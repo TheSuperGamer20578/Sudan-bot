@@ -53,6 +53,9 @@ def add(key, *url):
                 os.rename(file, f"music/{key}/{name}.mp3")
             except FileExistsError:
                 pass
+    for file in os.listdir():
+        if file.endswith(".webm") or file.endswith(".mp3"):
+            os.remove(file)
     queue[str(key)].append(name)
 
 
