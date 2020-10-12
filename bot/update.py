@@ -4,8 +4,8 @@ Automatically updates the bot when there are changes to master
 import time
 import configparser
 from subprocess import call
-from asyncio import sleep
 
+import discord
 from discord.ext import commands
 
 from core import trusted
