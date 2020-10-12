@@ -25,6 +25,14 @@ class dev(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_ready(self):
+        """
+        Sends message when the bot is ready
+        """
+        embed = discord.Embed(title="Bot online!")
+        await self.bot.get_channel(config["general"]["log channel id"]).send(embed=embed)
+
+    @commands.Cog.listener()
     async def on_guild_join(self, guild):
         """
         Sends message when the bot is added to a server
