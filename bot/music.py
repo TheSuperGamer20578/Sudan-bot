@@ -28,10 +28,11 @@ def check_dj(ctx):
     return len([vcuser for vcuser in ctx.author.voice.channel.members if not vcuser.bot]) <= 1 or mod(ctx)
 
 
-def add(key, url):
+def add(key, *url):
     """
     Adds a song to the queue
     """
+    url = " ".join(url)
     ytdl_options = {
         "format": "bestaudio/best",
         "postprocessors": [{
@@ -40,6 +41,8 @@ def add(key, url):
             "preferredquality": "192"
         }]
     }
+    if not url.startswith("https://"):
+        ytdl_options["default_search"] = "auto"
     with youtube_dl.YoutubeDL(ytdl_options) as ytdl:
         ytdl.download([url])
     name = None
