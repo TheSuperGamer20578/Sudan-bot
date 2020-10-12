@@ -2,13 +2,16 @@
 Automatically updates the bot when there are changes to master
 """
 import time
+import configparser
 from subprocess import call
-from asyncio import sleep
 
+import discord
 from discord.ext import commands
 
 from core import trusted
 
+config = configparser.ConfigParser()
+config.read("Config/config.ini")
 
 class update(commands.Cog):
     """
@@ -24,8 +27,11 @@ class update(commands.Cog):
         """
         if message.channel.id == 761747494693765151 and message.embeds:
             if " new commit" in message.embeds[0].title and message.embeds[0].title.startswith("[Sudan-bot:master] "):
-                await sleep(15)
+                embed = discord.Embed(title="Update detected pulling...")
+                await self.bot.get_channel(config["general"]["log channel id"]).send(embed=embed)
                 call(["git", "pull"])
+                embed = discord.Embed(title="Restarting/stopping...")
+                await self.bot.get_channel(config["general"]["log channel id"]).send(embed=embed)
                 await self.bot.close()
 
     @commands.command()
@@ -36,6 +42,8 @@ class update(commands.Cog):
         """
         start_time = time.time()
         msg = await ctx.send("updating...")
+        embed = discord.Embed(title="Pulling update...")
+        await self.bot.get_channel(config["general"]["log channel id"]).send(embed=embed)
         call(["git", "pull"])
         await msg.edit(f"updating... DONE!(took {time.time()-start_time}ms)")
 
@@ -46,6 +54,8 @@ class update(commands.Cog):
         Stops the bot
         """
         await ctx.send("stopping...")
+        embed = discord.Embed(title="Restarting/stopping...")
+        await self.bot.get_channel(config["general"]["log channel id"]).send(embed=embed)
         await self.bot.close()
 
 
