@@ -3,9 +3,9 @@ Several tools to help with development and to track growth
 """
 import json
 import configparser
-import requests
 import ast
 import traceback
+import requests
 
 import discord
 from discord.ext import commands
