@@ -4,17 +4,33 @@ Several tools to help with development and to track growth
 import json
 import configparser
 import requests
+import ast
+import traceback
 
 import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
-from core import GREEN, RED, trusted, PURPLE
+from core import GREEN, RED, trusted, PURPLE, BLUE
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")
 
 auth = HTTPBasicAuth(config["api"]["jira email"], config["api"]["jira key"])
+
+
+def insert_returns(body):
+    """
+    Eval magic
+    """
+    if isinstance(body[-1], ast.Expr):
+        body[-1] = ast.Return(body[-1].value)
+        ast.fix_missing_locations(body[-1])
+    if isinstance(body[-1], ast.If):
+        insert_returns(body[-1].body)
+        insert_returns(body[-1].orelse)
+    if isinstance(body[-1], ast.With):
+        insert_returns(body[-1].body)
 
 
 class dev(commands.Cog):
@@ -132,6 +148,49 @@ class dev(commands.Cog):
         await guild.leave()
         embed = discord.Embed(title=f"left {guild.name} owned by: {guild.owner.name}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
+    @commands.command(hidden=True)
+    @commands.check(trusted)
+    async def eval(self, ctx, *, cmd):
+        """
+        Evaluates input
+        """
+        fn_name = "_eval_expr"
+        cmd = cmd.strip("` ")
+        ecmd = cmd
+        cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
+        body = f"async def {fn_name}():\n{cmd}"
+        parsed = ast.parse(body)
+        body = parsed.body[0].body
+        insert_returns(body)
+        env = {
+            'bot': ctx.bot,
+            'discord': discord,
+            'commands': commands,
+            'ctx': ctx,
+            '__import__': __import__
+        }
+        exec(compile(parsed, filename="<ast>", mode="exec"), env)
+        result = (await eval(f"{fn_name}()", env))
+        embed = (discord.Embed(title="Evaluation", colour=BLUE)
+                 .set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+                 .add_field(name="Input", value=f"```python\n{ecmd}\n```")
+                 .add_field(name="Output", value=f"```python\n{result}\n```"))
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
+    @eval.error
+    async def eval_error(self, ctx, error):
+        """
+        Handles errors in eval and stops them from going to Opsgenie
+        """
+        cmd = ctx.message.content.split(" ", maxsplit=1)[1].strip("` ")
+        trace = "\n".join(traceback.format_exception(type(error), error, error.__traceback__))
+        embed = (discord.Embed(title="Evaluation", description=f"**Error**\n```python\n{trace}\n```", colour=RED)
+                 .set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+                 .add_field(name="Input", value=f"```python\n{cmd}\n```"))
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
