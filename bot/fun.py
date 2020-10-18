@@ -35,6 +35,7 @@ class fun(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.check(lambda ctx: "sudont" not in [role.name for role in ctx.author.roles])
     async def sudo(self, ctx, user: discord.Member, *, message):
         """
         Mimics another user
