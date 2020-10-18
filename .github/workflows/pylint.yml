@@ -23,4 +23,4 @@ jobs:
       run: |
         pip install -r requirements.txt
         cd bot
-        pylint --good-names `ls -d *.py -m | sed s/.py//g | sed 's/ //g' | tr -d '\n'` -d R0801,C0301,R0903,R0912 `ls -R|grep .py$|xargs`
+        pylint --good-names `ls -d *.py -m | sed s/.py//g | sed 's/ //g' | tr -d '\n'` -d R0801,C0301,R0903,R0912,W0122,W0123 `ls -R|grep .py$|xargs`

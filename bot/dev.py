@@ -3,18 +3,34 @@ Several tools to help with development and to track growth
 """
 import json
 import configparser
+import ast
+import traceback
 import requests
 
 import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
-from core import GREEN, RED, trusted, PURPLE
+from core import GREEN, RED, trusted, PURPLE, BLUE
 
 config = configparser.ConfigParser()
 config.read("Config/config.ini")
 
 auth = HTTPBasicAuth(config["api"]["jira email"], config["api"]["jira key"])
+
+
+def insert_returns(body):
+    """
+    Eval magic
+    """
+    if isinstance(body[-1], ast.Expr):
+        body[-1] = ast.Return(body[-1].value)
+        ast.fix_missing_locations(body[-1])
+    if isinstance(body[-1], ast.If):
+        insert_returns(body[-1].body)
+        insert_returns(body[-1].orelse)
+    if isinstance(body[-1], ast.With):
+        insert_returns(body[-1].body)
 
 
 class dev(commands.Cog):
@@ -40,8 +56,7 @@ class dev(commands.Cog):
         embed = discord.Embed(title="New server!", description=guild.name, colour=GREEN)
         embed.add_field(name="Owner", value=guild.owner.name)
         embed.add_field(name="Members", value=str(len(guild.members)))
-        embed.set_author(name=guild.owner.nick if guild.owner.nick else guild.owner.name,
-                         icon_url=guild.owner.avatar_url)
+        embed.set_author(name=guild.owner.nick if guild.owner.nick else guild.owner.name, icon_url=guild.owner.avatar_url)
         embed.set_footer(text=f"ID: {guild.id}")
         await self.bot.get_channel(753495117767377016).send(embed=embed)
 
@@ -59,8 +74,7 @@ class dev(commands.Cog):
             "customfield_10037": ctx.guild.name
         }}), auth=auth, headers={"Content-Type": "application/json"})
         issue = resp.json()
-        embed = discord.Embed(title="Suggestion noted!",
-                              description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {suggestion}")
+        embed = discord.Embed(title="Suggestion noted!", description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {suggestion}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -79,8 +93,7 @@ class dev(commands.Cog):
             "customfield_10037": ctx.guild.name
         }}), auth=auth, headers={"Content-Type": "application/json"})
         issue = resp.json()
-        embed = discord.Embed(title="Bug noted!",
-                              description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {bug}")
+        embed = discord.Embed(title="Bug noted!", description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {bug}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -95,14 +108,11 @@ class dev(commands.Cog):
             raise commands.BadArgument()
         issue = resp.json()["fields"]
         if issue["issuetype"]["name"] == "Bug":
-            embed = discord.Embed(title=f"Bug: {key}", description=issue["summary"], colour=RED,
-                                  url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
+            embed = discord.Embed(title=f"Bug: {key}", description=issue["summary"], colour=RED, url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         elif issue["issuetype"]["name"] == "Suggestion":
-            embed = discord.Embed(title=f"Suggestion: {key}", description=issue["summary"], colour=GREEN,
-                                  url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
+            embed = discord.Embed(title=f"Suggestion: {key}", description=issue["summary"], colour=GREEN, url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         elif issue["issuetype"]["name"] == "Epic":
-            embed = discord.Embed(title=f"Epic: {key}", description=issue["summary"], colour=PURPLE,
-                                  url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
+            embed = discord.Embed(title=f"Epic: {key}", description=issue["summary"], colour=PURPLE, url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
         else:
             raise Exception()
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -116,9 +126,7 @@ class dev(commands.Cog):
             except KeyError:
                 pass
             else:
-                embed.add_field(name="Epic",
-                                value=f"[{issue['parent']['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['parent']['key']}): " +
-                                      issue["parent"]["fields"]["summary"])
+                embed.add_field(name="Epic", value=f"[{issue['parent']['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['parent']['key']}): " + issue["parent"]["fields"]["summary"])
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
@@ -132,6 +140,49 @@ class dev(commands.Cog):
         await guild.leave()
         embed = discord.Embed(title=f"left {guild.name} owned by: {guild.owner.name}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
+    @commands.command(hidden=True)
+    @commands.check(trusted)
+    async def eval(self, ctx, *, cmd):
+        """
+        Evaluates input
+        """
+        fn_name = "_eval_expr"
+        cmd = cmd.strip("` ")
+        ecmd = cmd
+        cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
+        body = f"async def {fn_name}():\n{cmd}"
+        parsed = ast.parse(body)
+        body = parsed.body[0].body
+        insert_returns(body)
+        env = {
+            'bot': ctx.bot,
+            'discord': discord,
+            'commands': commands,
+            'ctx': ctx,
+            '__import__': __import__
+        }
+        exec(compile(parsed, filename="<ast>", mode="exec"), env)
+        result = (await eval(f"{fn_name}()", env))
+        embed = (discord.Embed(title="Evaluation", colour=BLUE)
+                 .set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+                 .add_field(name="Input", value=f"```python\n{ecmd}\n```")
+                 .add_field(name="Output", value=f"```python\n{result}\n```"))
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
+    @eval.error
+    async def eval_error(self, ctx, error):
+        """
+        Handles errors in eval and stops them from going to Opsgenie
+        """
+        cmd = ctx.message.content.split(" ", maxsplit=1)[1].strip("` ")
+        trace = "\n".join(traceback.format_exception(type(error), error, error.__traceback__))
+        embed = (discord.Embed(title="Evaluation", description=f"**Error**\n```python\n{trace}\n```", colour=RED)
+                 .set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+                 .add_field(name="Input", value=f"```python\n{cmd}\n```"))
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
