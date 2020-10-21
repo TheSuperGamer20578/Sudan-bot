@@ -1,0 +1,1 @@
+This file keeps the folder structure until files are added
