@@ -116,6 +116,18 @@ class fun(commands.Cog):
         m = re.search(r"i am (.*)", message.content.lower())
         if m:
             await message.channel.send(f"Hi {m.group(1)}! Im Dad")
+                           
+    @commands,command()
+    async def dadmode(self, ctx):
+        """
+        Toggles Dad mode.
+        """
+        d = fs_data.document("dad").get().to_dict()
+        if ctx.author.id in d:
+            del d[ctx.author,id]
+        else:
+            d[ctx,author.id] = True
+        fs_data.document("dad").set(d)
 
 
 def setup(bot):
