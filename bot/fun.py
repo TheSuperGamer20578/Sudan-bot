@@ -106,7 +106,7 @@ class fun(commands.Cog):
                 else:
                     await msg.add_reaction("✅")
 
-    @commands.Cog.listener
+    @commands.Cog.listener()
     async def on_message(self, message):
         """
         dad mode
@@ -129,6 +129,7 @@ class fun(commands.Cog):
         else:
             data[str(ctx.author.id)] = True
         fs_data.document("dad").set(data)
+        await ctx.send("dad toggled!")
 
 
 def setup(bot):
