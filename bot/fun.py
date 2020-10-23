@@ -105,29 +105,29 @@ class fun(commands.Cog):
                     await msg.add_reaction("💯")
                 else:
                     await msg.add_reaction("✅")
-                           
+
     @commands.Cog.listener
-    async def on_message(message):
+    async def on_message(self, message):
         """
         dad mode
         """
         if str(message.author.id) not in fs_data.document("dad").get().to_dict():
             return
-        m = re.search(r"i am (.*)", message.content.lower())
-        if m:
+        match = re.search(r"i am (.*)", message.content.lower())
+        if match:
             await message.channel.send(f"Hi {m.group(1)}! Im Dad")
-                           
+
     @commands.command()
     async def dadmode(self, ctx):
         """
         Toggles Dad mode.
         """
-        d = fs_data.document("dad").get().to_dict()
-        if str(ctx.author.id) in d:
-            del d[str(ctx.author,id)]
+        data = fs_data.document("dad").get().to_dict()
+        if str(ctx.author.id) in data:
+            del data[str(ctx.author,id)]
         else:
-            d[str(ctx,author.id)] = True
-        fs_data.document("dad").set(d)
+            data[str(ctx.author.id)] = True
+        fs_data.document("dad").set(data)
 
 
 def setup(bot):
