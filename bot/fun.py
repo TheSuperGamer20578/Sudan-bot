@@ -1,6 +1,8 @@
 """
 Contains fun stuff
 """
+import re
+
 import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
@@ -103,6 +105,17 @@ class fun(commands.Cog):
                     await msg.add_reaction("💯")
                 else:
                     await msg.add_reaction("✅")
+                           
+    @commands.Cog.listener
+    async def on_message(message):
+        """
+        dad mode
+        """
+        if str(message.author.id) not in fs_data.document("dad").to_dict():
+            return
+        m = re.search(r"i am (.*)", message.content.lower())
+        if m:
+            await message.channel.send(f"Hi {m.group(1)}! Im Dad")
 
 
 def setup(bot):
