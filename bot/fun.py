@@ -111,7 +111,7 @@ class fun(commands.Cog):
         """
         dad mode
         """
-        if str(message.author.id) not in fs_data.document("dad").to_dict():
+        if str(message.author.id) not in fs_data.document("dad").get().to_dict():
             return
         m = re.search(r"i am (.*)", message.content.lower())
         if m:
@@ -123,10 +123,10 @@ class fun(commands.Cog):
         Toggles Dad mode.
         """
         d = fs_data.document("dad").get().to_dict()
-        if ctx.author.id in d:
-            del d[ctx.author,id]
+        if str(ctx.author.id) in d:
+            del d[str(ctx.author,id)]
         else:
-            d[ctx,author.id] = True
+            d[str(ctx,author.id)] = True
         fs_data.document("dad").set(d)
 
 
