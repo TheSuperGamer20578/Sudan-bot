@@ -117,7 +117,7 @@ class fun(commands.Cog):
         if m:
             await message.channel.send(f"Hi {m.group(1)}! Im Dad")
                            
-    @commands,command()
+    @commands.command()
     async def dadmode(self, ctx):
         """
         Toggles Dad mode.
