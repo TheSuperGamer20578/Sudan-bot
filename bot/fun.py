@@ -111,11 +111,12 @@ class fun(commands.Cog):
         """
         dad mode
         """
+        # pylint: disable=function-redefined
         if str(message.author.id) not in fs_data.document("dad").get().to_dict():
             return
         match = re.search(r"i am (.*)", message.content.lower())
         if match:
-            await message.channel.send(f"Hi {m.group(1)}! Im Dad")
+            await message.channel.send(f"Hi {match.group(1)}! Im Dad")
 
     @commands.command()
     async def dadmode(self, ctx):
