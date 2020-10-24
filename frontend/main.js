@@ -1,1 +1,1 @@
-// JS lazyloading for the dashboard
+// This file is just here so ESLint tests don't fail. Once ESLint is configured this file can go
