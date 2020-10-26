@@ -1,2 +1,2 @@
 
-Worker: python3 core.py
+Worker: sh start.sh
