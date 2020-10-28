@@ -1,3 +1,6 @@
+// TODO: configure Babel for output
+// For Babel Rollup output plugin
+
 module.exports = {
     presets: [
         [
