@@ -1,3 +1,5 @@
+// TODO: configure Babel input plugin
+
 module.exports = {
     presets: [
         [
