@@ -1,17 +1,17 @@
-name: Pylint
+name: Lint
 
 on:
   - push
   - pull_request
 
 jobs:
-  standards-check-py:
+  lint-py:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Setup Python
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
@@ -20,7 +20,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
         pip install -r requirements.txt
-    - name: Analysing the code with pylint
+    - name: Analysis
       run: |
         cd bot
         pylint --good-names `ls -d *.py -m | sed s/.py//g | sed 's/ //g' | tr -d '\n'` -d R0801,C0301,R0903,R0912,W0122,W0123 `ls -R|grep .py$|xargs`
+        
+  lint-JS:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup node
+      uses: actions/setup-node@v2.1.2
+    - name: Install dependencies
+      run: |
+        npm install eslint
+    - name: Analysis
+      run: |
+        cd frontend
+        npx eslint `ls -R|grep .js$|xargs`
