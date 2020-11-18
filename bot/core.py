@@ -3,23 +3,21 @@ The core of the bot adds some essential commands and starts the bot you can load
 """
 import time
 import asyncio
-import configparser
 import os
 from datetime import timezone
 
 import discord
 from firebase_admin import firestore, credentials, initialize_app
 from discord.ext import commands
+from dotenv import load_dotenv
 
-config = configparser.ConfigParser()
-config.read("Config/config.ini")
+load_dotenv()
 
-try:
-    cred = credentials.Certificate("Config/firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
+# TODO: fix this to get cert from FIREBASE_CERT env var
+cred = credentials.Certificate("Config/firebase.json")
+initialize_app(cred)
 db = firestore.client()
+
 fs_data = db.collection("core")
 
 BLUE = 0x0a8cf0
@@ -201,7 +199,7 @@ def setup(setup_bot):
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=("&", "/", ".", "sb!", "s!"))  # , commands.when_mentioned))
     bot.add_cog(core(bot))
-    for cog in config["general"]["autoload cogs"].split("\n"):
+    for cog in loads(os.get_env("AUTOLOAD_COGS")):
         if cog != "":
             bot.load_extension(cog)
-    bot.run(config["api"]["discord"])
+    bot.run(os.get_env("BOT_TOKEN"))
