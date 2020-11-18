@@ -4,6 +4,7 @@ The core of the bot adds some essential commands and starts the bot you can load
 import time
 import asyncio
 import os
+from json import loads
 from datetime import timezone
 
 import discord
@@ -199,7 +200,7 @@ def setup(setup_bot):
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=("&", "/", ".", "sb!", "s!"))  # , commands.when_mentioned))
     bot.add_cog(core(bot))
-    for cog in loads(os.get_env("AUTOLOAD_COGS")):
+    for cog in loads(os.getenv("AUTOLOAD_COGS")):
         if cog != "":
             bot.load_extension(cog)
-    bot.run(os.get_env("BOT_TOKEN"))
+    bot.run(os.getenv("BOT_TOKEN"))
