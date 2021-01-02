@@ -14,8 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# TODO: fix this to get cert from FIREBASE_CERT env var
-cred = credentials.Certificate("Config/firebase.json")
+cred = credentials.Certificate("firebase.json")
 initialize_app(cred)
 db = firestore.client()
 
