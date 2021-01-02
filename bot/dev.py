@@ -43,7 +43,7 @@ class dev(commands.Cog):
         Sends message when the bot is ready
         """
         embed = discord.Embed(title="Bot online!")
-        await self.bot.get_channel(int(config["general"]["log channel id"])).send(embed=embed)
+        await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
@@ -62,7 +62,7 @@ class dev(commands.Cog):
         """
         Makes a suggestion issue on my Jira **DO NOT GIVE NON SERIOUS SUGGESTIONS**
         """
-        resp = requests.post(config["api"]["jira url"] + "issue", data=json.dumps({"fields": {
+        resp = requests.post(os.getenv("JIRA_URL") + "issue", data=json.dumps({"fields": {
             "project": {"key": "SDB"},
             "summary": suggestion,
             "issuetype": {"name": "Suggestion"},
@@ -81,7 +81,7 @@ class dev(commands.Cog):
         """
         Reports a bug **DO NOT REPORT NON SERIOUS BUGS**
         """
-        resp = requests.post(config["api"]["jira url"] + "issue", data=json.dumps({"fields": {
+        resp = requests.post(os.getenv("JIRA_URL") + "issue", data=json.dumps({"fields": {
             "project": {"key": "SDB"},
             "summary": bug,
             "issuetype": {"name": "Bug"},
@@ -100,7 +100,7 @@ class dev(commands.Cog):
         """
         Displays info on a Jira issue with the provided key
         """
-        resp = requests.get(config["api"]["jira url"] + "issue/" + key, auth=auth)
+        resp = requests.get(os.getenv("JIRA_URL") + "issue/" + key, auth=auth)
         if not key.startswith("SDB-"):
             raise commands.BadArgument()
         issue = resp.json()["fields"]
