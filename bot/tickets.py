@@ -2,7 +2,7 @@
 A ticket system
 """
 import random
-import configparser
+import os
 
 import discord
 from discord.ext import commands
@@ -10,11 +10,9 @@ from firebase_admin import firestore, credentials, initialize_app
 
 from core import RED, GREEN, admin
 
-config = configparser.ConfigParser()
-config.read("Config/config.ini")
 
 try:
-    cred = credentials.Certificate("Config/firebase.json")
+    cred = credentials.Certificate("firebase.json")
     initialize_app(cred)
 except ValueError:
     pass
@@ -71,7 +69,7 @@ class tickets(commands.Cog):
             embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed, delete_after=30)
             return
-        channel = await ctx.guild.create_text_channel(random.choice(config["general"]["names"].split("\n")),
+        channel = await ctx.guild.create_text_channel(random.choice(os.getenv("NAMES").split(",")),
                                                       category=ctx.guild.get_channel(int(data["category"])),
                                                       overwrites={
                                                           ctx.author: discord.PermissionOverwrite(read_messages=True),

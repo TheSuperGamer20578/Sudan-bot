@@ -4,7 +4,7 @@ Handles command errors
 import sys
 import traceback
 import asyncio
-import configparser
+import os
 from json import dumps
 import requests
 
@@ -13,12 +13,8 @@ from discord.ext import commands
 
 from core import RED, BLUE
 
-CONFIG = configparser.ConfigParser()
-CONFIG.read("Config/config.ini")
+AUTH = {"Authorization": f"GenieKey {os.getenv('OPSGENIE_TOKEN')}"}
 
-AUTH = {"Authorization": f"GenieKey {CONFIG['api']['opsgenie']}"}
-
-EMCSTATS = ["t", "res", "n", "online", "alliance"]
 OPS = "https://api.eu.opsgenie.com/v2/"
 
 
@@ -62,9 +58,6 @@ class errors(commands.Cog):
             embed = discord.Embed(title=f"You do not have permission to use {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.errors.CommandNotFound):
-            if 656231016385478657 in [member.id for member in ctx.guild.members]:
-                if ctx.message.content.split(" ")[0][1:] in EMCSTATS and ctx.message.content[0] == "/":
-                    return
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
                                   colour=RED)
 

@@ -2,24 +2,23 @@
 The core of the bot adds some essential commands and starts the bot you can load as an extension if you want
 """
 import time
-import asyncio
-import configparser
 import os
 from datetime import timezone
 
 import discord
 from firebase_admin import firestore, credentials, initialize_app
 from discord.ext import commands
+from dotenv import load_dotenv
 
-config = configparser.ConfigParser()
-config.read("Config/config.ini")
+load_dotenv()
 
 try:
-    cred = credentials.Certificate("Config/firebase.json")
+    cred = credentials.Certificate("firebase.json")
     initialize_app(cred)
 except ValueError:
     pass
 db = firestore.client()
+
 fs_data = db.collection("core")
 
 BLUE = 0x0a8cf0
@@ -175,10 +174,22 @@ class core(commands.Cog):
         """
         Sets the status of the bot
         """
-        activity = discord.Activity(type=discord.ActivityType.watching, name="the rise of Sudan and the fall of noobia")
-        await self.bot.change_presence(status=discord.Status.dnd, activity=activity)
-        await asyncio.sleep(30)
-        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        types = {
+            "playing": discord.ActivityType.playing,
+            "watching": discord.ActivityType.watching,
+            "streaming": discord.ActivityType.streaming,
+            "listening": discord.ActivityType.listening,
+            "competing": discord.ActivityType.competing,
+            "custom": discord.ActivityType.custom
+        }
+        activity = discord.Activity(type=types[os.getenv("ACTIVITY_TYPE")], name=os.getenv("ACTIVITY"))
+        statuses = {
+            "online": discord.Status.online,
+            "idle": discord.Status.idle,
+            "dnd": discord.Status.dnd,
+            "invisible": discord.Status.invisible
+        }
+        await self.bot.change_presence(status=statuses[os.getenv("STATUS")], activity=activity)
 
     @commands.command()
     async def github(self, ctx):
@@ -199,9 +210,9 @@ def setup(setup_bot):
 
 
 if __name__ == '__main__':
-    bot = commands.Bot(command_prefix=("&", "/", ".", "sb!", "s!"))  # , commands.when_mentioned))
+    bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","))
     bot.add_cog(core(bot))
-    for cog in config["general"]["autoload cogs"].split("\n"):
+    for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "":
             bot.load_extension(cog)
-    bot.run(config["api"]["discord"])
+    bot.run(os.getenv("BOT_TOKEN"))
