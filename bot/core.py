@@ -210,7 +210,7 @@ def setup(setup_bot):
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","))
     bot.add_cog(core(bot))
-    for cog in loads(os.getenv("AUTOLOAD_COGS")):
+    for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "":
             bot.load_extension(cog)
     bot.run(os.getenv("BOT_TOKEN"))
