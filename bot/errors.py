@@ -4,7 +4,7 @@ Handles command errors
 import sys
 import traceback
 import asyncio
-import configparser
+import os
 from json import dumps
 import requests
 
@@ -13,12 +13,8 @@ from discord.ext import commands
 
 from core import RED, BLUE
 
-CONFIG = configparser.ConfigParser()
-CONFIG.read("Config/config.ini")
+AUTH = {"Authorization": f"GenieKey {os.getenv('OPSGENIE_TOKEN')}"}
 
-AUTH = {"Authorization": f"GenieKey {CONFIG['api']['opsgenie']}"}
-
-EMCSTATS = ["t", "res", "n", "online", "alliance"]
 OPS = "https://api.eu.opsgenie.com/v2/"
 
 
