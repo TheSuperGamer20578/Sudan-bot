@@ -13,8 +13,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-cred = credentials.Certificate("firebase.json")
-initialize_app(cred)
+try:
+    cred = credentials.Certificate("firebase.json")
+    initialize_app(cred)
+except ValueError:
+    pass
 db = firestore.client()
 
 fs_data = db.collection("core")
