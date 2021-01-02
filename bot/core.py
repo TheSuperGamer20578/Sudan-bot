@@ -174,10 +174,22 @@ class core(commands.Cog):
         """
         Sets the status of the bot
         """
-        activity = discord.Activity(type=discord.ActivityType.watching, name="the rise of Sudan and the fall of noobia")
-        await self.bot.change_presence(status=discord.Status.dnd, activity=activity)
-        await asyncio.sleep(30)
-        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        types = {
+            "playing": discord.ActivityType.playing,
+            "watching": discord.ActivityType.watching,
+            "streaming": discord.ActivityType.streaming,
+            "listening": discord.ActivityType.listening,
+            "competing": discord.ActivityType.competing,
+            "custom": discord.ActivityType.custom
+        }
+        activity = discord.Activity(type=types[os.getenv("ACTIVITY_TYPE")], name=os.getenv("ACTIVITY"))
+        statuses = {
+            "online": discord.Status.online,
+            "idle": discord.Status.idle,
+            "dnd": discord.Status.dnd,
+            "invisible": discord.Status.invisible
+        }
+        await self.bot.change_presence(status=statuses[os.getenv("STATUS")], activity=activity)
 
     @commands.command()
     async def github(self, ctx):
@@ -198,7 +210,7 @@ def setup(setup_bot):
 
 
 if __name__ == '__main__':
-    bot = commands.Bot(command_prefix=("&", "/", ".", "sb!", "s!"))  # , commands.when_mentioned))
+    bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","))
     bot.add_cog(core(bot))
     for cog in loads(os.getenv("AUTOLOAD_COGS")):
         if cog != "":
