@@ -58,9 +58,6 @@ class errors(commands.Cog):
             embed = discord.Embed(title=f"You do not have permission to use {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.errors.CommandNotFound):
-            if 656231016385478657 in [member.id for member in ctx.guild.members]:
-                if ctx.message.content.split(" ")[0][1:] in EMCSTATS and ctx.message.content[0] == "/":
-                    return
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
                                   colour=RED)
 

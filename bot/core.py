@@ -3,7 +3,6 @@ The core of the bot adds some essential commands and starts the bot you can load
 """
 import time
 import os
-from json import loads
 from datetime import timezone
 
 import discord

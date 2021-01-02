@@ -4,8 +4,8 @@ Several tools to help with development and to track growth
 import json
 import ast
 import traceback
-import requests
 import os
+import requests
 
 import discord
 from discord.ext import commands
