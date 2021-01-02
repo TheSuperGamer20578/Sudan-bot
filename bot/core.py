@@ -2,7 +2,6 @@
 The core of the bot adds some essential commands and starts the bot you can load as an extension if you want
 """
 import time
-import asyncio
 import os
 from json import loads
 from datetime import timezone
