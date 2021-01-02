@@ -2,10 +2,10 @@
 Several tools to help with development and to track growth
 """
 import json
-import configparser
 import ast
 import traceback
 import requests
+import os
 
 import discord
 from discord.ext import commands
@@ -13,10 +13,7 @@ from requests.auth import HTTPBasicAuth
 
 from core import GREEN, RED, trusted, PURPLE, BLUE
 
-config = configparser.ConfigParser()
-config.read("Config/config.ini")
-
-auth = HTTPBasicAuth(config["api"]["jira email"], config["api"]["jira key"])
+auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
 
 def insert_returns(body):

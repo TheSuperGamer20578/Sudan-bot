@@ -175,8 +175,6 @@ class core(commands.Cog):
         """
         Sets the status of the bot
         """
-        embed = discord.Embed(title="Bot online!")
-        await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
         types = {
             "playing": discord.ActivityType.playing,
             "watching": discord.ActivityType.watching,
