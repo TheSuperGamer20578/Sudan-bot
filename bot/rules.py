@@ -8,7 +8,7 @@ from firebase_admin import firestore, credentials, initialize_app
 from core import BLUE, admin
 
 try:
-    cred = credentials.Certificate("Config/firebase.json")
+    cred = credentials.Certificate("firebase.json")
     initialize_app(cred)
 except ValueError:
     pass
