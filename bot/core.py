@@ -265,6 +265,17 @@ class core(commands.Cog):
         except asyncpg.UniqueViolationError:
             pass
 
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel):
+        """
+        Adds new channels to the db
+        """
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
+            except asyncpg.UniqueViolationError:
+                pass
+
 
 def setup(setup_bot):
     """
