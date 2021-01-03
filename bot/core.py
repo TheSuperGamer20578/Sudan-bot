@@ -6,20 +6,11 @@ import os
 from datetime import timezone
 
 import discord
-from firebase_admin import firestore, credentials, initialize_app
+from asyncpg import connect
 from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
-
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
-
-fs_data = db.collection("core")
 
 BLUE = 0x0a8cf0
 PURPLE = 0x6556FF
@@ -27,25 +18,37 @@ GREEN = 0x36eb45
 RED = 0xb00e0e
 
 
-def trusted(ctx):
+async def _load_db():
+    return await connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
+                         host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+
+
+async def _close_db(database):
+    await database.close()
+
+
+db = None
+
+
+async def trusted(ctx):
     """
     Check to see if the user is trusted
     """
-    return str(ctx.author.id) in fs_data.document("trusted").get().to_dict()["users"]
+    return await db.fetchval("SELECT trusted FROM users WHERE id = $1", ctx.author.id)
 
 
-def mod(ctx):
+async def mod(ctx):
     """
     Check to see if the user is a mod
     """
-    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["modrole"] in [str(role.id) for role in ctx.author.roles]
+    return any([a in b for a, b in (await db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id), [role.id for role in ctx.author.roles])])
 
 
-def admin(ctx):
+async def admin(ctx):
     """
     Check to see if the user is an admin
     """
-    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["adminrole"] in [str(i.id) for i in ctx.author.roles]
+    return any([a in b for a, b in (await db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id), [role.id for role in ctx.author.roles])])
 
 
 class core(commands.Cog):
@@ -146,15 +149,12 @@ class core(commands.Cog):
         """
         Adds or removes a user from trusted list
         """
-        if str(user.id) in fs_data.document("trusted").get().to_dict()["users"]:
+        if await self.bot.db.fetchval("SELECT trusted FROM users WHERE id = $1", user.id):
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is no longer trusted")
-            fs_data.document("trusted").set(
-                {"users": [str(trustee) for trustee in fs_data.document("trusted").get().to_dict()["users"] if trustee != str(user.id)]})
+            await self.bot.db.execute("UPDATE users SET trusted = FALSE WHERE id = $1", user.id)
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
-            data = fs_data.document("trusted").get().to_dict()["users"]
-            data.append(str(user.id))
-            fs_data.document("trusted").set({"users": data})
+            await self.bot.db.execute("UPDATE users SET trusted = TRUE WHERE id = $1", user.id)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -215,4 +215,7 @@ if __name__ == '__main__':
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "":
             bot.load_extension(cog)
+    bot.db = bot.loop.run_until_complete(_load_db())
+    db = bot.db
     bot.run(os.getenv("BOT_TOKEN"))
+    bot.loop.run_until_complete(_close_db(bot.db))
