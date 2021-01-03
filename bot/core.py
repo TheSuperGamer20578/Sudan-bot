@@ -6,7 +6,7 @@ import os
 from datetime import timezone
 
 import discord
-from asyncpg import connect
+import asyncpg
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -19,8 +19,8 @@ RED = 0xb00e0e
 
 
 async def _load_db():
-    return await connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
-                         host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+    return await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
+                                 host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
 
 
 async def _close_db(database):
@@ -190,8 +190,24 @@ class core(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """
-        Sets the status of the bot
+        Sets the status of the bot and adds stuff to the db
         """
+        for guild in self.bot.guilds:
+            try:
+                await self.bot.db.execute("INSERT INTO guilds (id, delete_blank_messages) VALUES ($1, false)", guild.id)
+            except asyncpg.UniqueViolationError:
+                pass
+            for member in guild.members:
+                try:
+                    await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+                except asyncpg.UniqueViolationError:
+                    pass
+            for channel in guild.text_channels:
+                try:
+                    await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
+                except asyncpg.UniqueViolationError:
+                    pass
+
         types = {
             "playing": discord.ActivityType.playing,
             "watching": discord.ActivityType.watching,
@@ -218,6 +234,36 @@ class core(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        """
+        Adds new guilds to the db
+        """
+        try:
+            await self.bot.db.execute("INSERT INTO guilds (id, delete_blank_messages) VALUES ($1, false)", guild.id)
+        except asyncpg.UniqueViolationError:
+            pass
+        for member in guild.members:
+            try:
+                await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+            except asyncpg.UniqueViolationError:
+                pass
+        for channel in guild.text_channels:
+            try:
+                await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
+            except asyncpg.UniqueViolationError:
+                pass
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        """
+        adds new users to the db
+        """
+        try:
+            await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+        except asyncpg.UniqueViolationError:
+            pass
 
 
 def setup(setup_bot):
