@@ -143,9 +143,14 @@ class core(commands.Cog):
         await ctx.send(
             f"Pong! (took {max(time.time() - ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp(), ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp() - time.time())} seconds)")
 
-    @commands.command(hidden=True)
+    @commands.group(hidden=True)
     @commands.check(trusted)
-    async def trust(self, ctx, user: discord.Member):
+    async def trust(self, ctx):
+        pass
+
+    @trust.command(hidden=True, aliases=["add", "remove"])
+    @commands.check(trusted)
+    async def toggle(self, ctx, user: discord.Member):
         """
         Adds or removes a user from trusted list
         """
@@ -155,6 +160,19 @@ class core(commands.Cog):
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
             await self.bot.db.execute("UPDATE users SET trusted = TRUE WHERE id = $1", user.id)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
+    @trust.command(hidden=True)
+    @commands.check(trusted)
+    async def list(self, ctx):
+        """
+        Lists all trusted users
+        """
+        records = await self.bot.db.fetch("SELECT id FROM users WHERE trusted = true")
+        users = [f"<@{user['id']}>" for user in records]
+        embed = discord.Embed(title="Trusted users", description="\n".join(users))
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
