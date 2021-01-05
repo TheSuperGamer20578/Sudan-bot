@@ -12,11 +12,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BLUE = 0x0a8cf0
-PURPLE = 0x6556FF
-GREEN = 0x36eb45
-RED = 0xb00e0e
-
 
 async def _load_db():
     return await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
@@ -25,30 +20,6 @@ async def _load_db():
 
 async def _close_db(database):
     await database.close()
-
-
-db = None
-
-
-async def trusted(ctx):
-    """
-    Check to see if the user is trusted
-    """
-    return await db.fetchval("SELECT trusted FROM users WHERE id = $1", ctx.author.id)
-
-
-async def mod(ctx):
-    """
-    Check to see if the user is a mod
-    """
-    return any([a in b for a, b in (await db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id), [role.id for role in ctx.author.roles])])
-
-
-async def admin(ctx):
-    """
-    Check to see if the user is an admin
-    """
-    return any([a in b for a, b in (await db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id), [role.id for role in ctx.author.roles])])
 
 
 class core(commands.Cog):
@@ -288,9 +259,8 @@ if __name__ == '__main__':
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","))
     bot.add_cog(core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
-        if cog != "":
+        if cog != "" and not cog.startswith("_"):
             bot.load_extension(cog)
     bot.db = bot.loop.run_until_complete(_load_db())
-    db = bot.db
     bot.run(os.getenv("BOT_TOKEN"))
     bot.loop.run_until_complete(_close_db(bot.db))
