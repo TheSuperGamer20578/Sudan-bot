@@ -164,9 +164,9 @@ class core(commands.Cog):
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
-    @trust.command(hidden=True)
+    @trust.command(hidden=True, name="list")
     @commands.check(trusted)
-    async def list(self, ctx):
+    async def trust_list(self, ctx):
         """
         Lists all trusted users
         """
