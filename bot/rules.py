@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 
-from core import BLUE, admin
+from _util import BLUE, checks
 
 try:
     cred = credentials.Certificate("firebase.json")
@@ -22,9 +22,10 @@ class rules(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.checks = checks(bot.db)
 
     @commands.command()
-    @commands.check(admin)
+    @commands.check(self.checks.admin)
     async def rules(self, ctx, operation, _id, cat=None, *, desc=None):
         """
         Modifies rules
@@ -45,7 +46,7 @@ class rules(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.check(admin)
+    @commands.check(self.checks.admin)
     async def sendrules(self, ctx, channel: discord.TextChannel):
         """
         Sends rules to the specified channel
