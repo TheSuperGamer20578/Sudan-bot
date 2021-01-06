@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 
-from core import mod, admin, BLUE
+from _util import checks, BLUE
 
 try:
     cred = credentials.Certificate("firebase.json")
@@ -22,6 +22,7 @@ class utils(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.checks = checks(bot.db)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -34,7 +35,7 @@ class utils(commands.Cog):
             await message.delete()
 
     @commands.command()
-    @commands.check(admin)
+    @commands.check(self.checks.admin)
     async def noblank(self, ctx):
         """
         Makes the bot delete blank messages
@@ -53,7 +54,7 @@ class utils(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.check(mod)
+    @commands.check(self.checks.mod)
     async def slowmode(self, ctx, *, length):
         """
         Sets the slowmode of a channel
