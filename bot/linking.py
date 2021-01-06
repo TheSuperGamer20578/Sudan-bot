@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 
-from core import trusted, BLUE, GREEN
+from _util import checks, BLUE, GREEN
 
 
 class linking(commands.Cog):
@@ -16,9 +16,10 @@ class linking(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.checks = checks(bot.db)
 
     @commands.command()
-    @commands.check(trusted)
+    @commands.check(self.checks.trusted)
     async def link(self, ctx, user: discord.User, mcname):
         """
         Links a user to their minecraft account
