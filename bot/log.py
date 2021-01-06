@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 
-from core import trusted, admin, GREEN
+from _util import checks, GREEN
 
 try:
     cred = credentials.Certificate("firebase.json")
@@ -35,6 +35,7 @@ class log(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.invites = {}
+        self.checks = checks(bot.db)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -45,7 +46,7 @@ class log(commands.Cog):
             self.invites[guild.id] = await guild.invites()
 
     @commands.command(hidden=True)
-    @commands.check(trusted)
+    @commands.check(self.checks.trusted)
     async def initlogs(self, ctx):
         """
         Run on_ready for if cog has been loaded after startup
@@ -80,7 +81,7 @@ class log(commands.Cog):
         self.invites[member.guild.id] = await member.guild.invites()
 
     @commands.command()
-    @commands.check(admin)
+    @commands.check(self.checks.admin)
     async def log(self, ctx, log_type, channel: discord.TextChannel):
         """
         Tells the bot to log something to a channel
