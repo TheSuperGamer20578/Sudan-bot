@@ -28,10 +28,9 @@ class core(commands.Cog):
     """
     Contains essential commands
     """
-    def __init__(self, b, db):
+    def __init__(self, b):
         self.bot = b
         self.bot.remove_command("help")
-        self.checks = checks(db)
 
     @commands.command()
     async def help(self, ctx, page=None):
@@ -59,7 +58,7 @@ class core(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(self.checks.trusted)
+    @commands.check(checks.trusted)
     async def load(self, ctx, extension):
         """
         Loads or reloads a cog
@@ -77,7 +76,7 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(self.checks.trusted)
+    @commands.check(checks.trusted)
     async def unload(self, ctx, extension):
         """
         Unloads a cog
@@ -93,7 +92,7 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(self.checks.trusted)
+    @commands.check(checks.trusted)
     async def list(self, ctx):
         """
         Lists all cogs
@@ -118,12 +117,12 @@ class core(commands.Cog):
             f"Pong! (took {max(time.time() - ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp(), ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp() - time.time())} seconds)")
 
     @commands.group(hidden=True)
-    @commands.check(self.checks.trusted)
+    @commands.check(checks.trusted)
     async def trust(self, ctx):
         pass
 
     @trust.command(hidden=True, aliases=["add", "remove"])
-    @commands.check(self.checks.trusted)
+    @commands.check(checks.trusted)
     async def toggle(self, ctx, user: discord.Member):
         """
         Adds or removes a user from trusted list
@@ -139,7 +138,7 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
     @trust.command(hidden=True, name="list")
-    @commands.check(self.checks.trusted)
+    @commands.check(checks.trusted)
     async def trust_list(self, ctx):
         """
         Lists all trusted users
@@ -255,13 +254,14 @@ def setup(setup_bot):
     """
     Initiate cog if loaded as extension
     """
-    bot.add_cog(core(setup_bot, setup_bot.db))
+    bot.add_cog(core(setup_bot))
 
 
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","))
     bot.db = bot.loop.run_until_complete(_load_db())
-    bot.add_cog(core(bot, bot.db))
+    checks = checks(bot.db)
+    bot.add_cog(core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "" and not cog.startswith("_"):
             bot.load_extension(cog)
