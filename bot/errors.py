@@ -30,6 +30,7 @@ class errors(commands.Cog):
         """
         The part that handles errors
         """
+        # pylint: disable=too-many-statements
         if hasattr(ctx.command, 'on_error'):
             return
 
@@ -63,6 +64,32 @@ class errors(commands.Cog):
 
         elif isinstance(error, commands.BadArgument):
             embed = discord.Embed(title=f"Invalid argument for {ctx.command}", colour=RED)
+
+        elif isinstance(error, commands.CommandOnCooldown):
+            unit = "seconds"
+            time = error.retry_after
+            if time >= 60:
+                time /= 60
+                unit = "minutes"
+                if time >= 60:
+                    time /= 60
+                    unit = "hours"
+                    if time >= 24:
+                        time /= 24
+                        unit = "days"
+                        if time >= 7:
+                            time /= 7
+                            unit = "weeks"
+            types = {
+                commands.BucketType.default: "global",
+                commands.BucketType.guild: "server",
+                commands.BucketType.channel: "channel",
+                commands.BucketType.member: "member",
+                commands.BucketType.category: "category",
+                commands.BucketType.role: "role",
+                commands.BucketType.user: "user"
+            }
+            embed = discord.Embed(title=f"{ctx.command} is on {types[error.cooldown.type]} cooldown for {time:,.2f} {unit}", colour=RED)
 
         else:
             embed = discord.Embed(title="You caused an error!", colour=RED)
