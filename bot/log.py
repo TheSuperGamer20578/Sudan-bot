@@ -4,7 +4,7 @@ Logs stuff
 import discord
 from discord.ext import commands
 
-from _util import checks, GREEN, set_db
+from _util import Checks, GREEN, set_db
 
 logtypes = ["invites"]
 
@@ -37,7 +37,7 @@ class log(commands.Cog):
             self.invites[guild.id] = await guild.invites()
 
     @commands.command(hidden=True)
-    @commands.check(checks.trusted)
+    @commands.check(Checks.trusted)
     async def initlogs(self, ctx):
         """
         Run on_ready for if cog has been loaded after startup
@@ -50,7 +50,7 @@ class log(commands.Cog):
         """
         Finds who invited a user
         """
-        if "invites" not in fs_data.document(str(member.guild.id)).get().to_dict():
+        if await self.bot.db.fetchval("SELECT count(*) FROM channels WHERE guild_id = $1 AND log_type = 'invites'") <= 0:
             return
         invites_before_join = self.invites[member.guild.id]
         invites_after_join = await member.guild.invites()
@@ -73,7 +73,7 @@ class log(commands.Cog):
         self.invites[member.guild.id] = await member.guild.invites()
 
     @commands.command()
-    @commands.check(checks.admin)
+    @commands.check(Checks.admin)
     async def log(self, ctx, channel: discord.TextChannel, log_type):
         """
         Tells the bot to log something to a channel

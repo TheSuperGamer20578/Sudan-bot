@@ -11,7 +11,7 @@ import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
-from _util import GREEN, RED, checks, PURPLE, BLUE, set_db
+from _util import GREEN, RED, Checks, PURPLE, BLUE, set_db
 
 auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
@@ -129,7 +129,7 @@ class dev(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(checks.trusted)
+    @commands.check(Checks.trusted)
     async def leaveserver(self, ctx, guild: int):
         """
         Make the bot leave a server
@@ -142,7 +142,7 @@ class dev(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(checks.trusted)
+    @commands.check(Checks.trusted)
     async def eval(self, ctx, *, cmd):
         """
         Evaluates input

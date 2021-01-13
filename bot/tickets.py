@@ -1,21 +1,21 @@
 """
 A ticket system
 """
-import random
-import os
-
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
-from _util import RED, GREEN, checks, set_db
+from _util import RED, GREEN, Checks, set_db
 
 
 def ticket_person(ctx):
     """
     Check to see if user is a ticket service person
     """
-    return int(fs_data.document(str(ctx.guild.id)).get().to_dict()["m_role"]) in [role.id for role in ctx.author.roles]
+    return any([a in b for a, b in (
+        await _db.fetchval(
+            "SELECT support_roles FROM guilds WHERE id = $1",
+            ctx.guild.id),
+        [role.id for role in ctx.author.roles])])
 
 
 class tickets(commands.Cog):
@@ -27,7 +27,7 @@ class tickets(commands.Cog):
         set_db(bot.db)
 
     @commands.command()
-    @commands.check(checks.admin)
+    @commands.check(Checks.admin)
     async def tsetup(self, ctx):
         """
         Enables tickets for the server
@@ -74,7 +74,7 @@ class tickets(commands.Cog):
         await msg.pin()
 
     @commands.command()
-    @commands.check(moderator)
+    @commands.check(ticket_person)
     async def close(self, ctx, *, reason="Resolved"):
         """
         Closes a ticket
@@ -84,16 +84,16 @@ class tickets(commands.Cog):
             ctx.guild.id)
         if config["ticket_category"] is None:
             return
-        if channel.category_id != config["ticket_category"]:
+        if ctx.channel.category_id != config["ticket_category"]:
             return
-        embed = discord.Embed(title=channel.name, description=channel.topic)
+        embed = discord.Embed(title=ctx.channel.name, description=ctx.channel.topic)
         embed.add_field(name="Closed by", value=ctx.author.mention)
         embed.add_field(name="Close Reason", value=reason)
         await self.bot.get_channel(config["ticket_log_channel"]).send(embed=embed)
-        await channel.delete()
+        await ctx.channel.delete()
 
     @commands.command()
-    @commands.check(moderator)
+    @commands.check(ticket_person)
     async def sum(self, ctx, *, summery,):
         """
         Sets the summery of a ticket
@@ -102,13 +102,13 @@ class tickets(commands.Cog):
             "SELECT ticket_category FROM guilds WHERE id = $1", ctx.guild.id)
         if config["ticket_category"] is None:
             return
-        if channel.category_id != config["ticket_category"]:
+        if ctx.channel.category_id != config["ticket_category"]:
             return
         await ctx.message.delete()
-        await channel.edit(topic=summery)
+        await ctx.channel.edit(topic=summery)
 
     @commands.command()
-    @commands.check(moderator)
+    @commands.check(ticket_person)
     async def tban(self, ctx, user: discord.Member):
         """
         Bans someone from opening tickets

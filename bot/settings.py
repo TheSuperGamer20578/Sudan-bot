@@ -5,7 +5,6 @@ import re
 
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
 from _util import GREEN
 

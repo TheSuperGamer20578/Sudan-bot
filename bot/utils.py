@@ -3,9 +3,8 @@ Provides several utilities
 """
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
-from _util import checks, BLUE, set_db
+from _util import Checks, BLUE, set_db
 
 
 class utils(commands.Cog):
@@ -17,7 +16,7 @@ class utils(commands.Cog):
         set_db(bot.db)
 
     @commands.command()
-    @commands.check(checks.mod)
+    @commands.check(Checks.mod)
     async def slowmode(self, ctx, *, length):
         """
         Sets the slowmode of a channel

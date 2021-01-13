@@ -10,15 +10,15 @@ RED = 0xb00e0e
 _db = None
 
 
-def set_db(db):
+def set_db(database):
     """
-    Sets the db 
+    Sets the db
     """
-    global _db
-    _db = db
+    global _db  # pylint: disable=global-statement
+    _db = database
 
 
-class checks:
+class Checks:
     """
     Permission checks
     """

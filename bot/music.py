@@ -12,7 +12,7 @@ import youtube_dl
 from discord.ext import commands
 from discord.utils import get
 
-from _util import checks, GREEN, RED, set_db
+from _util import Checks, GREEN, RED, set_db
 queue = {}
 np = {}
 if os.name != "nt":
@@ -25,7 +25,7 @@ def check_dj(ctx):
     """
     Check to see if user is a mod or in VC alone
     """
-    return len([vcuser for vcuser in ctx.author.voice.channel.members if not vcuser.bot]) <= 1 or checks.mod(ctx)
+    return len([vcuser for vcuser in ctx.author.voice.channel.members if not vcuser.bot]) <= 1 or Checks.mod(ctx)
 
 
 def add(key, *url):
@@ -90,7 +90,7 @@ class music(commands.Cog):
         channel = ctx.author.voice.channel
         voice = get(self.bot.voice_clients, guild=ctx.guild)
         if voice and voice.is_connected():
-            if mod(ctx):
+            if Checks.mod(ctx):
                 await voice.move_to(channel)
             else:
                 raise commands.CheckFailure()
@@ -183,7 +183,7 @@ class music(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(checks.trusted)
+    @commands.check(Checks.trusted)
     async def rick(self, ctx, guild: int):
         """
         Rick-rolls the server with the specified ID

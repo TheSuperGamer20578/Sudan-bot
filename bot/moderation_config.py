@@ -2,6 +2,7 @@
 Setup moderation stuff
 THIS IS STILL A WORK IN PROGRESS
 """
+# pylint: disable=all
 import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
