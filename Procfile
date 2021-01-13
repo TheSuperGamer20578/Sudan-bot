@@ -1,1 +1,1 @@
-Worker: cd bot && python3 core.py
+worker: cd bot && python3 core.py
