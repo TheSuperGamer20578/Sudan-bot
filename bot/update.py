@@ -8,8 +8,7 @@ from subprocess import call
 import discord
 from discord.ext import commands
 
-from core import trusted
-
+from _util import checks, set_db
 
 
 class update(commands.Cog):
@@ -18,6 +17,7 @@ class update(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        set_db(bot.db)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -34,7 +34,7 @@ class update(commands.Cog):
                 await self.bot.close()
 
     @commands.command()
-    @commands.check(trusted)
+    @commands.check(checks.trusted)
     async def forceupdate(self, ctx):
         """
         Forces the bot to download an update
@@ -47,7 +47,7 @@ class update(commands.Cog):
         await msg.edit(f"updating... DONE!(took {time.time()-start_time}ms)")
 
     @commands.command()
-    @commands.check(trusted)
+    @commands.check(checks.trusted)
     async def stopbot(self, ctx):
         """
         Stops the bot
