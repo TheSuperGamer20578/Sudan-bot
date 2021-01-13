@@ -16,6 +16,8 @@ load_dotenv()
 
 
 async def _load_db():
+    if "DATABASE_URL" in os.environ:
+        return await asyncpg.connect(os.getenv("DATABASE_URL"))
     return await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
                                  host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
 
