@@ -1,7 +1,7 @@
 CREATE TABLE guilds
 (id BIGINT PRIMARY KEY, mod_roles BIGINT[], admin_roles BIGINT[],
 ticket_category BIGINT, ticket_log_channel BIGINT, support_roles BIGINT[],
-ticket_ban_role BIGINT, chain_break_role BIGINT);
+ticket_ban_role BIGINT, ticket_index INT, chain_break_role BIGINT);
 
 CREATE TABLE users
 (id BIGINT PRIMARY KEY, trusted BOOLEAN, dad_mode BOOLEAN, mc_uuid TEXT);
