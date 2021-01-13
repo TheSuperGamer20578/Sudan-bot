@@ -30,6 +30,7 @@ class errors(commands.Cog):
         """
         The part that handles errors
         """
+        # pylint: disable=too-many-statements
         if hasattr(ctx.command, 'on_error'):
             return
 
@@ -79,12 +80,6 @@ class errors(commands.Cog):
                         if time >= 7:
                             time /= 7
                             unit = "weeks"
-                            if time >= 4:
-                                time /= 4
-                                unit = "months"
-                                if time >= 12:
-                                    time /= 12
-                                    unit = "years"
             types = {
                 commands.BucketType.default: "global",
                 commands.BucketType.guild: "server",
