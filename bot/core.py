@@ -5,7 +5,7 @@ import time
 import os
 from datetime import timezone
 
-from _util import checks, RED, GREEN
+from _util import checks, RED, GREEN, set_db
 
 import discord
 import asyncpg
@@ -30,6 +30,7 @@ class core(commands.Cog):
     """
     def __init__(self, b):
         self.bot = b
+        set_db(b.db)
         self.bot.remove_command("help")
 
     @commands.command()
@@ -260,7 +261,6 @@ def setup(setup_bot):
 if __name__ == '__main__':
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","))
     bot.db = bot.loop.run_until_complete(_load_db())
-    checks = checks(bot.db)
     bot.add_cog(core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "" and not cog.startswith("_"):
