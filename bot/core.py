@@ -123,7 +123,6 @@ class core(commands.Cog):
         """
         Command group for managing trusted users
         """
-        pass
 
     @trust.command(hidden=True, aliases=["add", "remove"])
     @commands.check(Checks.trusted)

@@ -6,14 +6,6 @@ from discord.ext import commands
 
 from _util import BLUE, Checks, set_db
 
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
-fs_data = db.collection("rules")
-
 
 class rules(commands.Cog):
     """

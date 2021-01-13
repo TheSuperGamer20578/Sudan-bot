@@ -6,6 +6,8 @@ from discord.ext import commands
 
 from _util import RED, GREEN, Checks, set_db
 
+_db = None
+
 
 def ticket_person(ctx):
     """
@@ -23,8 +25,10 @@ class tickets(commands.Cog):
     Main class
     """
     def __init__(self, bot):
+        global _db  # pylint: disable=global-statement
         self.bot = bot
         set_db(bot.db)
+        _db = bot.db
 
     @commands.command()
     @commands.check(Checks.admin)
