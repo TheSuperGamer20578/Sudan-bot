@@ -186,11 +186,6 @@ class dev(commands.Cog):
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(1, 70)
-    async def test(self, ctx):
-        await ctx.send("it works")
-
 
 def setup(bot):
     """
