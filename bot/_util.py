@@ -7,15 +7,15 @@ PURPLE = 0x6556FF
 GREEN = 0x36eb45
 RED = 0xb00e0e
 
-_db = None
+_DB = None
 
 
 def set_db(database):
     """
     Sets the db
     """
-    global _db  # pylint: disable=global-statement
-    _db = database
+    global _DB  # pylint: disable=global-statement
+    _DB = database
 
 
 class Checks:

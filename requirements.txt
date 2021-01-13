@@ -1,6 +1,6 @@
 discord.py[voice]
 emc-info == 0.8
 youtube_dl
-PyNaCl
 python-dotenv
 asyncpg
+requests
