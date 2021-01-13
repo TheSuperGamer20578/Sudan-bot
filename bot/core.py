@@ -5,7 +5,7 @@ import time
 import os
 from datetime import timezone
 
-from _util import checks, RED, GREEN, set_db
+from _util import checks, RED, GREEN, set_db, BLUE
 
 import discord
 import asyncpg
