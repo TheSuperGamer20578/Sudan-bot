@@ -28,7 +28,7 @@ class Checks:
         """
         Check to see if the user is trusted
         """
-        return await _db.fetchval(
+        return await _DB.fetchval(
             "SELECT trusted FROM users WHERE id = $1",
             ctx.author.id)
 
@@ -38,7 +38,7 @@ class Checks:
         Check to see if the user is a mod
         """
         return any([a in b for a, b in (
-            await _db.fetchval(
+            await _DB.fetchval(
                 "SELECT mod_roles FROM guilds WHERE id = $1",
                 ctx.guild.id),
             [role.id for role in ctx.author.roles])])
@@ -49,7 +49,7 @@ class Checks:
         Check to see if the user is an admin
         """
         return any([a in b for a, b in (
-            await _db.fetchval(
+            await _DB.fetchval(
                 "SELECT admin_roles FROM guilds WHERE id = $1",
                 ctx.guild.id),
             [role.id for role in ctx.author.roles])])

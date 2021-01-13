@@ -14,7 +14,7 @@ def ticket_person(ctx):
     Check to see if user is a ticket service person
     """
     return any([a in b for a, b in (
-        await _db.fetchval(
+        await _DB.fetchval(
             "SELECT support_roles FROM guilds WHERE id = $1",
             ctx.guild.id),
         [role.id for role in ctx.author.roles])])
