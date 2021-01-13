@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 
-from core import RED, GREEN, checks
+from _util import RED, GREEN, checks, set_db
 
 
 try:
@@ -33,10 +33,10 @@ class tickets(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.checks = checks(bot.db)
+        set_db(bot.db)
 
     @commands.command()
-    @commands.check(self.checks.admin)
+    @commands.check(checks.admin)
     async def tsetup(self, ctx, mod: discord.Role):
         """
         Enables tickets for the server
