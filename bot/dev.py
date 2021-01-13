@@ -59,6 +59,7 @@ class dev(commands.Cog):
         await self.bot.get_channel(753495117767377016).send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(1, 5*60)
     async def suggest(self, ctx, *, suggestion):
         """
         Makes a suggestion issue on my Jira **DO NOT GIVE NON SERIOUS SUGGESTIONS**
@@ -78,6 +79,7 @@ class dev(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(1, 5*60)
     async def bug(self, ctx, *, bug):
         """
         Reports a bug **DO NOT REPORT NON SERIOUS BUGS**
@@ -183,6 +185,11 @@ class dev(commands.Cog):
                  .add_field(name="Input", value=f"```python\n{cmd}\n```"))
         await ctx.message.delete()
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.cooldown(1, 70)
+    async def test(self, ctx):
+        await ctx.send("it works")
 
 
 def setup(bot):
