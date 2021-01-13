@@ -9,7 +9,7 @@ from _util import RED, GREEN, Checks, set_db
 _DB = None
 
 
-def ticket_person(ctx):
+async def ticket_person(ctx):
     """
     Check to see if user is a ticket service person
     """
