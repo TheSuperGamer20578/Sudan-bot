@@ -6,46 +6,22 @@ import os
 from datetime import timezone
 
 import discord
-from firebase_admin import firestore, credentials, initialize_app
+import asyncpg
 from discord.ext import commands
 from dotenv import load_dotenv
 
+from _util import Checks, RED, GREEN, set_db, BLUE
+
 load_dotenv()
 
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
 
-fs_data = db.collection("core")
-
-BLUE = 0x0a8cf0
-PURPLE = 0x6556FF
-GREEN = 0x36eb45
-RED = 0xb00e0e
+async def _load_db():
+    return await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
+                                 host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
 
 
-def trusted(ctx):
-    """
-    Check to see if the user is trusted
-    """
-    return str(ctx.author.id) in fs_data.document("trusted").get().to_dict()["users"]
-
-
-def mod(ctx):
-    """
-    Check to see if the user is a mod
-    """
-    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["modrole"] in [str(role.id) for role in ctx.author.roles]
-
-
-def admin(ctx):
-    """
-    Check to see if the user is an admin
-    """
-    return db.collection("settings").document(str(ctx.guild.id)).get().to_dict()["adminrole"] in [str(i.id) for i in ctx.author.roles]
+async def _close_db(database):
+    await database.close()
 
 
 class core(commands.Cog):
@@ -54,6 +30,7 @@ class core(commands.Cog):
     """
     def __init__(self, b):
         self.bot = b
+        set_db(b.db)
         self.bot.remove_command("help")
 
     @commands.command()
@@ -82,7 +59,7 @@ class core(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(trusted)
+    @commands.check(Checks.trusted)
     async def load(self, ctx, extension):
         """
         Loads or reloads a cog
@@ -100,7 +77,7 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(trusted)
+    @commands.check(Checks.trusted)
     async def unload(self, ctx, extension):
         """
         Unloads a cog
@@ -116,7 +93,7 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
-    @commands.check(trusted)
+    @commands.check(Checks.trusted)
     async def list(self, ctx):
         """
         Lists all cogs
@@ -140,21 +117,38 @@ class core(commands.Cog):
         await ctx.send(
             f"Pong! (took {max(time.time() - ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp(), ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp() - time.time())} seconds)")
 
-    @commands.command(hidden=True)
-    @commands.check(trusted)
-    async def trust(self, ctx, user: discord.Member):
+    @commands.group(hidden=True)
+    @commands.check(Checks.trusted)
+    async def trust(self, ctx):
+        """
+        Command group for managing trusted users
+        """
+
+    @trust.command(hidden=True, aliases=["add", "remove"])
+    @commands.check(Checks.trusted)
+    async def toggle(self, ctx, user: discord.Member):
         """
         Adds or removes a user from trusted list
         """
-        if str(user.id) in fs_data.document("trusted").get().to_dict()["users"]:
+        if await self.bot.db.fetchval("SELECT trusted FROM users WHERE id = $1", user.id):
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is no longer trusted")
-            fs_data.document("trusted").set(
-                {"users": [str(trustee) for trustee in fs_data.document("trusted").get().to_dict()["users"] if trustee != str(user.id)]})
+            await self.bot.db.execute("UPDATE users SET trusted = FALSE WHERE id = $1", user.id)
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
-            data = fs_data.document("trusted").get().to_dict()["users"]
-            data.append(str(user.id))
-            fs_data.document("trusted").set({"users": data})
+            await self.bot.db.execute("UPDATE users SET trusted = TRUE WHERE id = $1", user.id)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.message.delete()
+        await ctx.send(embed=embed)
+
+    @trust.command(hidden=True, name="list")
+    @commands.check(Checks.trusted)
+    async def trust_list(self, ctx):
+        """
+        Lists all trusted users
+        """
+        records = await self.bot.db.fetch("SELECT id FROM users WHERE trusted = true")
+        users = [f"<@{user['id']}>" for user in records]
+        embed = discord.Embed(title="Trusted users", description="\n".join(users))
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
@@ -172,8 +166,24 @@ class core(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """
-        Sets the status of the bot
+        Sets the status of the bot and adds stuff to the db
         """
+        for guild in self.bot.guilds:
+            try:
+                await self.bot.db.execute("INSERT INTO guilds (id, delete_blank_messages) VALUES ($1, false)", guild.id)
+            except asyncpg.UniqueViolationError:
+                pass
+            for member in guild.members:
+                try:
+                    await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+                except asyncpg.UniqueViolationError:
+                    pass
+            for channel in guild.text_channels:
+                try:
+                    await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
+                except asyncpg.UniqueViolationError:
+                    pass
+
         types = {
             "playing": discord.ActivityType.playing,
             "watching": discord.ActivityType.watching,
@@ -201,6 +211,47 @@ class core(commands.Cog):
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        """
+        Adds new guilds to the db
+        """
+        try:
+            await self.bot.db.execute("INSERT INTO guilds (id, delete_blank_messages) VALUES ($1, false)", guild.id)
+        except asyncpg.UniqueViolationError:
+            pass
+        for member in guild.members:
+            try:
+                await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+            except asyncpg.UniqueViolationError:
+                pass
+        for channel in guild.text_channels:
+            try:
+                await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
+            except asyncpg.UniqueViolationError:
+                pass
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        """
+        adds new users to the db
+        """
+        try:
+            await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+        except asyncpg.UniqueViolationError:
+            pass
+
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel):
+        """
+        Adds new channels to the db
+        """
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, channel.guild.id)
+            except asyncpg.UniqueViolationError:
+                pass
+
 
 def setup(setup_bot):
     """
@@ -213,8 +264,10 @@ if __name__ == '__main__':
     intents = discord.Intents.default()
     intents.members = True
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","), intents=intents)
+    bot.db = bot.loop.run_until_complete(_load_db())
     bot.add_cog(core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
-        if cog != "":
+        if cog != "" and not cog.startswith("_"):
             bot.load_extension(cog)
     bot.run(os.getenv("BOT_TOKEN"))
+    bot.loop.run_until_complete(_close_db(bot.db))

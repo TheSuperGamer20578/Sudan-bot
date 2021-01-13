@@ -11,7 +11,7 @@ import requests
 import discord
 from discord.ext import commands
 
-from core import RED, BLUE
+from _util import RED, BLUE
 
 AUTH = {"Authorization": f"GenieKey {os.getenv('OPSGENIE_TOKEN')}"}
 

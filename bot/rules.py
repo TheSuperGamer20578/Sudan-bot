@@ -3,17 +3,8 @@ Makes a rule embed will be used to set punishments when moderation is added
 """
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
-from core import BLUE, admin
-
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
-fs_data = db.collection("rules")
+from _util import BLUE, Checks, set_db
 
 
 class rules(commands.Cog):
@@ -22,58 +13,65 @@ class rules(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        set_db(bot.db)
 
-    @commands.command()
-    @commands.check(admin)
-    async def rules(self, ctx, operation, _id, cat=None, *, desc=None):
+    @commands.group()
+    @commands.check(Checks.admin)
+    async def rules(self, ctx):
         """
         Modifies rules
         """
-        if operation not in ["remove", "add"] or cat not in ["ban", "kick", "warn", "mute", "faq"]:
-            raise commands.errors.BadArgument()
-        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if data is None:
-            data = {}
-        if operation == "remove":
-            del data[_id]
-        elif operation == "add":
-            data[_id] = {"cat": cat, "desc": desc}
-        fs_data.document(str(ctx.guild.id)).set(data)
+
+    @rules.command(aliases=["add", "create"])
+    @commands.check(Checks.admin)
+    async def set(self, ctx, name, punishment, *, description):
+        """
+        makes a rule
+        """
+        await self.bot.db.execute("INSERT INTO rules (name, guild_id, punishment, description) VALUES ($2, $1, $3, $4)",
+                                  ctx.guild.id, name, punishment, description)
+        await ctx.message.delete()
+        embed = discord.Embed(title="Rules updated")
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @rules.command(aliases=["del", "remove"])
+    @commands.check(Checks.admin)
+    async def delete(self, ctx, name):
+        """
+        deletes a rule
+        """
+        await self.bot.db.execute("DELETE FROM rules WHERE guild_id = $1 AND name = $2",
+                                  ctx.guild.id, name)
+        await ctx.message.delete()
+        embed = discord.Embed(title="Rules updated")
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @rules.command()
+    @commands.check(Checks.admin)
+    async def clear(self, ctx):
+        """
+        clears all rules
+        """
+        await self.bot.db.execute("DELETE FROM rules WHERE guild_id = $1", ctx.guild.id)
         await ctx.message.delete()
         embed = discord.Embed(title="Rules updated")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.check(admin)
-    async def sendrules(self, ctx, channel: discord.TextChannel):
+    @commands.check(Checks.admin)
+    async def sendrules(self, ctx, channel: discord.TextChannel, inline: bool = False):
         """
         Sends rules to the specified channel
         """
-        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        embed = discord.Embed(title="Rules", colour=BLUE)
-        field = ""
-        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "ban"]:
-            field += f"{rule}\n\n"
-        if len(field) > 0:
-            embed.add_field(name="Instant ban:", value=field, inline=False)
-        field = ""
-        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "kick"]:
-            field += f"{rule}\n\n"
-        if len(field) > 0:
-            embed.add_field(name="Kick:", value=field, inline=False)
-        field = ""
-        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "mute"]:
-            field += f"{rule}\n\n"
-        if len(field) > 0:
-            embed.add_field(name="Mute:", value=field, inline=False)
-        field = ""
-        for rule in [data[x]["desc"] for x in data if data[x]["cat"] == "warn"]:
-            field += f"{rule}\n\n"
-        if len(field) > 0:
-            embed.add_field(name="Warning:", value=field, inline=False)
-        for rule in [(data[x]["desc"], x) for x in data if data[x]["cat"] == "faq"]:
-            embed.add_field(name=rule[1], value=rule[0], inline=False)
+        punishments = [punishment["punishment"] for punishment in await self.bot.db.fetch("SELECT DISTINCT punishment FROM rules WHERE guild_id = $1 AND punishment != 'faq'", ctx.guild.id)]
+        embed = discord.Embed(title="Rules")
+        for punishment in punishments:
+            embed.add_field(name=punishment, value="\n\n".join([rule["description"] for rule in await self.bot.db.fetch("SELECT description FROM rules WHERE guild_id = $1 AND punishment = $2", ctx.guild.id, punishment)]), inline=inline)
+        for faq in [(faq["name"], faq["description"]) for faq in await self.bot.db.fetch("SELECT name, description FROM rules WHERE guild_id = $1 AND punishment = 'faq'", ctx.guild.id)]:
+            embed.add_field(name=faq[0], value=faq[1], inline=inline)
         await ctx.message.delete()
         await channel.send(embed=embed)
         embed = discord.Embed(title=f"Rules sent to #{channel.name}")
@@ -81,13 +79,14 @@ class rules(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def rule(self, ctx, _id):
+    async def rule(self, ctx, name):
         """
         Shows info of a rule
         """
-        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        embed = discord.Embed(title=_id, description=data[_id]["desc"], colour=BLUE)
-        embed.add_field(name="punishment", value=data[_id]["cat"])
+        rule = await self.bot.db.fetchrow("SELECT name, punishment, description FROM rules WHERE guild_id = $1 AND name = $2 AND punishment != 'faq'",
+                                          ctx.guild.id, name)
+        embed = discord.Embed(title=name, description=rule["description"], colour=BLUE)
+        embed.add_field(name="Punishment:", value=rule["punishment"])
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)

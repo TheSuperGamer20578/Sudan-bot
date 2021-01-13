@@ -5,19 +5,15 @@ import re
 
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
-from core import GREEN
+from _util import GREEN
 
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
-fs_data = db.collection("settings")
-
-settable = ["modrole", "adminrole", "muterole", "breakrole"]
+settable = {
+    "mod_roles": list,
+    "admin_roles": list,
+    "support_roles": list,
+    "chain_break_role": int
+}
 
 
 class settings(commands.Cog):
@@ -26,10 +22,6 @@ class settings(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-
-    # @commands.command()
-    # async def setup(self, ctx, thing):
-    #     pass
 
     @commands.command()
     @commands.has_guild_permissions(manage_guild=True)
@@ -42,11 +34,9 @@ class settings(commands.Cog):
             value = match.group(1)
         if thing not in settable:
             raise commands.errors.BadArgument()
-        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if data is None:
-            data = {}
-        data[thing] = value
-        fs_data.document(str(ctx.guild.id)).set(data)
+        if settable[thing] == list:
+            value = [value]
+        await self.bot.db.execute("UPDATE guilds SET $2 = $3 WHERE id = $1", ctx.guild.id, thing, settable[thing](value))
         await ctx.message.delete()
         embed = discord.Embed(title="Settings updated", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)

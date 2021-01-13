@@ -1,6 +1,6 @@
 discord.py[voice]
 emc-info == 0.8
-firebase_admin
 youtube_dl
-PyNaCl
 python-dotenv
+asyncpg
+requests

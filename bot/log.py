@@ -3,17 +3,8 @@ Logs stuff
 """
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
-from core import trusted, admin, GREEN
-
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
-fs_data = db.collection("logging")
+from _util import Checks, GREEN, set_db
 
 logtypes = ["invites"]
 
@@ -35,6 +26,7 @@ class log(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.invites = {}
+        set_db(bot.db)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -45,7 +37,7 @@ class log(commands.Cog):
             self.invites[guild.id] = await guild.invites()
 
     @commands.command(hidden=True)
-    @commands.check(trusted)
+    @commands.check(Checks.trusted)
     async def initlogs(self, ctx):
         """
         Run on_ready for if cog has been loaded after startup
@@ -58,14 +50,15 @@ class log(commands.Cog):
         """
         Finds who invited a user
         """
-        if "invites" not in fs_data.document(str(member.guild.id)).get().to_dict():
+        if await self.bot.db.fetchval("SELECT count(*) FROM channels WHERE guild_id = $1 AND log_type = 'invites'") <= 0:
             return
         invites_before_join = self.invites[member.guild.id]
         invites_after_join = await member.guild.invites()
         for invite in invites_before_join:
             if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
                 embed = discord.Embed(title="Member joined", description=f"{member.mention}({member.name}) was invited by {invite.inviter.mention}({invite.inviter}) using invite https://discord.gg/{invite.code}")
-                await self.bot.get_channel(fs_data.document(str(member.guild.id)).get().to_dict()["invites"]).send(embed=embed)
+                for channel in await self.bot.db.fetch("SELECT id FROM channels WHERE guild_id = $1 AND log_type = 'invites'", member.guild.id):
+                    await self.bot.get_channel(channel["id"]).send(embed=embed)
                 self.invites[member.guild.id] = invites_after_join
                 return
 
@@ -80,18 +73,14 @@ class log(commands.Cog):
         self.invites[member.guild.id] = await member.guild.invites()
 
     @commands.command()
-    @commands.check(admin)
-    async def log(self, ctx, log_type, channel: discord.TextChannel):
+    @commands.check(Checks.admin)
+    async def log(self, ctx, channel: discord.TextChannel, log_type):
         """
         Tells the bot to log something to a channel
         """
-        if log_type not in logtypes:
+        if log_type.lower() not in logtypes:
             raise commands.BadArgument()
-        data = fs_data.document(str(ctx.guild.id)).get().to_dict()
-        if data is None:
-            data = {}
-        data[log_type] = channel.id
-        fs_data.document(str(ctx.guild.id)).set(data)
+        await self.bot.db.execute("UPDATE channels SET log_type = $3 WHERE id = $1 AND guild_id = $2", channel.id, ctx.guild.id, log_type.lower())
         embed = discord.Embed(title="Log setup", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()

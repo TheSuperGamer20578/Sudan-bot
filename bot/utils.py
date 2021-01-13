@@ -3,17 +3,8 @@ Provides several utilities
 """
 import discord
 from discord.ext import commands
-from firebase_admin import firestore, credentials, initialize_app
 
-from core import mod, admin, BLUE
-
-try:
-    cred = credentials.Certificate("firebase.json")
-    initialize_app(cred)
-except ValueError:
-    pass
-db = firestore.client()
-fs_data = db.collection("utils")
+from _util import Checks, BLUE, set_db
 
 
 class utils(commands.Cog):
@@ -22,38 +13,10 @@ class utils(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        """
-        Delete message if its blank
-        """
-        if (len(message.content.replace(" ", "").replace("*", "").replace("_", "")) <= 0) and not (
-                message.author.bot or len(message.attachments) or message.is_system())\
-                and str(message.guild.id) in fs_data.document("no-blank").get().to_dict()["servers"]:
-            await message.delete()
+        set_db(bot.db)
 
     @commands.command()
-    @commands.check(admin)
-    async def noblank(self, ctx):
-        """
-        Makes the bot delete blank messages
-        """
-        await ctx.message.delete()
-        if ctx.guild.id in fs_data.document("no-blank").get().to_dict()["servers"]:
-            embed = discord.Embed(title="Blank messages will no longer be deleted")
-            fs_data.document("no-blank").set(
-                {"servers": [guild for guild in fs_data.document("no-blank").get().to_dict()["servers"] if guild != str(ctx.guild.id)]})
-        else:
-            embed = discord.Embed(title="Blank messages will now be deleted")
-            data = fs_data.document("no-blank").get().to_dict()["servers"]
-            data.append(str(ctx.guild.id))
-            fs_data.document("no-blank").set({"servers": data})
-        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    @commands.check(mod)
+    @commands.check(Checks.mod)
     async def slowmode(self, ctx, *, length):
         """
         Sets the slowmode of a channel
