@@ -172,7 +172,7 @@ class core(commands.Cog):
         """
         for guild in self.bot.guilds:
             try:
-                await self.bot.db.execute("INSERT INTO guilds (id, delete_blank_messages) VALUES ($1, false)", guild.id)
+                await self.bot.db.execute("INSERT INTO guilds (id) VALUES ($1)", guild.id)
             except asyncpg.UniqueViolationError:
                 pass
             for member in guild.members:
@@ -219,7 +219,7 @@ class core(commands.Cog):
         Adds new guilds to the db
         """
         try:
-            await self.bot.db.execute("INSERT INTO guilds (id, delete_blank_messages) VALUES ($1, false)", guild.id)
+            await self.bot.db.execute("INSERT INTO guilds (id) VALUES ($1)", guild.id)
         except asyncpg.UniqueViolationError:
             pass
         for member in guild.members:
