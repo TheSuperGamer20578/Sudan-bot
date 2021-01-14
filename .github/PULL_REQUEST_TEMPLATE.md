@@ -16,7 +16,6 @@
 - [ ] Manual restart and/or configuration required post-merge
 	- [ ] I have listed how to make bot work again post-merge
 - [ ] README.md or other documentation will be updated by this PR
-- [ ] I have listed how to make bot work again post-merge
 
 <!-- Only tick one in each set -->
 - [ ] This is a major change
