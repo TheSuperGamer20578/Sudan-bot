@@ -77,6 +77,7 @@ class tickets(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         msg = await channel.send(embed=embed)
         await msg.pin()
+        await self.bot.db.execute("UPDATE guilds SET ticket_index = ticket_index + 1 WHERE id = $1", ctx.guild.id)
 
     @commands.command()
     @commands.check(ticket_person)
