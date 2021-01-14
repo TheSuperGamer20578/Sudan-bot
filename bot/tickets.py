@@ -52,7 +52,7 @@ class tickets(commands.Cog):
         """
         Opens a new ticket
         """
-        config = await self.bot.fetchrow("SELECT ticket_category, support_roles, ticket_ban_role, ticket_index FROM guilds WHERE id = $1", ctx.guild.id)
+        config = await self.bot.db.fetchrow("SELECT ticket_category, support_roles, ticket_ban_role, ticket_index FROM guilds WHERE id = $1", ctx.guild.id)
         if config["ticket_category"] is None:
             return
         await ctx.message.delete()
@@ -83,7 +83,7 @@ class tickets(commands.Cog):
         """
         Closes a ticket
         """
-        config = await self.bot.fetchrow(
+        config = await self.bot.db.fetchrow(
             "SELECT ticket_category, ticket_log_channel FROM guilds WHERE id = $1",
             ctx.guild.id)
         if config["ticket_category"] is None:
@@ -102,7 +102,7 @@ class tickets(commands.Cog):
         """
         Sets the summery of a ticket
         """
-        config = await self.bot.fetchrow(
+        config = await self.bot.db.fetchrow(
             "SELECT ticket_category FROM guilds WHERE id = $1", ctx.guild.id)
         if config["ticket_category"] is None:
             return
@@ -117,7 +117,7 @@ class tickets(commands.Cog):
         """
         Bans someone from opening tickets
         """
-        config = await self.bot.fetchrow(
+        config = await self.bot.db.fetchrow(
             "SELECT ticket_ban_role FROM guilds WHERE id = $1", ctx.guild.id)
         if config["ticket_ban_role"] is None:
             return
