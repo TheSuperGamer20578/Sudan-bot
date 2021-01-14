@@ -48,6 +48,7 @@ class tickets(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(1, 24*60*60, commands.BucketType.user)
     async def new(self, ctx):
         """
         Opens a new ticket
