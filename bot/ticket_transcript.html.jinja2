@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ name }}</title>
+    <link rel="stylesheet" href="ticket_transcript.css">
+</head>
+<body>
+<div id="header">
+    <h1>{{ name }}</h1>
+    <p>{{ summury }}</p>
+</div>
+{% for message in messages %}
+<div class="message">
+    <img src="{{ message.author.avatar_url }}" alt="">
+    <h3>{{ message.author.display_name }}</h3>
+    <p>{{ message.content }}</p>
+</div>
+{% endfor %}
+</body>
+</html>
