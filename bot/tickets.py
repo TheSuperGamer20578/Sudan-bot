@@ -18,11 +18,9 @@ async def ticket_person(ctx):
     """
     Check to see if user is a ticket service person
     """
-    return any([a in b for a, b in (
-        await _DB.fetchval(
-            "SELECT support_roles FROM guilds WHERE id = $1",
-            ctx.guild.id),
-        [role.id for role in ctx.author.roles])])
+    return await _DB.fetchval(
+            "SELECT support_role FROM guilds WHERE id = $1",
+            ctx.guild.id) in [role.id for role in ctx.author.roles]
 
 
 class tickets(commands.Cog):
