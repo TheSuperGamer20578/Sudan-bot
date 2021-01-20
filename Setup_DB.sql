@@ -1,6 +1,6 @@
 CREATE TABLE guilds
 (id BIGINT PRIMARY KEY, mod_roles BIGINT[], admin_roles BIGINT[],
-ticket_category BIGINT, ticket_log_channel BIGINT, support_roles BIGINT[],
+ticket_category BIGINT, ticket_log_channel BIGINT, support_role BIGINT,
 ticket_ban_role BIGINT, ticket_index INT, chain_break_role BIGINT);
 
 CREATE TABLE users
