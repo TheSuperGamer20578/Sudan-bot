@@ -3,21 +3,24 @@ A ticket system
 """
 import discord
 from discord.ext import commands
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from _util import RED, GREEN, Checks, set_db
 
 _DB = None
+env = Environment(
+    loader=FileSystemLoader("."),
+    autoescape=select_autoescape(['html', 'xml'])
+)
 
 
 async def ticket_person(ctx):
     """
     Check to see if user is a ticket service person
     """
-    return any([a in b for a, b in (
-        await _DB.fetchval(
-            "SELECT support_roles FROM guilds WHERE id = $1",
-            ctx.guild.id),
-        [role.id for role in ctx.author.roles])])
+    return await _DB.fetchval(
+            "SELECT support_role FROM guilds WHERE id = $1",
+            ctx.guild.id) in [role.id for role in ctx.author.roles]
 
 
 class tickets(commands.Cog):
@@ -77,6 +80,7 @@ class tickets(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         msg = await channel.send(embed=embed)
         await msg.pin()
+        await self.bot.db.execute("UPDATE guilds SET ticket_index = ticket_index + 1 WHERE id = $1", ctx.guild.id)
 
     @commands.command()
     @commands.check(ticket_person)
@@ -91,10 +95,17 @@ class tickets(commands.Cog):
             return
         if ctx.channel.category_id != config["ticket_category"]:
             return
+        template = env.get_template("ticket_transcript.html.jinja2")
+        with open("transcript.html", "w") as transcript:
+            transcript.write(template.render(
+                name=ctx.channel.name,
+                summury=ctx.channel.topic,
+                messages=await ctx.channel.history(oldest_first=True).flatten()
+            ).replace("    ", ""). replace("\n", ""))
         embed = discord.Embed(title=ctx.channel.name, description=ctx.channel.topic)
         embed.add_field(name="Closed by", value=ctx.author.mention)
         embed.add_field(name="Close Reason", value=reason)
-        await self.bot.get_channel(config["ticket_log_channel"]).send(embed=embed)
+        await self.bot.get_channel(config["ticket_log_channel"]).send(embed=embed, file=discord.File("transcript.html"))
         await ctx.channel.delete()
 
     @commands.command()

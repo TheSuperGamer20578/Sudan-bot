@@ -11,7 +11,7 @@ from _util import GREEN
 settable = {
     "mod_roles": list,
     "admin_roles": list,
-    "support_roles": list,
+    "support_role": int,
     "chain_break_role": int
 }
 
