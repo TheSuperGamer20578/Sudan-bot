@@ -3,10 +3,15 @@ A ticket system
 """
 import discord
 from discord.ext import commands
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from _util import RED, GREEN, Checks, set_db
 
 _DB = None
+env = Environment(
+    loader=FileSystemLoader("."),
+    autoescape=select_autoescape(['html', 'xml'])
+)
 
 
 async def ticket_person(ctx):
@@ -92,10 +97,17 @@ class tickets(commands.Cog):
             return
         if ctx.channel.category_id != config["ticket_category"]:
             return
+        template = env.get_template("ticket_transcript.html.jinja2")
+        with open("transcript.html", "w") as transcript:
+            transcript.write(template.render(
+                name=ctx.channel.name,
+                summury=ctx.channel.topic,
+                messages=await ctx.channel.history(oldest_first=True).flatten()
+            ).replace("    ", ""). replace("\n", ""))
         embed = discord.Embed(title=ctx.channel.name, description=ctx.channel.topic)
         embed.add_field(name="Closed by", value=ctx.author.mention)
         embed.add_field(name="Close Reason", value=reason)
-        await self.bot.get_channel(config["ticket_log_channel"]).send(embed=embed)
+        await self.bot.get_channel(config["ticket_log_channel"]).send(embed=embed, file=discord.File("transcript.html"))
         await ctx.channel.delete()
 
     @commands.command()
