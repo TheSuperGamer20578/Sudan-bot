@@ -2,19 +2,68 @@
 <html lang="en">
 <head>
     <title>{{ name }}</title>
-    <link rel="stylesheet" href="ticket_transcript.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #36393f;
+            width: 100%;
+            margin: 0;
+        }
+        .pfp {
+            border-radius: 100%;
+        }
+        #header {
+            border-bottom: 3px solid #2b2e33;
+            width: calc(100% - 2em);
+            background: inherit;
+            height: 3em;
+            padding: 1em;
+        }
+        * {
+            padding: 0;
+            margin: 0;
+            color: white;
+        }
+        .message:hover {
+            background: #2f3237;
+        }
+        #messages {
+            height: calc(100vh - 5.2em);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #header h1 {
+            position: relative;
+        }
+        .message img {
+            width: 2.5em;
+            height: 2.5em;
+            margin-right: 1em;
+        }
+        .message {
+            display: flex;
+            padding: 1em 0 1em 1em;
+        }
+        .message p {
+            overflow-wrap: anywhere;
+        }
+    </style>
 </head>
 <body>
 <div id="header">
     <h1>{{ name }}</h1>
     <p>{{ summury }}</p>
 </div>
-{% for message in messages %}
-<div class="message">
-    <img src="{{ message.author.avatar_url }}" alt="">
-    <h3>{{ message.author.display_name }}</h3>
-    <p>{{ message.content }}</p>
+<div id="messages">
+    {% for message in messages %}
+    <div class="message">
+        <img src="{{ message.author.avatar_url }}" alt="" class="pfp">
+        <div>
+            <h3>{{ message.author.display_name }}</h3>
+            <p>{{ message.clean_content }}</p>
+        </div>
+    </div>
+    {% endfor %}
 </div>
-{% endfor %}
 </body>
 </html>
