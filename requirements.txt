@@ -4,5 +4,4 @@ youtube_dl
 python-dotenv
 asyncpg
 requests
-googletrans
 jinja2
