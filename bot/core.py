@@ -265,7 +265,7 @@ def setup(setup_bot):
 if __name__ == '__main__':
     intents = discord.Intents.default()
     intents.members = True
-    bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","), intents=intents, allowed_mentions=discord.AllowedMentions.none)
+    bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","), intents=intents)
     bot.db = bot.loop.run_until_complete(_load_db())
     bot.add_cog(core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
