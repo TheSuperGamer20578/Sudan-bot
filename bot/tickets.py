@@ -74,7 +74,7 @@ class tickets(commands.Cog):
                                                               read_messages=False),
                                                           **overwrites
                                                       })
-        await channel.send("@everyone", delete_after=0)
+        await channel.send("@everyone", delete_after=0, allowed_mentions=discord.AllowedMentions(everyone=True))
         embed = discord.Embed(title="Ticket",
                               description="A member of staff will be with you shortly\nWhile you wait please state what you need help with")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
