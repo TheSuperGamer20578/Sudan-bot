@@ -37,7 +37,7 @@ class fun(commands.Cog):
         await ctx.message.delete()
         webhook = await ctx.channel.create_webhook(
             name=user.nick if user.nick is not None else user.name)
-        await webhook.send(message.replace("@", "@\N{zero width space}"),
+        await webhook.send(message,
                            avatar_url=user.avatar_url)
         await webhook.delete()
 
@@ -46,9 +46,6 @@ class fun(commands.Cog):
         """
         Starts a chain
         """
-        if "@" in thing:
-            return await ctx.send(
-                "Nice try but you cant fool me into mentioning")
         await self.bot.db.execute("UPDATE channels SET last_chain = NULL WHERE id = $1", ctx.channel.id)
         await self.bot.db.execute(
             "UPDATE channels SET chain = $2 WHERE id = $1", ctx.channel.id,
