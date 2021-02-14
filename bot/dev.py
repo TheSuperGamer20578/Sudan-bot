@@ -1,17 +1,15 @@
 """
 Several tools to help with development and to track growth
 """
-import json
 import ast
 import traceback
 import os
-import requests
 
 import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
-from _util import GREEN, RED, Checks, PURPLE, BLUE, set_db
+from _util import GREEN, RED, Checks, BLUE, set_db
 
 auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
