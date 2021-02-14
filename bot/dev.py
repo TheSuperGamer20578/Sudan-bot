@@ -58,77 +58,13 @@ class dev(commands.Cog):
         embed.set_footer(text=f"ID: {guild.id}")
         await self.bot.get_channel(753495117767377016).send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(1, 5*60)
-    async def suggest(self, ctx, *, suggestion):
+    @commands.command(aliases=["suggest", "bug"], hidden=True)
+    async def issue(self, ctx, *args):  # pylint: disable=unused-argument
         """
-        Makes a suggestion issue on my Jira **DO NOT GIVE NON SERIOUS SUGGESTIONS**
+        Links to new issue tracker
         """
-        resp = requests.post(os.getenv("JIRA_URL") + "issue", data=json.dumps({"fields": {
-            "project": {"key": "SDB"},
-            "summary": suggestion,
-            "issuetype": {"name": "Suggestion"},
-            "customfield_10103": str(ctx.author.id),
-            "customfield_10036": ctx.author.name,
-            "customfield_10037": ctx.guild.name
-        }}), auth=auth, headers={"Content-Type": "application/json"})
-        issue = resp.json()
-        embed = discord.Embed(title="Suggestion noted!", description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {suggestion}")
-        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.message.delete()
-        await ctx.send(embed=embed)
+        await ctx.send("Issues have been moved to https://github.com/TheSuperGamer20578/Sudan-bot/issues")
 
-    @commands.command()
-    @commands.cooldown(1, 5*60)
-    async def bug(self, ctx, *, bug):
-        """
-        Reports a bug **DO NOT REPORT NON SERIOUS BUGS**
-        """
-        resp = requests.post(os.getenv("JIRA_URL") + "issue", data=json.dumps({"fields": {
-            "project": {"key": "SDB"},
-            "summary": bug,
-            "issuetype": {"name": "Bug"},
-            "customfield_10103": str(ctx.author.id),
-            "customfield_10036": ctx.author.name,
-            "customfield_10037": ctx.guild.name
-        }}), auth=auth, headers={"Content-Type": "application/json"})
-        issue = resp.json()
-        embed = discord.Embed(title="Bug noted!", description=f"[{issue['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['key']}): {bug}")
-        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.message.delete()
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def issue(self, ctx, key):
-        """
-        Displays info on a Jira issue with the provided key
-        """
-        resp = requests.get(os.getenv("JIRA_URL") + "issue/" + key, auth=auth)
-        if not key.startswith("SDB-"):
-            raise commands.BadArgument()
-        issue = resp.json()["fields"]
-        if issue["issuetype"]["name"] == "Bug":
-            embed = discord.Embed(title=f"Bug: {key}", description=issue["summary"], colour=RED, url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
-        elif issue["issuetype"]["name"] == "Suggestion":
-            embed = discord.Embed(title=f"Suggestion: {key}", description=issue["summary"], colour=GREEN, url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
-        elif issue["issuetype"]["name"] == "Epic":
-            embed = discord.Embed(title=f"Epic: {key}", description=issue["summary"], colour=PURPLE, url=f"https://thesupergamer20578.atlassian.net/browse/{key}")
-        else:
-            raise Exception()
-        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-        if issue["issuetype"]["name"] != "Epic":
-            embed.add_field(name="Status", value=issue["status"]["name"])
-            embed.add_field(name="Priority", value=issue["priority"]["name"])
-            embed.add_field(name="Author", value=f"<@{issue['customfield_10103']}>({issue['customfield_10036']})")
-            embed.add_field(name="Server", value=issue["customfield_10037"])
-            try:
-                issue["parent"]
-            except KeyError:
-                pass
-            else:
-                embed.add_field(name="Epic", value=f"[{issue['parent']['key']}](https://thesupergamer20578.atlassian.net/browse/{issue['parent']['key']}): " + issue["parent"]["fields"]["summary"])
-        await ctx.message.delete()
-        await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
     @commands.check(Checks.trusted)
