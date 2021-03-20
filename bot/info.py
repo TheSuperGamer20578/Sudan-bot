@@ -45,12 +45,15 @@ PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
             residents = ", ".join([res.name for res in town.residents])
             if len(residents) > 1024-6:
                 residents_a = residents[:1024-6].split(', ')[:-1]
-                embed.add_field(name=f"Residents [{len(town.residents)}]:", value=f"```{', '.join(residents_a)}```")
-                embed.add_field(name="\N{zero width space}", value=f"```{', '.join([res.name for res in town.residents[-len(residents_a):]])}```")
+                embed.add_field(name=f"Residents [{len(town.residents)}]:", value=f"```{', '.join(residents_a)}```", inline=False)
+                embed.add_field(name="\N{zero width space}", value=f"```{', '.join([res.name for res in town.residents[-len(residents_a):]])}```", inline=False)
             else:
-                embed.add_field(name=f"Residents [{len(town.residents)}]", value=f"```{residents}```")
+                embed.add_field(name=f"Residents [{len(town.residents)}]", value=f"```{residents}```", inline=False)
             online = [res.name for res in town.residents if res.online]
-            embed.add_field(name=f"Online residents [{len(online)}]", value=f"```{', '.join(online)}```")
+            if len(online) > 0:
+                embed.add_field(name=f"Online residents [{len(online)}]", value=f"```{', '.join(online)}```", inline=False)
+            else:
+                embed.add_field(name="Online residents [0]", value=f"```No online residents in {town}```", inline=False)
         await ctx.send(embed=embed)
 
 
