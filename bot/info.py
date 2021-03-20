@@ -4,7 +4,7 @@ Give info about EMC
 import discord
 import emc
 from emc._async import get_data
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from core import RED
 
