@@ -31,7 +31,7 @@ class info(commands.Cog):
             embed = discord.Embed(title=f"The town {town_to_find} was not found", colour=RED)
             embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         else:
-            embed = discord.Embed(title=town, colour=town.colour)
+            embed = discord.Embed(title=town, colour=int(town.colour[1:], 16))
             embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
             embed.add_field(name="Mayor", value=f"```{town.mayor}```")
             embed.add_field(name="Nation", value=f"```{town.nation}```")
