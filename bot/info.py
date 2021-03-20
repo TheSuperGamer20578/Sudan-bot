@@ -27,7 +27,7 @@ class info(commands.Cog):
         await ctx.message.delete()
         try:
             town = emc.Town(town_to_find, await get_data())
-        except emc.exceptions.TownNotFoundError:
+        except emc.exceptions.TownNotFoundException:
             embed = discord.Embed(title=f"The town {town_to_find} was not found", colour=RED)
             embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         else:
