@@ -42,14 +42,14 @@ Explosions: {'🟩' if town.flags['explosions'] else '🟥'}
 Mobs      : {'🟩' if town.flags['mobs'] else '🟥'}
 PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
 ```""")
-            residents = ", ".join(town.residents)
+            residents = ", ".join([res.name for res in town.residents])
             if len(residents) > 1024:
                 residents_a = residents[:1024].split(', ')[:-1]
                 embed.add_field(name=f"Residents [{len(town.residents)}]:", value=f"```{', '.join(residents_a)}```")
-                embed.add_field(name="\N{zero width space}", value=f"```{', '.join(town.residents[-len(residents_a):])}```")
+                embed.add_field(name="\N{zero width space}", value=f"```{', '.join([res.name for res in town.residents[-len(residents_a):]])}```")
             else:
                 embed.add_field(name=f"Residents [{len(town.residents)}]", value=f"```{residents}```")
-            online = [res for res in town.residents if res.online]
+            online = [res.name for res in town.residents if res.online]
             embed.add_field(name=f"Online residents [{len(online)}]", value=f"```{', '.join(online)}```")
         await ctx.send(embed=embed)
 
