@@ -42,12 +42,12 @@ class info(commands.Cog):
             embed = discord.Embed(title=town.name, colour=int(town.colour[1:], 16))
             embed.add_field(name="Mayor", value=f"```{town.mayor}```")
             embed.add_field(name="Nation", value=f"```{town.nation}```")
-            embed.add_field(name="Flags", value=f"""```
-Capital   : {'🟩' if town.flags['capital'] else '🟥'}
-Fire      : {'🟩' if town.flags['fire'] else '🟥'}
-Explosions: {'🟩' if town.flags['explosions'] else '🟥'}
-Mobs      : {'🟩' if town.flags['mobs'] else '🟥'}
-PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
+            embed.add_field(name="Flags", value=f"""```diff
+{'+' if town.flags['capital'] else '-'} Capital
+{'+' if town.flags['fire'] else '-'} Fire
+{'+' if town.flags['explosions'] else '-'} Explosions
+{'+' if town.flags['mobs'] else '-'} Mobs
+{'+' if town.flags['pvp'] else '-'} PVP
 ```""")
             _long_fields(embed, f"Residents [{len(town.residents)}]", [res.name for res in town.residents])
             online = [res.name for res in town.residents if res.online]
