@@ -6,10 +6,7 @@ import emc
 from emc.async_ import get_data
 from discord.ext import commands
 
-from core import RED
-
-
-BLUE = 0x3357CC
+from _util import RED, BLUE
 
 
 def _long_fields(embed, title, list_):
