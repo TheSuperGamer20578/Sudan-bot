@@ -12,6 +12,17 @@ from core import RED
 BLUE = 0x3357CC
 
 
+def _long_fields(embed, title, list_):
+    all_comma_sep = ", ".join(list_)
+    if len(all_comma_sep) > 1024-6:
+        list_a = all_comma_sep[:1024-6].split(', ')[:-1]
+        embed.add_field(name=title, value=f"```{', '.join(list_a)}```", inline=False)
+        _long_fields(embed, "\N{zero width space}", list_[len(list_a):])
+    else:
+        embed.add_field(name=title, value=f"```{all_comma_sep}```", inline=False)
+
+
+
 class info(commands.Cog):
     """
     Main class
@@ -42,13 +53,7 @@ Explosions: {'🟩' if town.flags['explosions'] else '🟥'}
 Mobs      : {'🟩' if town.flags['mobs'] else '🟥'}
 PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
 ```""")
-            residents = ", ".join([res.name for res in town.residents])
-            if len(residents) > 1024-6:
-                residents_a = residents[:1024-6].split(', ')[:-1]
-                embed.add_field(name=f"Residents [{len(town.residents)}]", value=f"```{', '.join(residents_a)}```", inline=False)
-                embed.add_field(name="\N{zero width space}", value=f"```{', '.join([res.name for res in town.residents[len(residents_a)-1:]])}```", inline=False)
-            else:
-                embed.add_field(name=f"Residents [{len(town.residents)}]", value=f"```{residents}```", inline=False)
+            _long_fields(embed, f"Residents [{len(town.residents)}]", [res.name for res in town.residents])
             online = [res.name for res in town.residents if res.online]
             if len(online) > 0:
                 embed.add_field(name=f"Online residents [{len(online)}]", value=f"```{', '.join(online)}```", inline=False)
