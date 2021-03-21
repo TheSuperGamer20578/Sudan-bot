@@ -37,7 +37,8 @@ class info(commands.Cog):
         """
         await ctx.message.delete()
         try:
-            town = emc.Town(town_to_find, data=await get_data())
+            async with ctx.typing():
+                town = emc.Town(town_to_find, data=await get_data())
         except emc.exceptions.TownNotFoundException:
             embed = discord.Embed(title=f"The town {town_to_find} was not found", colour=RED)
         else:
@@ -65,7 +66,8 @@ PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
         """Gives info about a nation"""
         await ctx.message.delete()
         try:
-            nation = emc.Nation(nation_to_find, data=await get_data())
+            async with ctx.typing():
+                nation = emc.Nation(nation_to_find, data=await get_data())
         except emc.exceptions.NationNotFoundException:
             embed = discord.Embed(title=f"The nation {nation_to_find} was not found", colour=RED)
         else:
@@ -79,6 +81,26 @@ PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
                 embed.add_field(name=f"Online [{len(online)}]", value=f"```{', '.join(online)}```", inline=False)
             else:
                 embed.add_field(name="Online [0]", value=f"```0 citizens online in {nation}```", inline=False)
+        embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["res", "player", "pl"])
+    async def resident(self, ctx, resident_to_find):
+        """Gives info about a player"""
+        await ctx.message.delete()
+        async with ctx.typing():
+            resident = emc.Resident(resident_to_find, data=await get_data())
+        embed = discord.Embed(title=resident.name, colour=BLUE)
+        embed.set_thumbnail(url=f"https://minotar.net/armor/bust/{resident}")
+        embed.add_field(name="Town", value=f"```{resident.town}```")
+        embed.add_field(name="Nation", value=f"```{resident.nation}```")
+        if resident.online:
+            if resident.hidden:
+                embed.add_field(name="Position", value=f"```{resident} is currently not visable on the map```")
+            else:
+                embed.add_field(name="Position", value=f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))")
+        else:
+            embed.add_field(name="Position", value=f"```{resident} is currently offline```")
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
