@@ -40,10 +40,8 @@ class info(commands.Cog):
             town = emc.Town(town_to_find, data=await get_data())
         except emc.exceptions.TownNotFoundException:
             embed = discord.Embed(title=f"The town {town_to_find} was not found", colour=RED)
-            embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         else:
             embed = discord.Embed(title=town.name, colour=int(town.colour[1:], 16))
-            embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
             embed.add_field(name="Mayor", value=f"```{town.mayor}```")
             embed.add_field(name="Nation", value=f"```{town.nation}```")
             embed.add_field(name="Flags", value=f"""```
@@ -59,6 +57,29 @@ PVP       : {'🟩' if town.flags['pvp'] else '🟥'}
                 embed.add_field(name=f"Online residents [{len(online)}]", value=f"```{', '.join(online)}```", inline=False)
             else:
                 embed.add_field(name="Online residents [0]", value=f"```No online residents in {town}```", inline=False)
+        embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["n"])
+    async def nation(self, ctx, nation_to_find="Sudan"):
+        """Gives info about a nation"""
+        await ctx.message.delete()
+        try:
+            nation = emc.Nation(nation_to_find, data=await get_data())
+        except emc.exceptions.NationNotFoundException:
+            embed = discord.Embed(title=f"The nation {nation_to_find} was not found", colour=RED)
+        else:
+            embed = discord.Embed(title=nation.name, colour=int(nation.colour[1:], 16))
+            embed.add_field(name="Leader", value=f"```{nation.leader}```")
+            embed.add_field(name="Capital", value=f"```{nation.capital}```")
+            embed.add_field(name="Population", value=f"```{len(nation.citizens)}```")
+            _long_fields(embed, f"Towns [{len(nation.towns)}]", [town.name for town in nation.towns])
+            online = [res.name for res in nation.citizens if res.online]
+            if len(online) > 0:
+                embed.add_field(name=f"Online [{len(online)}]", value=f"```{', '.join(online)}```", inline=False)
+            else:
+                embed.add_field(name="Online [0]", value=f"```0 citizens online in {nation}```", inline=False)
+        embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
 
