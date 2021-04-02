@@ -100,10 +100,10 @@ def github(ctx):
 @command
 def town(ctx):
     try:
-        town = Town(town_to_find)
+        town = Town(ctx["options"][0])
     except TownNotFoundException:
         embed = {
-            "title": f"The town {town_to_find} was not found",
+            "title": f"The town {ctx['options'][0]} was not found",
             "color": RED
         }
     else:
@@ -157,10 +157,10 @@ def town(ctx):
 @command
 def nation(ctx):
     try:
-        nation = Nation(nation_to_find)
+        nation = Nation(ctx["options"][0])
     except NationNotFoundException:
         embed = {
-            "title": f"The nation {nation_to_find} was not found",
+            "title": f"The nation {ctx['options'][0]} was not found",
             "color": RED
         }
     else:
@@ -207,7 +207,7 @@ def nation(ctx):
 
 @command
 def resident(ctx):
-    resident = Resident(resident_to_find)
+    resident = Resident(ctx["options"][0])
     embed = {
         "title": resident.name,
         "color": BLUE,
