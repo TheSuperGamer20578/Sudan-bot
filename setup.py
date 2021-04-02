@@ -11,3 +11,13 @@ post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "ping",
     "description": "Ping! Pong!"
 })
+
+post(DISCORD+"/commands", headers=HEADERS, json={
+    "name": "invite",
+    "description": "Invite me to your own server"
+})
+
+post(DISCORD+"/commands", headers=HEADERS, json={
+    "name": "github",
+    "description": "Get a link to my Github repository"
+})

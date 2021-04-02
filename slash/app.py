@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 load_dotenv()
+BLUE = 0x0a8cf0
+PURPLE = 0x6556FF
+GREEN = 0x36eb45
+RED = 0xb00e0e
 commands = {}
 
 
@@ -39,5 +43,33 @@ def ping(ctx):
         "type": 4,
         "data": {
             "content": "Pong!"
+        }
+    })
+
+
+@command
+def invite(ctx):
+    return jsonify({
+        "type": 4,
+        "data": {
+            "embeds": [{
+                "title": "Add me to your own server by clicking here",
+                "url": "https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot%20applications.commands",
+                "color": BLUE
+            }]
+        }
+    })
+
+
+@command
+def github(ctx):
+    return jsonify({
+        "type": 4,
+        "data": {
+            "embeds": [{
+                "title": "Click here to goto my Github repository",
+                "url": "https://github.com/TheSuperGamer20578/Sudan-bot",
+                "color": BLUE
+            }]
         }
     })
