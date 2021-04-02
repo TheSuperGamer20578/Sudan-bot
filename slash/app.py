@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 load_dotenv()
-verify_key = VerifyKey(bytes.fromhex(getenv("PUBLIC_KEY")))
 commands = {}
 
 
@@ -21,6 +20,7 @@ def slash():
     signature = request.headers["X-Signature-Ed25519"]
     timestamp = request.headers["X-Signature-Timestamp"]
     body = request.data
+    verify_key = VerifyKey(bytes.fromhex(getenv("PUBLIC_KEY")))
     try:
         verify_key.verify(f"{timestamp}{body}".encode(), bytes.fromhex(signature))
     except BadSignatureError:
