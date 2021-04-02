@@ -28,7 +28,8 @@ post(DISCORD+"/commands", headers=HEADERS, json={
     "options": [{
         "name": "town",
         "description": "The name of the town you want info about",
-        "type": 3
+        "type": 3,
+        "required": True
     }]
 })
 
@@ -38,7 +39,8 @@ post(DISCORD+"/commands", headers=HEADERS, json={
     "options": [{
         "name": "nation",
         "description": "The name of the nation you want info about",
-        "type": 3
+        "type": 3,
+        "required": True
     }]
 })
 
@@ -48,6 +50,7 @@ post(DISCORD+"/commands", headers=HEADERS, json={
     "options": [{
         "name": "player",
         "description": "The name of the player you want info about",
-        "type": 3
+        "type": 3,
+        "required": True
     }]
 })
