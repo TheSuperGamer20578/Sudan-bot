@@ -4,6 +4,8 @@ from flask import Flask, jsonify, request, Response, abort
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 from dotenv import load_dotenv
+from emc import Town, Nation, Resident
+from emc.exceptions import TownNotFoundException, NationNotFoundException
 
 app = Flask(__name__)
 load_dotenv()
@@ -17,6 +19,26 @@ commands = {}
 def command(func):
     commands[func.__name__] = func
     return func
+
+
+def _long_fields(title, list_):
+    all_comma_sep = ", ".join(list_)
+    if len(all_comma_sep) > 1024 - 6:
+        list_a = all_comma_sep[:1024 - 6].split(', ')[:-1]
+        return [
+            {
+                "name": title,
+                "value": f"```{', '.join(list_a)}```",
+                "inline": False
+            },
+            *_long_fields("\N{zero width space}", list_[len(list_a):])
+        ]
+    else:
+        return [{
+            "name": title,
+            "value": f"```{all_comma_sep}```",
+            "inline": False
+        }]
 
 
 @app.route("/", methods=["POST"])
@@ -71,5 +93,157 @@ def github(ctx):
                 "url": "https://github.com/TheSuperGamer20578/Sudan-bot",
                 "color": BLUE
             }]
+        }
+    })
+
+
+@command
+def town(ctx):
+    try:
+        town = Town(town_to_find)
+    except TownNotFoundException:
+        embed = {
+            "title": f"The town {town_to_find} was not found",
+            "color": RED
+        }
+    else:
+        embed = {
+            "title": town.name,
+            "color": int(town.colour[1:], 16),
+            "fields": [
+                {
+                    "name": "Mayor",
+                    "value": f"```{town.mayor}```"
+                },
+                {
+                    "name": "Nation",
+                    "value": f"```{town.nation}```"
+                },
+                {
+                    "name": "Flags",
+                    "value": f"""```diff
+{'+' if town.flags['capital'] else '-'} Capital
+{'+' if town.flags['fire'] else '-'} Fire
+{'+' if town.flags['explosions'] else '-'} Explosions
+{'+' if town.flags['mobs'] else '-'} Mobs
+{'+' if town.flags['pvp'] else '-'} PVP
+```"""
+                },
+                *_long_fields(f"Residents [{len(town.residents)}]",
+                              [res.name for res in town.residents])
+            ]
+        }
+        online = [res.name for res in town.residents if res.online]
+        if len(online) > 0:
+            embed["fields"].append({
+                "name": f"Online residents [{len(online)}]",
+                "value": f"```{', '.join(online)}```",
+                "inline": False
+            })
+        else:
+            embed["fields"].append({
+                "name": "Online residents [0]",
+                "value": f"```No online residents in {town}```",
+                "inline": False
+            })
+    return jsonify({
+        "type": 4,
+        "data": {
+            "embeds": [embed]
+        }
+    })
+
+
+@command
+def nation(ctx):
+    try:
+        nation = Nation(nation_to_find)
+    except NationNotFoundException:
+        embed = {
+            "title": f"The nation {nation_to_find} was not found",
+            "color": RED
+        }
+    else:
+        embed = {
+            "title": nation.name,
+            "color": int(nation.colour[1:], 16),
+            "fields": [
+                {
+                    "name": "Leader",
+                    "value": f"```{nation.leader}```"
+                },
+                {
+                    "name": "Capital",
+                    "value": f"```{nation.capital}```"
+                },
+                {
+                    "name": "Population",
+                    "value": f"```{len(nation.citizens)}```"
+                },
+                *_long_fields(f"Towns [{len(nation.towns)}]",
+                              [town.name for town in nation.towns])
+            ]
+        }
+        online = [res.name for res in nation.citizens if res.online]
+        if len(online) > 0:
+            embed["fields"].append({
+                "name": f"Online [{len(online)}]",
+                "value": f"```{', '.join(online)}```",
+                "inline": False
+            })
+        else:
+            embed["fields"].append({
+                "name": "Online [0]",
+                "value": f"```0 citizens online in {nation}```",
+                "inline": False
+            })
+    return jsonify({
+        "type": 4,
+        "data": {
+            "embeds": [embed]
+        }
+    })
+
+
+@command
+def resident(ctx):
+    resident = Resident(resident_to_find)
+    embed = {
+        "title": resident.name,
+        "color": BLUE,
+        "thumbnail": {
+            "url": f"https://minotar.net/armor/bust/{resident}"
+        },
+        "fields": [
+            {
+                "name": "Town",
+                "value": f"```{resident.town}```"
+            },
+            {
+                "name": "Nation",
+                "value": f"```{resident.nation}```"
+            }
+        ]
+    }
+    if resident.online:
+        if resident.hidden:
+            embed["fields"].append({
+                "name": "Position",
+                "value": f"```{resident} is currently not visible on the map```"
+            })
+        else:
+            embed["fields"].append({
+                "name": "Position",
+                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))"
+            })
+    else:
+        embed["fields"].append({
+            "name": "Position",
+            "value": f"```{resident} is currently offline```"
+        })
+    return jsonify({
+        "type": 4,
+        "data": {
+            "embeds": [embed]
         }
     })

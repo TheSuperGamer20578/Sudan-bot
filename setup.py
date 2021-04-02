@@ -21,3 +21,33 @@ post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "github",
     "description": "Get a link to my Github repository"
 })
+
+post(DISCORD+"/commands", headers=HEADERS, json={
+    "name": "town",
+    "description": "Gets info about a town",
+    "options": [{
+        "name": "town",
+        "description": "The name of the town you want info about",
+        "type": 3
+    }]
+})
+
+post(DISCORD+"/commands", headers=HEADERS, json={
+    "name": "nation",
+    "description": "Gets info about a nation",
+    "options": [{
+        "name": "nation",
+        "description": "The name of the nation you want info about",
+        "type": 3
+    }]
+})
+
+post(DISCORD+"/commands", headers=HEADERS, json={
+    "name": "resident",
+    "description": "Gets info about a player",
+    "options": [{
+        "name": "player",
+        "description": "The name of the player you want info about",
+        "type": 3
+    }]
+})
