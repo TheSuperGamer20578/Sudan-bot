@@ -113,11 +113,13 @@ def town(ctx):
             "fields": [
                 {
                     "name": "Mayor",
-                    "value": f"```{town.mayor}```"
+                    "value": f"```{town.mayor}```",
+                    "inline": True
                 },
                 {
                     "name": "Nation",
-                    "value": f"```{town.nation}```"
+                    "value": f"```{town.nation}```",
+                    "inline": True
                 },
                 {
                     "name": "Flags",
@@ -127,7 +129,8 @@ def town(ctx):
 {'+' if town.flags['explosions'] else '-'} Explosions
 {'+' if town.flags['mobs'] else '-'} Mobs
 {'+' if town.flags['pvp'] else '-'} PVP
-```"""
+```""",
+                    "inline": True
                 },
                 *_long_fields(f"Residents [{len(town.residents)}]",
                               [res.name for res in town.residents])
@@ -170,15 +173,18 @@ def nation(ctx):
             "fields": [
                 {
                     "name": "Leader",
-                    "value": f"```{nation.leader}```"
+                    "value": f"```{nation.leader}```",
+                    "inline": True
                 },
                 {
                     "name": "Capital",
-                    "value": f"```{nation.capital}```"
+                    "value": f"```{nation.capital}```",
+                    "inline": True
                 },
                 {
                     "name": "Population",
-                    "value": f"```{len(nation.citizens)}```"
+                    "value": f"```{len(nation.citizens)}```",
+                    "inline": True
                 },
                 *_long_fields(f"Towns [{len(nation.towns)}]",
                               [town.name for town in nation.towns])
@@ -217,11 +223,13 @@ def resident(ctx):
         "fields": [
             {
                 "name": "Town",
-                "value": f"```{resident.town}```"
+                "value": f"```{resident.town}```",
+                "inline": True
             },
             {
                 "name": "Nation",
-                "value": f"```{resident.nation}```"
+                "value": f"```{resident.nation}```",
+                "inline": True
             }
         ]
     }
@@ -229,17 +237,20 @@ def resident(ctx):
         if resident.hidden:
             embed["fields"].append({
                 "name": "Position",
-                "value": f"```{resident} is currently not visible on the map```"
+                "value": f"```{resident} is currently not visible on the map```",
+                "inline": True
             })
         else:
             embed["fields"].append({
                 "name": "Position",
-                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))"
+                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))",
+                "inline": True
             })
     else:
         embed["fields"].append({
             "name": "Position",
-            "value": f"```{resident} is currently offline```"
+            "value": f"```{resident} is currently offline```",
+            "inline": True
         })
     return jsonify({
         "type": 4,
