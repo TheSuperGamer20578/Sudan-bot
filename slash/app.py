@@ -22,7 +22,7 @@ def slash():
     body = request.data
     verify_key = VerifyKey(bytes.fromhex(getenv("PUBLIC_KEY")))
     try:
-        verify_key.verify(f"{timestamp}{body}".encode(), bytes.fromhex(signature))
+        verify_key.verify(timestamp.encode() + body, bytes.fromhex(signature))
     except BadSignatureError:
         abort(401)
     if request.json["type"] == 1:
