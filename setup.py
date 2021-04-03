@@ -1,4 +1,5 @@
 from os import getenv
+from time import sleep
 
 from requests import post
 from dotenv import load_dotenv
@@ -6,21 +7,25 @@ from dotenv import load_dotenv
 load_dotenv()
 DISCORD = f"https://discord.com/api/v8/applications/{getenv('APPLICATION_ID')}"
 HEADERS = {"Authorization": f"Bot {getenv('BOT_TOKEN')}"}
+DELAY = 3
 
 post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "ping",
     "description": "Ping! Pong!"
 })
+sleep(DELAY)
 
 post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "invite",
     "description": "Invite me to your own server"
 })
+sleep(DELAY)
 
 post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "github",
     "description": "Get a link to my Github repository"
 })
+sleep(DELAY)
 
 post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "town",
@@ -32,6 +37,7 @@ post(DISCORD+"/commands", headers=HEADERS, json={
         "required": True
     }]
 })
+sleep(DELAY)
 
 post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "nation",
@@ -43,6 +49,7 @@ post(DISCORD+"/commands", headers=HEADERS, json={
         "required": True
     }]
 })
+sleep(DELAY)
 
 post(DISCORD+"/commands", headers=HEADERS, json={
     "name": "resident",
@@ -54,3 +61,4 @@ post(DISCORD+"/commands", headers=HEADERS, json={
         "required": True
     }]
 })
+sleep(DELAY)
