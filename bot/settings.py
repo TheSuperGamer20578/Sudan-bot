@@ -22,7 +22,7 @@ class settings(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=False, aliases=["set"])
-    def settings(self, ctx):
+    async def settings(self, ctx):
         embed = discord.Embed(title="Settings")
         if Checks.admin(ctx):
             settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
