@@ -1,12 +1,10 @@
 """
 A global config for the bot
 """
-import re
-
 import discord
 from discord.ext import commands
 
-from _util import GREEN
+from _util import GREEN, Checks
 
 settable = {
     "mod_roles": list,
@@ -23,22 +21,21 @@ class settings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    @commands.has_guild_permissions(manage_guild=True)
-    async def set(self, ctx, thing, value):
-        """
-        Changes settings
-        """
-        match = re.match("^<[@#][!&]?([0-9]{17,18})>$", value)
-        if match:
-            value = match.group(1)
-        if thing not in settable:
-            raise commands.errors.BadArgument()
-        if settable[thing] == list:
-            value = [value]
-        await self.bot.db.execute("UPDATE guilds SET $2 = $3 WHERE id = $1", ctx.guild.id, thing, settable[thing](value))
-        await ctx.message.delete()
-        embed = discord.Embed(title="Settings updated", colour=GREEN)
+    @commands.group(invoke_without_command=False, aliases=["set"])
+    def settings(self, ctx):
+        embed = discord.Embed(title="Settings")
+        if Checks.admin(ctx):
+            settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
+            embed.add_field(name="Server settings", value=f"""
+                Admin roles: {', '.join(f'<@&{settings["admin_roles"]}>')}
+                Moderator roles: {', '.join(f'<@&{settings["mod_roles"]}>')}
+                Ticket support role: {f'<@&{settings["support_role"]}>'}
+                Chain break role: {f'<@&{settings["chain_break_role"]}>'}
+            """)
+        settings = await self.bot.db.fetchrow("SELECT * FROM users WHERE id = $1", ctx.author.id)
+        embed.add_field(name="User settings", value=f"""
+            Dad mode: {'🟢' if settings['dad_mode'] else '🔴'}
+        """)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
