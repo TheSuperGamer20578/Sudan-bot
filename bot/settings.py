@@ -14,7 +14,7 @@ class settings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(invoke_without_command=False, aliases=["set"])
+    @commands.group(invoke_without_command=True, aliases=["set"])
     async def settings(self, ctx):
         await ctx.message.delete()
         embed = discord.Embed(title="Settings", colour=BLUE)
@@ -33,7 +33,7 @@ class settings(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @settings.group(invoke_without_command=False)
+    @settings.group(invoke_without_command=True)
     @commands.check(Checks.admin)
     async def admin(self, ctx):
         settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
@@ -60,7 +60,7 @@ class settings(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @settings.group(invoke_without_command=False)
+    @settings.group(invoke_without_command=True)
     @commands.check(Checks.admin)
     async def mod(self, ctx):
         settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
@@ -87,7 +87,7 @@ class settings(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @settings.group(invoke_without_command=False)
+    @settings.group(invoke_without_command=True)
     @commands.check(Checks.admin)
     async def support(self, ctx):
         settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
