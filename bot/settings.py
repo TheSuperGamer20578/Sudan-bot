@@ -18,7 +18,7 @@ class settings(commands.Cog):
     async def settings(self, ctx):
         await ctx.message.delete()
         embed = discord.Embed(title="Settings", colour=BLUE)
-        if Checks.admin(ctx):
+        if await Checks.admin(ctx):
             settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
             embed.add_field(name="Server settings", inline=False, value=f"""
                 Admin roles: {', '.join([f'<@&{role}>' for role in settings["admin_roles"]])}
