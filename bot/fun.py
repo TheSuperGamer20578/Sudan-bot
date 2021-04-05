@@ -123,14 +123,6 @@ class fun(commands.Cog):
         await asyncio.sleep(.1)
         await self.chain_check(message)
 
-    @commands.command()
-    async def dadmode(self, ctx):
-        """
-        Toggles Dad mode.
-        """
-        await self.bot.db.execute("UPDATE users SET dad_mode = NOT dad_mode WHERE id = $1", ctx.author.id)
-        await ctx.send("dad toggled!")
-
 
 def setup(bot):
     """
