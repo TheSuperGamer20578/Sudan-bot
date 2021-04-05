@@ -47,7 +47,7 @@ class settings(commands.Cog):
     async def admin_add(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET admin_roles = ARRAY_APPEND(admin_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Added {role.mention} to admin roles", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Added {role.mention} to admin roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -56,7 +56,7 @@ class settings(commands.Cog):
     async def admin_remove(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET admin_roles = ARRAY_REMOVE(admin_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Removed {role.mention} from admin roles", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Removed {role.mention} from admin roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -74,7 +74,7 @@ class settings(commands.Cog):
     async def mod_add(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET mod_roles = ARRAY_APPEND(mod_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Added {role.mention} to moderator roles", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Added {role.mention} to moderator roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -83,7 +83,7 @@ class settings(commands.Cog):
     async def mod_remove(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET mod_roles = ARRAY_REMOVE(mod_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Removed {role.mention} from moderator roles", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Removed {role.mention} from moderator roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -101,7 +101,7 @@ class settings(commands.Cog):
     async def support_add(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET support_roles = ARRAY_APPEND(support_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Added {role.mention} to ticket support roles", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Added {role.mention} to ticket support roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -110,7 +110,7 @@ class settings(commands.Cog):
     async def support_remove(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET support_roles = ARRAY_REMOVE(support_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Removed {role.mention} from ticket support roles", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Removed {role.mention} from ticket support roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -119,7 +119,7 @@ class settings(commands.Cog):
     async def breakrole(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET chain_break_role = $2 WHERE id = $1", ctx.guild.id, role.id)
-        embed = discord.Embed(title=f"Set chain break role to {role.mention}", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"Set chain break role to {role.mention}", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -127,7 +127,7 @@ class settings(commands.Cog):
     async def dad(self, ctx, toggle: bool):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE users SET dad_mode = $2 WHERE id = $1", ctx.author.id, toggle)
-        embed = discord.Embed(title=f"{'Enabled' if toggle else 'Disabled'} dad mode", colour=GREEN)
+        embed = discord.Embed(title="Settings updated", description=f"{'Enabled' if toggle else 'Disabled'} dad mode", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
