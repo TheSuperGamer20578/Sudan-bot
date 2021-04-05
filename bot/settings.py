@@ -22,10 +22,10 @@ class settings(commands.Cog):
         if await Checks.admin(ctx):
             settings_ = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
             embed.add_field(name="Server settings", inline=False, value=f"""
-                Admin roles: {', '.join([f'<@&{role}>' for role in settings_["admin_roles"]])}
-                Moderator roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]])}
-                Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]])}
-                Chain break role: {f'<@&{settings_["chain_break_role"]}>'}
+                Admin roles: {', '.join([f'<@&{role}>' for role in settings_["admin_roles"]]) if len(settings_['admin_roles']) > 0 else 'None'}
+                Moderator roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]]) if len(settings_['mod_roles']) > 0 else 'None'}
+                Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["support_roles"]]) if len(settings_['support_roles']) > 0 else 'None'}
+                Chain break role: {f'<@&{settings_["chain_break_role"]}>' if settings_["chain_break_role"] is not None else 'None'}
             """)
         settings_ = await self.bot.db.fetchrow("SELECT * FROM users WHERE id = $1", ctx.author.id)
         embed.add_field(name="User settings", inline=False, value=f"""
@@ -40,7 +40,7 @@ class settings(commands.Cog):
         """Lists admin roles"""
         roles = await self.bot.db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Admin roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]))
+        embed = discord.Embed(title="Admin roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]) if len(roles) > 0 else 'None')
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -84,7 +84,7 @@ class settings(commands.Cog):
         """Lists moderator roles"""
         roles = await self.bot.db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]))
+        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]) if len(roles) > 0 else 'None')
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -114,7 +114,7 @@ class settings(commands.Cog):
         """Lists ticket support roles"""
         roles = await self.bot.db.fetchval("SELECT support_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Ticket support roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]))
+        embed = discord.Embed(title="Ticket support roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]) if len(roles) > 0 else 'None')
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
