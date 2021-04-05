@@ -40,7 +40,7 @@ class Checks:
         Check to see if the user is a mod
         """
         for role in await _DB.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id):
-            if role in ctx.author.roles:
+            if role in [r.id for r in ctx.author.roles]:
                 return True
         return False
 
@@ -50,6 +50,6 @@ class Checks:
         Check to see if the user is an admin
         """
         for role in await _DB.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id):
-            if role in ctx.author.roles:
+            if role in [r.id for r in ctx.author.roles]:
                 return True
         return False
