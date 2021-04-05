@@ -43,7 +43,7 @@ class settings(commands.Cog):
         await ctx.send(embed=embed)
 
     @admin.command(name="add")
-    @commands.check_any(commands.check(Checks.admin), commands.is_owner)
+    @commands.check(lambda ctx: Checks.admin(ctx) or ctx.author == ctx.guild.owner)
     async def admin_add(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET admin_roles = ARRAY_APPEND(admin_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
