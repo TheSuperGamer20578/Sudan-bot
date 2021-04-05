@@ -1,8 +1,6 @@
 """
 Stuff that is shared between all cogs
 """
-# pylint: skip-file
-# TODO: Make checks work properly
 # colours
 BLUE = 0x0a8cf0
 PURPLE = 0x6556FF
