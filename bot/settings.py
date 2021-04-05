@@ -4,7 +4,7 @@ A global config for the bot
 import discord
 from discord.ext import commands
 
-from _util import GREEN, BLUE, Checks
+from _util import GREEN, BLUE, RED, Checks
 
 
 class settings(commands.Cog):
@@ -42,8 +42,21 @@ class settings(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
+    @admin.command(name="set")
+    @commands.check(lambda ctx: ctx.author == ctx.guild.owner)
+    async def admin_set(self, ctx, role: discord.Role):
+        await ctx.message.delete()
+        roles = await self.bot.db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id)
+        if len(roles) > 0:
+            embed = discord.Embed(title="You already have an admin role set", description="use `.set admin add <role>` to add more", colour=RED)
+        else:
+            await self.bot.db.execute("UPDATE guilds SET admin_roles = ARRAY_APPEND(admin_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
+            embed = discord.Embed(title="Settings updated", description=f"Set {role.mention} as this server's admin role", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
     @admin.command(name="add")
-    @commands.check(lambda ctx: Checks.admin(ctx) or (ctx.author.id == ctx.guild.owner_id))
+    @commands.check(Checks.admin)
     async def admin_add(self, ctx, role: discord.Role):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET admin_roles = ARRAY_APPEND(admin_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
