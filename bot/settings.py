@@ -20,16 +20,16 @@ class settings(commands.Cog):
         await ctx.message.delete()
         embed = discord.Embed(title="Settings", colour=BLUE)
         if await Checks.admin(ctx):
-            settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
+            settings_ = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
             embed.add_field(name="Server settings", inline=False, value=f"""
-                Admin roles: {', '.join([f'<@&{role}>' for role in settings["admin_roles"]])}
-                Moderator roles: {', '.join([f'<@&{role}>' for role in settings["mod_roles"]])}
-                Ticket support roles: {', '.join([f'<@&{role}>' for role in settings["mod_roles"]])}
-                Chain break role: {f'<@&{settings["chain_break_role"]}>'}
+                Admin roles: {', '.join([f'<@&{role}>' for role in settings_["admin_roles"]])}
+                Moderator roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]])}
+                Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]])}
+                Chain break role: {f'<@&{settings_["chain_break_role"]}>'}
             """)
-        settings = await self.bot.db.fetchrow("SELECT * FROM users WHERE id = $1", ctx.author.id)
+        settings_ = await self.bot.db.fetchrow("SELECT * FROM users WHERE id = $1", ctx.author.id)
         embed.add_field(name="User settings", inline=False, value=f"""
-            Dad mode: {'🟢' if settings['dad_mode'] else '🔴'}
+            Dad mode: {'🟢' if settings_['dad_mode'] else '🔴'}
         """)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -38,9 +38,9 @@ class settings(commands.Cog):
     @commands.check(Checks.admin)
     async def admin(self, ctx):
         """Lists admin roles"""
-        settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
+        roles = await self.bot.db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Admin roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in settings["admin_roles"]]))
+        embed = discord.Embed(title="Admin roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]))
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -82,9 +82,9 @@ class settings(commands.Cog):
     @commands.check(Checks.admin)
     async def mod(self, ctx):
         """Lists moderator roles"""
-        settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
+        roles = await self.bot.db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in settings["mod_roles"]]))
+        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]))
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -112,9 +112,9 @@ class settings(commands.Cog):
     @commands.check(Checks.admin)
     async def support(self, ctx):
         """Lists ticket support roles"""
-        settings = await self.bot.db.fetchrow("SELECT * FROM guilds WHERE id = $1", ctx.guild.id)
+        roles = await self.bot.db.fetchval("SELECT support_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Ticket support roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in settings["support_roles"]]))
+        embed = discord.Embed(title="Ticket support roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]))
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
