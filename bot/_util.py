@@ -1,8 +1,6 @@
 """
 Stuff that is shared between all cogs
 """
-# pylint: skip-file
-# TODO: Make checks work properly
 # colours
 BLUE = 0x0a8cf0
 PURPLE = 0x6556FF
@@ -39,19 +37,17 @@ class Checks:
         """
         Check to see if the user is a mod
         """
-        return any([a in b for a, b in (
-            await _DB.fetchval(
-                "SELECT mod_roles FROM guilds WHERE id = $1",
-                ctx.guild.id),
-            [role.id for role in ctx.author.roles])])
+        for role in await _DB.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id):
+            if role in [r.id for r in ctx.author.roles]:
+                return True
+        return False
 
     @staticmethod
     async def admin(ctx):
         """
         Check to see if the user is an admin
         """
-        return any([a in b for a, b in (
-            await _DB.fetchval(
-                "SELECT admin_roles FROM guilds WHERE id = $1",
-                ctx.guild.id),
-            [role.id for role in ctx.author.roles])])
+        for role in await _DB.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id):
+            if role in [r.id for r in ctx.author.roles]:
+                return True
+        return False
