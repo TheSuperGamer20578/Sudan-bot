@@ -320,7 +320,7 @@ def resident(ctx, private):
 @command
 def settings(ctx, private):
     if private:
-        message = "```md\n### Settings ###"
+        message = "### Settings ###"
         if Checks.admin(ctx):
             with db.cursor() as curr:
                 curr.execute(
@@ -340,7 +340,7 @@ Private commands: {'🟢' if settings[4] else '🔴'}"""
             settings = curr.fetchone()
         message += f"""
 ()[User settings]()
-Dad mode: {'🟢' if settings[0] else '🔴'}```"""
+Dad mode: {'🟢' if settings[0] else '🔴'}"""
         return {"content": message}
     embed = {
         "title": "Settings",
