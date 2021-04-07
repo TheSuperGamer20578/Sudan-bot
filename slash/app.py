@@ -11,7 +11,7 @@ from psycopg2 import connect
 app = Flask(__name__)
 load_dotenv()
 if "DATABASE_URL" in environ:
-    db = connect(getenv("DATABASE_URL"), ssl="require")
+    db = connect(getenv("DATABASE_URL"))
 else:
     db = connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
                  host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
