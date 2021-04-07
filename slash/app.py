@@ -65,18 +65,20 @@ def slash():
         with db.cursor() as curr:
             curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"]),))
             private = curr.fetchone()[0]
-            return jsonify({"type": 4, "data": {"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json)}})
+            return jsonify({"type": 4, "data": {"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json, private)}})
 
 
 @command
-def ping(ctx):
+def ping(ctx, private):
     return {
         "content": "Pong!"
     }
 
 
 @command
-def invite(ctx):
+def invite(ctx, private):
+    if private:
+        return {"content": "[Add me to your own server by clicking here](https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot%20applications.commands)"}
     return {
         "embeds": [{
             "title": "Add me to your own server by clicking here",
@@ -87,7 +89,9 @@ def invite(ctx):
 
 
 @command
-def github(ctx):
+def github(ctx, private):
+    if private:
+        return {"content": "[Click here to goto my Github repository](https://github.com/TheSuperGamer20578/Sudan-bot)"}
     return {
         "embeds": [{
             "title": "Click here to goto my Github repository",
@@ -98,16 +102,17 @@ def github(ctx):
 
 
 @command
-def town(ctx):
+def town(ctx, private):
     try:
         town = Town(ctx["data"]["options"][0]["value"])
     except TownNotFoundException:
         return {
             "flags": 64,
-            "embeds": [{
-                "title": f"The town {ctx['data']['options'][0]['value']} was not found",
-                "color": RED
-            }]
+            "content": f"The town {ctx['data']['options'][0]['value']} was not found"
+            # "embeds": [{
+            #     "title": f"The town {ctx['data']['options'][0]['value']} was not found",
+            #     "color": RED
+            # }]
         }
     embed = {
         "title": town.name,
@@ -155,16 +160,17 @@ def town(ctx):
 
 
 @command
-def nation(ctx):
+def nation(ctx, private):
     try:
         nation = Nation(ctx["data"]["options"][0]["value"])
     except NationNotFoundException:
         return {
             "flags": 64,
-            "embeds": [{
-                "title": f"The nation {ctx['data']['options'][0]['value']} was not found",
-                "color": RED
-            }]
+            "content": f"The nation {ctx['data']['options'][0]['value']} was not found"
+            # "embeds": [{
+            #     "title": f"The nation {ctx['data']['options'][0]['value']} was not found",
+            #     "color": RED
+            # }]
         }
     embed = {
         "title": nation.name,
@@ -206,7 +212,7 @@ def nation(ctx):
 
 
 @command
-def resident(ctx):
+def resident(ctx, private):
     resident = Resident(ctx["data"]["options"][0]["value"])
     embed = {
         "title": resident.name,
