@@ -6,7 +6,7 @@ from nacl.exceptions import BadSignatureError
 from dotenv import load_dotenv
 from emc import Town, Nation, Resident
 from emc.exceptions import TownNotFoundException, NationNotFoundException
-from psycopg2 import connection
+from psycopg2 import connect
 
 app = Flask(__name__)
 load_dotenv()
