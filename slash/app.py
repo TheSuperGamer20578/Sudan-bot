@@ -159,7 +159,6 @@ def nation(ctx):
     try:
         nation = Nation(ctx["data"]["options"][0]["value"])
     except NationNotFoundException:
-
         return {
             "flags": 64,
             "embeds": [{

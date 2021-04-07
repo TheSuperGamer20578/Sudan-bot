@@ -154,7 +154,7 @@ class settings(commands.Cog):
     async def private(self, ctx, toggle: bool):
         """Enables or disables private commands"""
         await ctx.message.delete()
-        await self.bot.db.execute("UPDATE guilds SET private_commands = $2 WHERE id = $1", ctx.author.id, toggle)
+        await self.bot.db.execute("UPDATE guilds SET private_commands = $2 WHERE id = $1", ctx.guild.id, toggle)
         embed = discord.Embed(title="Settings updated", description=f"{'Enabled' if toggle else 'Disabled'} private commands", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
