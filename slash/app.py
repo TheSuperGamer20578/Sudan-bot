@@ -65,41 +65,35 @@ def slash():
         with db.cursor() as curr:
             curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"]),))
             private = curr.fetchone()[0]
-            return jsonify({"flags": 64 if private else 0, "type": 4, **commands[request.json["data"]["name"]](request.json)})
+            return jsonify({"type": 4, "data": {"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json)}})
 
 
 @command
 def ping(ctx):
     return {
-        "data": {
-            "content": "Pong!"
-        }
+        "content": "Pong!"
     }
 
 
 @command
 def invite(ctx):
     return {
-        "data": {
-            "embeds": [{
-                "title": "Add me to your own server by clicking here",
-                "url": "https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot%20applications.commands",
-                "color": BLUE
-            }]
-        }
+        "embeds": [{
+            "title": "Add me to your own server by clicking here",
+            "url": "https://discord.com/api/oauth2/authorize?client_id=693313847028744212&permissions=0&scope=bot%20applications.commands",
+            "color": BLUE
+        }]
     }
 
 
 @command
 def github(ctx):
     return {
-        "data": {
-            "embeds": [{
-                "title": "Click here to goto my Github repository",
-                "url": "https://github.com/TheSuperGamer20578/Sudan-bot",
-                "color": BLUE
-            }]
-        }
+        "embeds": [{
+            "title": "Click here to goto my Github repository",
+            "url": "https://github.com/TheSuperGamer20578/Sudan-bot",
+            "color": BLUE
+        }]
     }
 
 
@@ -110,12 +104,10 @@ def town(ctx):
     except TownNotFoundException:
         return {
             "flags": 64,
-            "data": {
-                "embeds": [{
-                    "title": f"The town {ctx['data']['options'][0]['value']} was not found",
-                    "color": RED
-                }]
-            }
+            "embeds": [{
+                "title": f"The town {ctx['data']['options'][0]['value']} was not found",
+                "color": RED
+            }]
         }
     embed = {
         "title": town.name,
@@ -159,11 +151,7 @@ def town(ctx):
             "value": f"```No online residents in {town}```",
             "inline": False
         })
-    return {
-        "data": {
-            "embeds": [embed]
-        }
-    }
+    return {"embeds": [embed]}
 
 
 @command
@@ -174,12 +162,10 @@ def nation(ctx):
 
         return {
             "flags": 64,
-            "data": {
-                "embeds": [{
-                    "title": f"The nation {ctx['data']['options'][0]['value']} was not found",
-                    "color": RED
-                }]
-            }
+            "embeds": [{
+                "title": f"The nation {ctx['data']['options'][0]['value']} was not found",
+                "color": RED
+            }]
         }
     embed = {
         "title": nation.name,
@@ -217,11 +203,7 @@ def nation(ctx):
             "value": f"```0 citizens online in {nation}```",
             "inline": False
         })
-    return {
-        "data": {
-            "embeds": [embed]
-        }
-    }
+    return {"embeds": [embed]}
 
 
 @command
@@ -265,8 +247,4 @@ def resident(ctx):
             "value": f"```{resident} is currently offline```",
             "inline": True
         })
-    return {
-        "data": {
-            "embeds": [embed]
-        }
-    }
+    return {"embeds": [embed]}
