@@ -63,7 +63,7 @@ def slash():
         })
     elif request.json["type"] == 2:
         with db.cursor() as curr:
-            curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"])))
+            curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"]),))
             private = curr.fetchone()[0]
             return jsonify({"flags": 64 if private else 0, "type": 4, **commands[request.json["data"]["name"]](request.json)})
 
