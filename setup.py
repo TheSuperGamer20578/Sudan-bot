@@ -62,3 +62,9 @@ post(DISCORD+"/commands", headers=HEADERS, json={
     }]
 })
 sleep(DELAY)
+
+post(DISCORD+"/commands", headers=HEADERS, json={
+    "name": "settings",
+    "description": "Shows your settings"
+})
+sleep(DELAY)

@@ -315,3 +315,35 @@ def resident(ctx, private):
             "inline": True
         })
     return {"embeds": [embed]}
+
+
+@command
+def settings(ctx, private):
+    embed = {
+        "title": "Settings",
+        "fields": []
+    }
+    if Checks.admin(ctx):
+        with db.cursor() as curr:
+            curr.execute("SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands FROM guilds WHERE id = %s", (ctx["guild_id"],))
+            settings = curr.fetchone()
+        embed["fields"].append({
+            "name": "Server settings",
+            "value": f"""
+                Admin roles: {', '.join([f'<@&{role}>' for role in settings[0]]) if len(settings[0]) > 0 else 'None'}
+                Moderator roles: {', '.join([f'<@&{role}>' for role in settings[1]]) if len(settings[1]) > 0 else 'None'}
+                Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len(settings[2]) > 0 else 'None'}
+                Chain break role: {f'<@&{settings[3]}>' if settings[3] is not None else 'None'}
+                Private commands: {'🟢' if settings[4] else '🔴'}
+            """
+        })
+    with db.cursor() as curr:
+        curr.execute("SELECT dad_mode FROM users WHERE id = %s", (ctx["member"]["id"],))
+        settings = curr.fetchone()
+    embed["fields"].append({
+        "name": "User settings",
+        "value": f"""
+            Dad mode: {'🟢' if settings[0] else '🔴'}
+        """
+    })
+    return {"embeds": [embed]}
