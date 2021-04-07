@@ -194,7 +194,7 @@ def nation(ctx, private):
 <Capital> {nation.capital}
 <Population> {len(nation.citizens)}
 <Towns {len(nation.towns)}> {', '.join([town.name for town in nation.towns])}
-<Online {len(online)}> {', '.join(online) if len(online) > 1 else f'No citizens online in {nation}'}```"""}
+<Online {len(online)}> {', '.join(online) if len(online) > 0 else f'No citizens online in {nation}'}```"""}
     embed = {
         "title": nation.name,
         "color": int(nation.colour[1:], 16),
