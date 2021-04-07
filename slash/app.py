@@ -1,4 +1,4 @@
-from os import getenv
+from os import getenv, environ
 
 from flask import Flask, jsonify, request, Response, abort
 from nacl.signing import VerifyKey
@@ -6,9 +6,15 @@ from nacl.exceptions import BadSignatureError
 from dotenv import load_dotenv
 from emc import Town, Nation, Resident
 from emc.exceptions import TownNotFoundException, NationNotFoundException
+from psycopg2 import connection
 
 app = Flask(__name__)
 load_dotenv()
+if "DATABASE_URL" in environ:
+    db = connect(getenv("DATABASE_URL"), ssl="require")
+else:
+    db = connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
+                 host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
 BLUE = 0x0a8cf0
 PURPLE = 0x6556FF
 GREEN = 0x36eb45
@@ -56,22 +62,25 @@ def slash():
             "type": 1
         })
     elif request.json["type"] == 2:
-        return commands[request.json["data"]["name"]](request.json)
+        with db.cursor() as curr:
+            curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"])))
+            private = curr.fetchone()[0]
+            return jsonify({"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json)})
 
 
 @command
 def ping(ctx):
-    return jsonify({
+    return {
         "type": 4,
         "data": {
             "content": "Pong!"
         }
-    })
+    }
 
 
 @command
 def invite(ctx):
-    return jsonify({
+    return {
         "type": 4,
         "data": {
             "embeds": [{
@@ -80,12 +89,12 @@ def invite(ctx):
                 "color": BLUE
             }]
         }
-    })
+    }
 
 
 @command
 def github(ctx):
-    return jsonify({
+    return {
         "type": 4,
         "data": {
             "embeds": [{
@@ -94,7 +103,7 @@ def github(ctx):
                 "color": BLUE
             }]
         }
-    })
+    }
 
 
 @command
@@ -149,12 +158,12 @@ def town(ctx):
                 "value": f"```No online residents in {town}```",
                 "inline": False
             })
-    return jsonify({
+    return {
         "type": 4,
         "data": {
             "embeds": [embed]
         }
-    })
+    }
 
 
 @command
@@ -203,12 +212,12 @@ def nation(ctx):
                 "value": f"```0 citizens online in {nation}```",
                 "inline": False
             })
-    return jsonify({
+    return {
         "type": 4,
         "data": {
             "embeds": [embed]
         }
-    })
+    }
 
 
 @command
@@ -252,9 +261,9 @@ def resident(ctx):
             "value": f"```{resident} is currently offline```",
             "inline": True
         })
-    return jsonify({
+    return {
         "type": 4,
         "data": {
             "embeds": [embed]
         }
-    })
+    }
