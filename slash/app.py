@@ -114,6 +114,20 @@ def town(ctx, private):
             #     "color": RED
             # }]
         }
+    if private:
+        online = [res.name for res in town.residents if res.online]
+        return {"content": f"""```md
+### {town} ###
+<Mayor> {town.mayor}
+<Nation> {town.nation}
+<Residents {len(town.residents)}> {', '.join(town.residents)}
+<Online {len(online)}> {', '.join(online) if len(online) > 0 else f'No residents online in {town}'}
+[Flags]
+{'#' if town.flags['capital'] else '>'} Capital
+{'#' if town.flags['fire'] else '>'} Fire
+{'#' if town.flags['explosions'] else '>'} Explosions
+{'#' if town.flags['mobs'] else '>'} Mobs
+{'#' if town.flags['pvp'] else '>'} PVP```"""}
     embed = {
         "title": town.name,
         "color": int(town.colour[1:], 16),
