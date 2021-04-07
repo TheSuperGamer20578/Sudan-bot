@@ -328,7 +328,7 @@ def settings(ctx, private):
                     (ctx["guild_id"],))
                 settings = curr.fetchone()
             message += f"""
-()[Server settings]()
+--- Server settings ---
 Admin roles: {', '.join([f'<@&{role}>' for role in settings[0]]) if len(settings[0]) > 0 else 'None'}
 Moderator roles: {', '.join([f'<@&{role}>' for role in settings[1]]) if len(settings[1]) > 0 else 'None'}
 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len(settings[2]) > 0 else 'None'}
@@ -339,7 +339,7 @@ Private commands: {'🟢' if settings[4] else '🔴'}"""
                          (ctx["member"]["user"]["id"],))
             settings = curr.fetchone()
         message += f"""
-()[User settings]()
+--- User settings ---
 Dad mode: {'🟢' if settings[0] else '🔴'}"""
         return {"content": message}
     embed = {
