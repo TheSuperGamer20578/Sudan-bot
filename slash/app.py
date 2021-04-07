@@ -237,6 +237,20 @@ def nation(ctx, private):
 @command
 def resident(ctx, private):
     resident = Resident(ctx["data"]["options"][0]["value"])
+    if private:
+        resp = f"""```md
+### {resident} ###
+<Town> {resident.town}
+<Nation> {resident.nation}
+<Position> """
+        if resident.online:
+            if resident.hidden:
+                resp += f"{resident} is currently not visible on the map```"
+            else:
+                resp += f"{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))"
+        else:
+            resp += f"{resident} is currently offline```"
+        return {"content": resp}
     embed = {
         "title": resident.name,
         "color": BLUE,
