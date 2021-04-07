@@ -172,6 +172,16 @@ def nation(ctx, private):
             #     "color": RED
             # }]
         }
+    if private:
+        online = [res.name for res in nation.citizens if res.online]
+        return {"content": f"""```md
+        ### {nation} ###
+        <Leader> {nation.leader}
+        <Capital> {nation.capital}
+        <Population> {len(nation.citizens)}
+        <Towns {len(nation.towns)}> {', '.join([town.name for town in nation.towns])}
+        <Online {len(online)}> {', '.join(online) if len(online) > 1 else f'No citizens online in {nation}'}
+        ```"""}
     embed = {
         "title": nation.name,
         "color": int(nation.colour[1:], 16),
@@ -205,7 +215,7 @@ def nation(ctx, private):
     else:
         embed["fields"].append({
             "name": "Online [0]",
-            "value": f"```0 citizens online in {nation}```",
+            "value": f"```No citizens online in {nation}```",
             "inline": False
         })
     return {"embeds": [embed]}
