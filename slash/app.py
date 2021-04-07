@@ -120,7 +120,7 @@ def town(ctx, private):
 ### {town} ###
 <Mayor> {town.mayor}
 <Nation> {town.nation}
-<Residents {len(town.residents)}> {', '.join(town.residents)}
+<Residents {len(town.residents)}> {', '.join([res.name for res in town.residents])}
 <Online {len(online)}> {', '.join(online) if len(online) > 0 else f'No residents online in {town}'}
 [Flags]
 {'#' if town.flags['capital'] else '>'} Capital
