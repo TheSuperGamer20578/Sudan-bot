@@ -338,7 +338,7 @@ def settings(ctx, private):
             """
         })
     with db.cursor() as curr:
-        curr.execute("SELECT dad_mode FROM users WHERE id = %s", (ctx["user"]["id"],))
+        curr.execute("SELECT dad_mode FROM users WHERE id = %s", (ctx["member"]["user"]["id"],))
         settings = curr.fetchone()
     embed["fields"].append({
         "name": "User settings",
