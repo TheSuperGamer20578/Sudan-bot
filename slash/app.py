@@ -22,9 +22,34 @@ RED = 0xb00e0e
 commands = {}
 
 
+class Checks:
+    @staticmethod
+    def admin(ctx):
+        with db.cursor() as curr:
+            curr.execute("SELECT admin_roles FROM guilds WHERE id = %s", (ctx["guild_id"],))
+            roles = curr.fetchone()[0]
+        for role in roles:
+            if str(role) in ctx["member"]["roles"]:
+                return True
+            return False
+
+
 def command(func):
     commands[func.__name__] = func
     return func
+
+
+def check(check):
+    def decorator(func):
+        def wrapper(ctx, private):
+            if check(ctx):
+                return func(ctx, private)
+            return {
+                "flags": 64,
+                "content": f"You do not have permission to use {ctx['data']['name']}"
+            }
+        return wrapper
+    return decorator
 
 
 def _long_fields(title, list_):
@@ -65,7 +90,7 @@ def slash():
         with db.cursor() as curr:
             curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"]),))
             private = curr.fetchone()[0]
-            return jsonify({"type": 4, "data": {"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json, private)}})
+        return jsonify({"type": 4, "data": {"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json, private)}})
 
 
 @command
