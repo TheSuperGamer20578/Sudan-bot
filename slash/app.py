@@ -65,13 +65,12 @@ def slash():
         with db.cursor() as curr:
             curr.execute("SELECT private_commands FROM guilds WHERE id = %s", (int(request.json["guild_id"])))
             private = curr.fetchone()[0]
-            return jsonify({"flags": 64 if private else 0, **commands[request.json["data"]["name"]](request.json)})
+            return jsonify({"flags": 64 if private else 0, "type": 4, **commands[request.json["data"]["name"]](request.json)})
 
 
 @command
 def ping(ctx):
     return {
-        "type": 4,
         "data": {
             "content": "Pong!"
         }
@@ -81,7 +80,6 @@ def ping(ctx):
 @command
 def invite(ctx):
     return {
-        "type": 4,
         "data": {
             "embeds": [{
                 "title": "Add me to your own server by clicking here",
@@ -95,7 +93,6 @@ def invite(ctx):
 @command
 def github(ctx):
     return {
-        "type": 4,
         "data": {
             "embeds": [{
                 "title": "Click here to goto my Github repository",
@@ -111,55 +108,58 @@ def town(ctx):
     try:
         town = Town(ctx["data"]["options"][0]["value"])
     except TownNotFoundException:
-        embed = {
-            "title": f"The town {ctx['data']['options'][0]['value']} was not found",
-            "color": RED
+        return {
+            "flags": 64,
+            "data": {
+                "embeds": [{
+                    "title": f"The town {ctx['data']['options'][0]['value']} was not found",
+                    "color": RED
+                }]
+            }
         }
-    else:
-        embed = {
-            "title": town.name,
-            "color": int(town.colour[1:], 16),
-            "fields": [
-                {
-                    "name": "Mayor",
-                    "value": f"```{town.mayor}```",
-                    "inline": True
-                },
-                {
-                    "name": "Nation",
-                    "value": f"```{town.nation}```",
-                    "inline": True
-                },
-                {
-                    "name": "Flags",
-                    "value": f"""```diff
+    embed = {
+        "title": town.name,
+        "color": int(town.colour[1:], 16),
+        "fields": [
+            {
+                "name": "Mayor",
+                "value": f"```{town.mayor}```",
+                "inline": True
+            },
+            {
+                "name": "Nation",
+                "value": f"```{town.nation}```",
+                "inline": True
+            },
+            {
+                "name": "Flags",
+                "value": f"""```diff
 {'+' if town.flags['capital'] else '-'} Capital
 {'+' if town.flags['fire'] else '-'} Fire
 {'+' if town.flags['explosions'] else '-'} Explosions
 {'+' if town.flags['mobs'] else '-'} Mobs
 {'+' if town.flags['pvp'] else '-'} PVP
 ```""",
-                    "inline": True
-                },
-                *_long_fields(f"Residents [{len(town.residents)}]",
-                              [res.name for res in town.residents])
-            ]
-        }
-        online = [res.name for res in town.residents if res.online]
-        if len(online) > 0:
-            embed["fields"].append({
-                "name": f"Online residents [{len(online)}]",
-                "value": f"```{', '.join(online)}```",
-                "inline": False
-            })
-        else:
-            embed["fields"].append({
-                "name": "Online residents [0]",
-                "value": f"```No online residents in {town}```",
-                "inline": False
-            })
+                "inline": True
+            },
+            *_long_fields(f"Residents [{len(town.residents)}]",
+                          [res.name for res in town.residents])
+        ]
+    }
+    online = [res.name for res in town.residents if res.online]
+    if len(online) > 0:
+        embed["fields"].append({
+            "name": f"Online residents [{len(online)}]",
+            "value": f"```{', '.join(online)}```",
+            "inline": False
+        })
+    else:
+        embed["fields"].append({
+            "name": "Online residents [0]",
+            "value": f"```No online residents in {town}```",
+            "inline": False
+        })
     return {
-        "type": 4,
         "data": {
             "embeds": [embed]
         }
@@ -171,49 +171,53 @@ def nation(ctx):
     try:
         nation = Nation(ctx["data"]["options"][0]["value"])
     except NationNotFoundException:
-        embed = {
-            "title": f"The nation {ctx['data']['options'][0]['value']} was not found",
-            "color": RED
+
+        return {
+            "flags": 64,
+            "data": {
+                "embeds": [{
+                    "title": f"The nation {ctx['data']['options'][0]['value']} was not found",
+                    "color": RED
+                }]
+            }
         }
+    embed = {
+        "title": nation.name,
+        "color": int(nation.colour[1:], 16),
+        "fields": [
+            {
+                "name": "Leader",
+                "value": f"```{nation.leader}```",
+                "inline": True
+            },
+            {
+                "name": "Capital",
+                "value": f"```{nation.capital}```",
+                "inline": True
+            },
+            {
+                "name": "Population",
+                "value": f"```{len(nation.citizens)}```",
+                "inline": True
+            },
+            *_long_fields(f"Towns [{len(nation.towns)}]",
+                          [town.name for town in nation.towns])
+        ]
+    }
+    online = [res.name for res in nation.citizens if res.online]
+    if len(online) > 0:
+        embed["fields"].append({
+            "name": f"Online [{len(online)}]",
+            "value": f"```{', '.join(online)}```",
+            "inline": False
+        })
     else:
-        embed = {
-            "title": nation.name,
-            "color": int(nation.colour[1:], 16),
-            "fields": [
-                {
-                    "name": "Leader",
-                    "value": f"```{nation.leader}```",
-                    "inline": True
-                },
-                {
-                    "name": "Capital",
-                    "value": f"```{nation.capital}```",
-                    "inline": True
-                },
-                {
-                    "name": "Population",
-                    "value": f"```{len(nation.citizens)}```",
-                    "inline": True
-                },
-                *_long_fields(f"Towns [{len(nation.towns)}]",
-                              [town.name for town in nation.towns])
-            ]
-        }
-        online = [res.name for res in nation.citizens if res.online]
-        if len(online) > 0:
-            embed["fields"].append({
-                "name": f"Online [{len(online)}]",
-                "value": f"```{', '.join(online)}```",
-                "inline": False
-            })
-        else:
-            embed["fields"].append({
-                "name": "Online [0]",
-                "value": f"```0 citizens online in {nation}```",
-                "inline": False
-            })
+        embed["fields"].append({
+            "name": "Online [0]",
+            "value": f"```0 citizens online in {nation}```",
+            "inline": False
+        })
     return {
-        "type": 4,
         "data": {
             "embeds": [embed]
         }
@@ -262,7 +266,6 @@ def resident(ctx):
             "inline": True
         })
     return {
-        "type": 4,
         "data": {
             "embeds": [embed]
         }
