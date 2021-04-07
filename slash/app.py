@@ -175,13 +175,12 @@ def nation(ctx, private):
     if private:
         online = [res.name for res in nation.citizens if res.online]
         return {"content": f"""```md
-        ### {nation} ###
-        <Leader> {nation.leader}
-        <Capital> {nation.capital}
-        <Population> {len(nation.citizens)}
-        <Towns {len(nation.towns)}> {', '.join([town.name for town in nation.towns])}
-        <Online {len(online)}> {', '.join(online) if len(online) > 1 else f'No citizens online in {nation}'}
-        ```"""}
+### {nation} ###
+<Leader> {nation.leader}
+<Capital> {nation.capital}
+<Population> {len(nation.citizens)}
+<Towns {len(nation.towns)}> {', '.join([town.name for town in nation.towns])}
+<Online {len(online)}> {', '.join(online) if len(online) > 1 else f'No citizens online in {nation}'}```"""}
     embed = {
         "title": nation.name,
         "color": int(nation.colour[1:], 16),
