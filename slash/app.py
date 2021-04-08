@@ -94,6 +94,11 @@ def slash():
 
 
 @command
+def debug(ctx, private):
+    return {"content": repr(ctx)}
+
+
+@command
 def ping(ctx, private):
     return {
         "content": "Pong!"
