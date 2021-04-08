@@ -389,11 +389,11 @@ def set(ctx, private):
                         int(ctx["member"]["user"]["id"])
                     ))
             if private:
-                return {"content": f"{'Enabled' if toggle else 'Disabled'} dad mode"}
+                return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} dad mode"}
             return {
                 "embeds": [{
                     "title": "Settings updated",
-                    "description": f"{'Enabled' if toggle else 'Disabled'} dad mode",
+                    "description": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} dad mode",
                     "color": GREEN
                 }]
             }
