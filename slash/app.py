@@ -414,3 +414,18 @@ def set(ctx, private):
                     ))
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles"}
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "moderator":
+            with db.cursor() as curr:
+                if ctx["data"]["options"][0]["options"][0]["options"][0]["value"]:
+                    curr.execute("UPDATE guilds SET mod_roles = ARRAY_APPEND(mod_roles, %s) WHERE id = %s", (
+                        int(["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+                else:
+                    curr.execute("UPDATE guilds SET mod_roles = ARRAY_REMOVE(mod_roles, %s) WHERE id = %s", (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+            if private:
+                return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from moderator roles"}
