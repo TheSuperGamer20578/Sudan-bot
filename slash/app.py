@@ -376,3 +376,28 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
         """
     })
     return {"embeds": [embed]}
+
+
+def set(ctx, private):
+    if ctx["data"]["options"][0]["name"] == "user":
+        if ctx["data"]["options"][0]["options"][0]["name"] == "dadmode":
+            with db.cursor() as curr:
+                curr.execute("UPDATE users SET dad_mode = %s WHERE id = %s",
+                    (
+                        ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
+                        int(ctx["member"]["user"]["id"])
+                    ))
+            if private:
+                return {"content": f"{'Enabled' if toggle else 'Disabled'} dad mode"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Enabled' if toggle else 'Disabled'} dad mode",
+                    "color": GREEN
+                }]
+            }
+
+    elif ctx["data"]["options"]["name"] == "server":
+        if not Checks.admin(ctx):
+            return {"flags": 64, "content": "You do not have permission to change server settings"}
+        pass
