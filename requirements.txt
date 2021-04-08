@@ -5,3 +5,7 @@ python-dotenv
 asyncpg
 requests
 jinja2
+flask
+gunicorn
+pynacl
+psycopg2-binary
