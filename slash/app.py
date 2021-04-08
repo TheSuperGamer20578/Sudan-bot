@@ -383,8 +383,7 @@ def set(ctx, private):
     if ctx["data"]["options"][0]["name"] == "user":
         if ctx["data"]["options"][0]["options"][0]["name"] == "dadmode":
             with db.cursor() as curr:
-                curr.execute("UPDATE users SET dad_mode = %s WHERE id = %s",
-                    (
+                curr.execute("UPDATE users SET dad_mode = %s WHERE id = %s", (
                         ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
                         int(ctx["member"]["user"]["id"])
                     ))
@@ -398,7 +397,20 @@ def set(ctx, private):
                 }]
             }
 
-    elif ctx["data"]["options"]["name"] == "server":
+    elif ctx["data"]["options"][0]["name"] == "server":
         if not Checks.admin(ctx):
             return {"flags": 64, "content": "You do not have permission to change server settings"}
-        pass
+        if ctx["data"]["options"][0]["options"][0]["name"] == "admin":
+            with db.cursor() as curr:
+                if ctx["data"]["options"][0]["options"][0]["options"][0]["value"]:
+                    curr.execute("UPDATE guilds SET admin_roles = ARRAY_APPEND(admin_roles, %s) WHERE id = %s", (
+                        int(["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+                else:
+                    curr.execute("UPDATE guilds SET admin_roles = ARRAY_REMOVE(admin_roles, %s) WHERE id = %s", (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+            if private:
+                return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles"}
