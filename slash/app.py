@@ -378,6 +378,7 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
     return {"embeds": [embed]}
 
 
+@command
 def set(ctx, private):
     if ctx["data"]["options"][0]["name"] == "user":
         if ctx["data"]["options"][0]["options"][0]["name"] == "dadmode":
