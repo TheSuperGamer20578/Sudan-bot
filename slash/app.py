@@ -414,6 +414,13 @@ def set(ctx, private):
                     ))
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles",
+                    "color": GREEN
+                }]
+            }
 
         elif ctx["data"]["options"][0]["options"][0]["name"] == "moderator":
             with db.cursor() as curr:
@@ -429,6 +436,13 @@ def set(ctx, private):
                     ))
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from moderator roles"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from moderator roles",
+                    "color": GREEN
+                }]
+            }
 
         elif ctx["data"]["options"][0]["options"][0]["name"] == "ticketsupport":
             with db.cursor() as curr:
@@ -448,6 +462,13 @@ def set(ctx, private):
                         ))
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from ticket support roles"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from ticket support roles",
+                    "color": GREEN
+                }]
+            }
 
         elif ctx["data"]["options"][0]["options"][0]["name"] == "chainbreak":
             with db.cursor() as curr:
@@ -459,6 +480,13 @@ def set(ctx, private):
                     ))
             if private:
                 return {"content": f"Set chain break role to <@&{ctx['data']['options'][0]['options'][0]['options'][0]['value']}>"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"Set chain break role to <@&{ctx['data']['options'][0]['options'][0]['options'][0]['value']}>",
+                    "color": GREEN
+                }]
+            }
 
         elif ctx["data"]["options"][0]["options"][0]["name"] == "privatecommands":
             with db.cursor() as curr:
@@ -468,3 +496,10 @@ def set(ctx, private):
                     ))
             if private:
                 return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} private commands"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} private commands",
+                    "color": GREEN
+                }]
+            }
