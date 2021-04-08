@@ -448,3 +448,23 @@ def set(ctx, private):
                         ))
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from ticket support roles"}
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "chainbreak":
+            with db.cursor() as curr:
+                curr.execute(
+                    "UPDATE guilds SET chain_break_role = %s WHERE id = %s",
+                    (
+                        int(["data"]["options"][0]["options"][0]["options"][0]["value"]),
+                        ctx["guild_id"]
+                    ))
+            if private:
+                return {"content": f"Set chain break role to <@&{ctx['data']['options'][0]['options'][0]['options'][0]['value']}>"}
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "privatecommands":
+            with db.cursor() as curr:
+                curr.execute("UPDATE guilds SET private_commands = %s WHERE id = %s", (
+                        ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
+                        int(ctx["member"]["user"]["id"])
+                    ))
+            if private:
+                return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} private commands"}
