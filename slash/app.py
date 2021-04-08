@@ -492,7 +492,7 @@ def set(ctx, private):
             with db.cursor() as curr:
                 curr.execute("UPDATE guilds SET private_commands = %s WHERE id = %s", (
                         ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
-                        int(ctx["member"]["user"]["id"])
+                        int(ctx["guild_id"])
                     ))
             if private:
                 return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} private commands"}
