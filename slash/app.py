@@ -387,6 +387,7 @@ def set(ctx, private):
                         ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
                         int(ctx["member"]["user"]["id"])
                     ))
+                db.commit()
             if private:
                 return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} dad mode"}
             return {
@@ -412,6 +413,7 @@ def set(ctx, private):
                         int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
                         ctx["guild_id"]
                     ))
+                db.commit()
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles"}
             return {
@@ -434,6 +436,7 @@ def set(ctx, private):
                         int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
                         ctx["guild_id"]
                     ))
+                db.commit()
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from moderator roles"}
             return {
@@ -460,6 +463,7 @@ def set(ctx, private):
                             int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
                             ctx["guild_id"]
                         ))
+                db.commit()
             if private:
                 return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from ticket support roles"}
             return {
@@ -478,6 +482,7 @@ def set(ctx, private):
                         int(ctx["data"]["options"][0]["options"][0]["options"][0]["value"]),
                         ctx["guild_id"]
                     ))
+                db.commit()
             if private:
                 return {"content": f"Set chain break role to <@&{ctx['data']['options'][0]['options'][0]['options'][0]['value']}>"}
             return {
@@ -494,6 +499,7 @@ def set(ctx, private):
                         ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
                         int(ctx["guild_id"])
                     ))
+                db.commit()
             if private:
                 return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} private commands"}
             return {
