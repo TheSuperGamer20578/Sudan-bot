@@ -404,7 +404,7 @@ def set(ctx, private):
             with db.cursor() as curr:
                 if ctx["data"]["options"][0]["options"][0]["options"][0]["value"]:
                     curr.execute("UPDATE guilds SET admin_roles = ARRAY_APPEND(admin_roles, %s) WHERE id = %s", (
-                        int(["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
                         ctx["guild_id"]
                     ))
                 else:
@@ -426,7 +426,7 @@ def set(ctx, private):
             with db.cursor() as curr:
                 if ctx["data"]["options"][0]["options"][0]["options"][0]["value"]:
                     curr.execute("UPDATE guilds SET mod_roles = ARRAY_APPEND(mod_roles, %s) WHERE id = %s", (
-                        int(["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
                         ctx["guild_id"]
                     ))
                 else:
@@ -450,7 +450,7 @@ def set(ctx, private):
                     curr.execute(
                         "UPDATE guilds SET support_roles = ARRAY_APPEND(support_roles, %s) WHERE id = %s",
                         (
-                            int(["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                            int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
                             ctx["guild_id"]
                         ))
                 else:
@@ -475,7 +475,7 @@ def set(ctx, private):
                 curr.execute(
                     "UPDATE guilds SET chain_break_role = %s WHERE id = %s",
                     (
-                        int(["data"]["options"][0]["options"][0]["options"][0]["value"]),
+                        int(ctx["data"]["options"][0]["options"][0]["options"][0]["value"]),
                         ctx["guild_id"]
                     ))
             if private:
