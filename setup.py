@@ -118,7 +118,7 @@ post(DISCORD + "/commands", headers=HEADERS, json={
                     "options": [
                         {
                             "type": 4,
-                            "name": "add/remove",
+                            "name": "operation",
                             "description": "Add or remove from admin roles",
                             "required": True,
                             "choices": [
@@ -147,7 +147,7 @@ post(DISCORD + "/commands", headers=HEADERS, json={
                     "options": [
                         {
                             "type": 4,
-                            "name": "add/remove",
+                            "name": "operation",
                             "description": "Add or remove from moderator roles",
                             "required": True,
                             "choices": [
@@ -176,7 +176,7 @@ post(DISCORD + "/commands", headers=HEADERS, json={
                     "options": [
                         {
                             "type": 4,
-                            "name": "add/remove",
+                            "name": "operation",
                             "description": "Add or remove from ticket support roles",
                             "required": True,
                             "choices": [
@@ -205,8 +205,8 @@ post(DISCORD + "/commands", headers=HEADERS, json={
                     "options": [
                         {
                             "type": 5,
-                            "name": "enable/disable",
-                            "description": "Enable or disable private commands",
+                            "name": "value",
+                            "description": "Value to set private commands to",
                             "required": True
                         }
                     ]
