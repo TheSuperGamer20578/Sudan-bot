@@ -1,5 +1,6 @@
 {
   "name": "sudan-bot",
+  "logo": "https://cdn.discordapp.com/attachments/743718127207972867/831044575354683402/nation_flag.jpg",
   "repository": "https://github.com/TheSuperGamer20578/Sudan-bot",
   "scripts": {
     "postdeploy": "python3.8 setup.py;psql $DATABASE_URL -f Setup_DB.sql"
