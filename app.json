@@ -9,14 +9,14 @@
       "description": "The bot's token"
     },
     "PUBLIC_KEY": {
-      "decription": "The public key for the Discord API application"
+      "description": "The public key for the Discord API application"
     },
     "OPSGENIE_TOKEN": {
-      "decription": "The API token for Opsgenie, only required for the errors cog",
+      "description": "The API token for Opsgenie, only required for the errors cog",
       "required": false
     },
     "MICROSOFT_TRANSLATE_KEY": {
-      "decription": "API key for Microsoft translate, only required for the translate cog",
+      "description": "API key for Microsoft translate, only required for the translate cog",
       "required": false
     },
     "MICROSOFT_TRANSLATE_REGION": {
