@@ -8,8 +8,8 @@
 6. Run the commands in `Setup_DB.sql` to create the tables in the database.
 7. `cd bot` and run `core.py`. If you are on linux and want to use the auto updating cog you will have to run it with `start.sh`.
 8. `cd slash` and run `gunicorn app:app`  
-<br/>
+
 Or push this button  
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)  
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 For more info look at the (currently non-existent) [Wiki](https://github.com/TheSuperGamer20578/Sudan-bot/wiki)
