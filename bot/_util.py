@@ -51,3 +51,10 @@ class Checks:
             if role in [r.id for r in ctx.author.roles]:
                 return True
         return False
+
+    @staticmethod
+    async def slash(ctx):
+        """
+        Check to see if command has slash command alternative
+        """
+        return not await _DB.fetchval("SELECT force_slash FROM guilds WHERE id = $1", ctx.guild.id)

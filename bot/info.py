@@ -6,7 +6,7 @@ import emc
 from emc.async_ import get_data
 from discord.ext import commands
 
-from _util import RED, BLUE
+from _util import RED, BLUE, Checks, set_db
 
 
 def _long_fields(embed, title, list_):
@@ -26,8 +26,10 @@ class info(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        set_db(bot.db)
 
     @commands.command(aliases=["t"])
+    @commands.check(Checks.slash)
     async def town(self, ctx, town_to_find):
         """
         Gives info about a town
@@ -59,6 +61,7 @@ class info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["n"])
+    @commands.check(Checks.slash)
     async def nation(self, ctx, nation_to_find="Sudan"):
         """Gives info about a nation"""
         await ctx.message.delete()
@@ -82,6 +85,7 @@ class info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["res", "player", "pl"])
+    @commands.check(Checks.slash)
     async def resident(self, ctx, resident_to_find):
         """Gives info about a player"""
         await ctx.message.delete()
