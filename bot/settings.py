@@ -15,6 +15,7 @@ class settings(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=True, aliases=["set"])
+    @commands.check(Checks.slash)
     async def settings(self, ctx):
         """Lists settings"""
         await ctx.message.delete()
@@ -38,6 +39,7 @@ class settings(commands.Cog):
 
     @settings.group(invoke_without_command=True)
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def admin(self, ctx):
         """Lists admin roles"""
         roles = await self.bot.db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id)
@@ -48,6 +50,7 @@ class settings(commands.Cog):
 
     @admin.command(name="set")
     @commands.check(lambda ctx: ctx.author == ctx.guild.owner)
+    @commands.check(Checks.slash)
     async def admin_set(self, ctx, role: discord.Role):
         """Sets the server's admin role"""
         await ctx.message.delete()
@@ -62,6 +65,7 @@ class settings(commands.Cog):
 
     @admin.command(name="add")
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def admin_add(self, ctx, role: discord.Role):
         """Adds an admin role"""
         await ctx.message.delete()
@@ -72,6 +76,7 @@ class settings(commands.Cog):
 
     @admin.command(name="remove")
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def admin_remove(self, ctx, role: discord.Role):
         """Removes an admin role"""
         await ctx.message.delete()
@@ -82,6 +87,7 @@ class settings(commands.Cog):
 
     @settings.group(invoke_without_command=True)
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def mod(self, ctx):
         """Lists moderator roles"""
         roles = await self.bot.db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id)
@@ -92,6 +98,7 @@ class settings(commands.Cog):
 
     @mod.command(name="add")
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def mod_add(self, ctx, role: discord.Role):
         """Adds moderator role"""
         await ctx.message.delete()
@@ -102,6 +109,7 @@ class settings(commands.Cog):
 
     @mod.command(name="remove")
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def mod_remove(self, ctx, role: discord.Role):
         """Removes moderator role"""
         await ctx.message.delete()
@@ -112,6 +120,7 @@ class settings(commands.Cog):
 
     @settings.group(invoke_without_command=True)
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def support(self, ctx):
         """Lists ticket support roles"""
         roles = await self.bot.db.fetchval("SELECT support_roles FROM guilds WHERE id = $1", ctx.guild.id)
@@ -122,6 +131,7 @@ class settings(commands.Cog):
 
     @support.command(name="add")
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def support_add(self, ctx, role: discord.Role):
         """Adds ticket support role"""
         await ctx.message.delete()
@@ -132,6 +142,7 @@ class settings(commands.Cog):
 
     @support.command(name="remove")
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def support_remove(self, ctx, role: discord.Role):
         """Removes ticket support role"""
         await ctx.message.delete()
@@ -142,6 +153,7 @@ class settings(commands.Cog):
 
     @settings.command()
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def breakrole(self, ctx, role: discord.Role):
         """Sets the chain break role"""
         await ctx.message.delete()
@@ -152,6 +164,7 @@ class settings(commands.Cog):
 
     @settings.command()
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def private(self, ctx, toggle: bool):
         """Enables or disables private commands"""
         await ctx.message.delete()
@@ -171,6 +184,7 @@ class settings(commands.Cog):
         await ctx.send(embed=embed)
 
     @settings.command()
+    @commands.check(Checks.slash)
     async def dad(self, ctx, toggle: bool):
         """Enables or disables dad mode"""
         await ctx.message.delete()

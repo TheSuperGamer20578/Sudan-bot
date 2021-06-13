@@ -156,6 +156,7 @@ class core(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.check(Checks.slash)
     async def invite(self, ctx):
         """
         Gives invite for you to invite bot to your own server
@@ -204,6 +205,7 @@ class core(commands.Cog):
         await self.bot.change_presence(status=statuses[os.getenv("STATUS")], activity=activity)
 
     @commands.command()
+    @commands.check(Checks.slash)
     async def github(self, ctx):
         """
         Links to github
