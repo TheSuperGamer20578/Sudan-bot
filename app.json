@@ -1,0 +1,59 @@
+{
+  "name": "sudan-bot",
+  "logo": "https://cdn.discordapp.com/attachments/743718127207972867/831044575354683402/nation_flag.jpg",
+  "repository": "https://github.com/TheSuperGamer20578/Sudan-bot",
+  "scripts": {
+    "postdeploy": "python3.8 setup.py;psql $DATABASE_URL -f Setup_DB.sql"
+  },
+  "env": {
+    "BOT_TOKEN": {
+      "description": "The bot's token"
+    },
+    "PUBLIC_KEY": {
+      "description": "The public key for the Discord API application"
+    },
+    "OPSGENIE_TOKEN": {
+      "description": "The API token for Opsgenie, only required for the errors cog",
+      "required": false
+    },
+    "MICROSOFT_TRANSLATE_KEY": {
+      "description": "API key for Microsoft translate, only required for the translate cog",
+      "required": false
+    },
+    "MICROSOFT_TRANSLATE_REGION": {
+      "description": "The region for Microsoft translate, only required for the translate cog",
+      "required": false
+    },
+    "LOG_CHANNEL": {
+      "description": "The ID of the channel you want the bot to use to say that it is online"
+    },
+    "AUTOLOAD_COGS": {
+      "description": "Comma seperated list of cogs to load when the bot starts",
+      "value": "tickets,fun,gamerooms,utils,dev,settings,rules,linking,log,info"
+    },
+    "ACTIVITY_TYPE": {
+      "description": "The type of activity, must be playing, watching, streaming, listening, competing or custom",
+      "value": "watching"
+    },
+    "ACTIVITY": {
+      "description": "The bot's activity",
+      "value": "my owner set me up"
+    },
+    "STATUS": {
+      "description": "The bot's status, must be online, idle, dnd or invisable",
+      "value": "idle"
+    },
+    "PREFIXES": {
+      "description": "Comma seperated list of prefixes",
+      "value": ".,/,&"
+    }
+  },
+  "addons": [
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
