@@ -12,4 +12,4 @@
 Or push this button  
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-For more info look at the (currently non-existent) [Wiki](https://github.com/TheSuperGamer20578/Sudan-bot/wiki)
+For more info look at the [Wiki](https://github.com/TheSuperGamer20578/Sudan-bot/wiki)
