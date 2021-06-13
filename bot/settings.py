@@ -27,6 +27,7 @@ class settings(commands.Cog):
                 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["support_roles"]]) if len(settings_['support_roles']) > 0 else 'None'}
                 Chain break role: {f'<@&{settings_["chain_break_role"]}>' if settings_["chain_break_role"] is not None else 'None'}
                 Private commands: {'🟢' if settings_['private_commands'] else '🔴'}
+                Force slash commands: {'🟢' if settings_['force_slash'] else '🔴'}
             """)
         settings_ = await self.bot.db.fetchrow("SELECT * FROM users WHERE id = $1", ctx.author.id)
         embed.add_field(name="User settings", inline=False, value=f"""
@@ -156,6 +157,16 @@ class settings(commands.Cog):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET private_commands = $2 WHERE id = $1", ctx.guild.id, toggle)
         embed = discord.Embed(title="Settings updated", description=f"{'Enabled' if toggle else 'Disabled'} private commands", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.command()
+    @commands.check(Checks.admin)
+    async def forceslash(self, ctx, toggle: bool):
+        """Enables or disables forced slash command usage"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET force_slash = $2 WHERE id = $1", ctx.guild.id, toggle)
+        embed = discord.Embed(title="Settings updated", description=f"{'Enabled' if toggle else 'Disabled'} forced slash commands", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
