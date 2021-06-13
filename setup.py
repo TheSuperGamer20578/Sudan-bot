@@ -210,6 +210,19 @@ post(DISCORD + "/commands", headers=HEADERS, json={
                             "required": True
                         }
                     ]
+                },
+                {
+                    "type": 1,
+                    "name": "forceslash",
+                    "description": "Set if slash command usage should be enforced",
+                    "options": [
+                        {
+                            "type": 5,
+                            "name": "value",
+                            "description": "Value to set force slash commands to",
+                            "required": True
+                        }
+                    ]
                 }
             ]
         }

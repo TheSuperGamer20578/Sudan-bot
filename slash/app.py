@@ -509,3 +509,20 @@ def set(ctx, private):
                     "color": GREEN
                 }]
             }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "forceslash":
+            with db.cursor() as curr:
+                curr.execute("UPDATE guilds SET force_slash = %s WHERE id = %s", (
+                        ctx["data"]["options"][0]["options"][0]["options"][0]["value"],
+                        int(ctx["guild_id"])
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} force slash commands"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Enabled' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Disabled'} force slash commands",
+                    "color": GREEN
+                }]
+            }
