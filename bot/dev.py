@@ -56,12 +56,29 @@ class dev(commands.Cog):
         embed.set_footer(text=f"ID: {guild.id}")
         await self.bot.get_channel(753495117767377016).send(embed=embed)
 
-    @commands.command(aliases=["suggest", "bug"], hidden=True)
-    async def issue(self, ctx, *args):  # pylint: disable=unused-argument
+    @commands.command()
+    async def issues(self, ctx):
         """
-        Links to new issue tracker
+        Links to issue tracker
         """
-        await ctx.send("Issues have been moved to https://github.com/TheSuperGamer20578/Sudan-bot/issues")
+        await ctx.message.delete()
+        await ctx.send("Issue tracker: https://github.com/TheSuperGamer20578/Sudan-bot/issues")
+
+    @commands.command()
+    async def bug(self, ctx):
+        """
+        File a bug report
+        """
+        await ctx.message.delete()
+        await ctx.send("File a bug report: https://github.com/TheSuperGamer20578/Sudan-bot/issues/new?labels=Bug&template=bug_report.md")
+
+    @commands.command()
+    async def suggest(self, ctx):
+        """
+        Make a suggestion
+        """
+        await ctx.message.delete()
+        await ctx.send("Make a suggestion: https://github.com/TheSuperGamer20578/Sudan-bot/issues/new?labels=Enhancement&template=feature_request.md")
 
 
     @commands.command(hidden=True)
