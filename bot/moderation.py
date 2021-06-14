@@ -5,30 +5,32 @@ import time
 from discord.ext import commands
 from _util import Checks, set_db
 
-def parse_punishment_type(arg):    
-    punishments = {
-        "none": 0,
-        "warn": 1,
-        "mute": 2,
-        "kick": 3,
-        "ban": 4
-    }
-    return punishments[arg.lower()]
+class parse_punishment_type(commands.Converter):
+    def convert(self, ctx, arg):  
+        punishments = {
+            "none": 0,
+            "warn": 1,
+            "mute": 2,
+            "kick": 3,
+            "ban": 4
+        }
+        return punishments[arg.lower()]
 
-def parse_time(arg):
-    time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*")
-    times = {
-        "s": 1,
-        "m": 60,
-        "h": 60**2,
-        "d": 60**3,
-        "w": 60**3 * 7,
-        "M": 60**3 * 30,
-        "y": 60**3 * 365
-    }
-    if time is None:
-        raise Exception
-    return time.group(1) * times[time.group(2)]
+class parse_time(commands.Converter):
+    def convert(self, ctx, arg):
+        time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*", arg)
+        times = {
+            "s": 1,
+            "m": 60,
+            "h": 60**2,
+            "d": 60**3,
+            "w": 60**3 * 7,
+            "M": 60**3 * 30,
+            "y": 60**3 * 365
+        }
+        if time is None:
+            raise Exception
+        return time.group(1) * times[time.group(2)]
 
 class moderation(commands.Cog):
     def __init__(self, bot):
