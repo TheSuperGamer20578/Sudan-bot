@@ -2,7 +2,7 @@ import discord
 import typing
 import re
 import time
-from discord import commands
+from discord.ext import commands
 from _util import Checks, set_db
 
 def parse_punishment_type(arg):    
