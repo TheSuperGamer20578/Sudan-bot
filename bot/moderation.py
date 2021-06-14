@@ -37,10 +37,7 @@ class moderation(commands.Cog):
     
     @commands.command(aliases=["pu"])
     @commands.check(Checks.mod)
-    async def punish(self, ctx, users: commands.Greedy[discord.member], punishment: typing.Optional[parse_punishment_type] = 0, duration: commands.Greedy[parse_time] = [], reason = None):
-        if reason is None:
-            raise discord.InvalidArgument
-        
+    async def punish(self, ctx, users: commands.Greedy[discord.member], punishment: typing.Optional[parse_punishment_type] = 0, duration: commands.Greedy[parse_time] = [], *, reason):
         await ctx.message.delete()
 
         id = await self.bot.db.fetchval("SELECT incident_index FROM guilds WHERE id = $1", ctx.guild.id)
