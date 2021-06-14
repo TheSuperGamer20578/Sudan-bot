@@ -37,7 +37,7 @@ class moderation(commands.Cog):
     
     @commands.command(aliases=["pu"])
     @commands.check(Checks.mod)
-    async def punish(self, ctx, users: typing.greedy[discord.member], punishment: typing.Optional[parse_punishment_type] = 0, duration: typing.greedy[parse_time] = [], reason = None):
+    async def punish(self, ctx, users: commands.Greedy[discord.member], punishment: typing.Optional[parse_punishment_type] = 0, duration: commands.Greedy[parse_time] = [], reason = None):
         if reason is None:
             raise discord.InvalidArgument
         
