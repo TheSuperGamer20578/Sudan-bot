@@ -13,3 +13,6 @@ chain_length INTEGER, log_type TEXT, last_chain BIGINT);
 
 CREATE TABLE rules
 (name TEXT, guild_id BIGINT, punishment TEXT, description TEXT);
+
+CREATE TABLE incidents
+(guild BIGINT, id INT, moderator BIGINT, users BIGINT[], comment TEXT, expires TIMESTAMP, type_ INT, time_ TIMESTAMP);
