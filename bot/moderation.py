@@ -6,7 +6,7 @@ from discord.ext import commands
 from _util import Checks, set_db
 
 class parse_punishment_type(commands.Converter):
-    def convert(self, ctx, arg):  
+    async def convert(self, ctx, argument):  
         punishments = {
             "none": 0,
             "warn": 1,
@@ -14,11 +14,11 @@ class parse_punishment_type(commands.Converter):
             "kick": 3,
             "ban": 4
         }
-        return punishments[arg.lower()]
+        return punishments[argument.lower()]
 
 class parse_time(commands.Converter):
-    def convert(self, ctx, arg):
-        time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*", arg)
+    async def convert(self, ctx, argument):
+        time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*", argument)
         times = {
             "s": 1,
             "m": 60,
