@@ -17,7 +17,7 @@ def parse_punishment(argument):
 
 
 def parse_time(argument):
-    time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*", argument)
+    time = re.match(r"(\d*)(s|m|h|d|w|M|y)", argument)
     times = {
         "s": 1,
         "m": 60,
@@ -31,6 +31,31 @@ def parse_time(argument):
         raise Exception
     return int(time.group(1)) * times[time.group(2)]
 
+
+def human_delta(duration):
+    delta = []
+    if duration // (60**2 * 24 * 365) > 0:
+        delta.append(f"{duration // (60**2 * 24 * 365)} years")
+        duration %= 60**2 * 24 * 365
+    if duration // (60**2 * 24 * 30) > 0:
+        delta.append(f"{duration // (60**2 * 24 * 30)} months")
+        duration %= 60**2 * 24 * 30
+    if duration // (60**2 * 24) > 0:
+        delta.append(f"{duration // (60**2 * 24)} days")
+        duration %= 60**2 * 24
+    if duration // 60**2 > 0:
+        delta.append(f"{duration // 60**2} hours")
+        duration %= 60**2
+    if duration // 60 > 0:
+        delta.append(f"{duration // 60} minutes")
+        duration %= 60
+    if duration > 0:
+        delta.append(f"{duration} seconds")
+    if len(delta) == 0:
+        delta = ["Forever"]
+    return ", ".join(delta)
+
+
 class moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -42,6 +67,8 @@ class moderation(commands.Cog):
         if punishment == 3 and duration != 0:
             raise commands.BadArgument
         
+        duration = sum(duration)
+        
         await ctx.message.delete()
 
         ref = (f"https://discord.com/channels/{ctx.guild.id}/{ctx.channel.id}/" +
@@ -52,31 +79,7 @@ class moderation(commands.Cog):
         
         await self.bot.db.execute("INSERT INTO incidents (guild, id, moderator, users, type_, time_, expires, comment, ref)" +
                                   "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", ctx.guild.id, id, ctx.author.id, [user.id for user in users],
-                                  punishment, time.time(), time.time() + sum(duration), reason, ref)
-
-        delta = []
-        temp = sum(duration)
-        if temp // (60**2 * 24 * 365) > 0:
-            delta.append(f"{temp // (60**2 * 24 * 365)} years")
-            temp %= 60**2 * 24 * 365
-        if temp // (60**2 * 24 * 30) > 0:
-            delta.append(f"{temp // (60**2 * 24 * 30)} months")
-            temp %= 60**2 * 24 * 30
-        if temp // (60**2 * 24) > 0:
-            delta.append(f"{temp // (60**2 * 24)} days")
-            temp %= 60**2 * 24
-        if temp // 60**2 > 0:
-            delta.append(f"{temp // 60**2} hours")
-            temp %= 60**2
-        if temp // 60 > 0:
-            delta.append(f"{temp // 60} minutes")
-            temp %= 60
-        if temp > 0:
-            delta.append(f"{temp} seconds")
-        del temp
-        if len(delta) == 0:
-            delta = ["Forever"]
-        delta = ", ".join(delta)
+                                  punishment, time.time(), time.time() + duration, reason, ref)
         
         async def log(type):
             colours = {
@@ -91,7 +94,7 @@ class moderation(commands.Cog):
             embed.add_field(name="Members involved", value=", ".join([member.mention for member in users]))
             embed.add_field(name="Punishemnt", value=type)
             if punishment in (1, 2, 4):
-                embed.add_field(name="Duration", value=delta)
+                embed.add_field(name="Duration", value=human_delta(duration))
             embed.add_field(name="Reason", value=f"{reason} ([ref]({ref}))", inline=False)
 
             for channel in [ctx.guild.get_channel(record["id"]) for record in await self.bot.db.fetch("SELECT id FROM channels WHERE log_type = 'moderation' AND guild_id = $1", ctx.guild.id)]:
@@ -106,7 +109,7 @@ class moderation(commands.Cog):
         async def mute():
             role = ctx.guild.get_role(await self.bot.db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", ctx.guild.id))
             for user in users:
-                await user.add_roles(role, reason=f"Duration: {delta}. Incident #{id}: {reason}")
+                await user.add_roles(role, reason=f"Duration: {human_delta(duration)}. Incident #{id}: {reason}")
             await log("Mute")
 
         async def kick():
@@ -116,7 +119,7 @@ class moderation(commands.Cog):
 
         async def ban():
             for user in users:
-                await user.ban(reason=f"Duration: {delta}. Incident #{id}: {reason}", delete_message_days=0)
+                await user.ban(reason=f"Duration: {human_delta(duration)}. Incident #{id}: {reason}", delete_message_days=0)
             await log("Ban")
 
         punishments = {
