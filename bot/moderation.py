@@ -45,10 +45,10 @@ class moderation(commands.Cog):
         await self.bot.db.execute("UPDATE guilds SET incident_index = incident_index + 1 WHERE id = $1", ctx.guild.id)
         
         await self.bot.db.execute("INSERT INTO incidents (guild, id, moderator, users, type_, time_, expires, comment, ref)" +
-                                  "($1,$2,$3,$4,%5,%6,$7,$8,$9)", ctx.guild.id, id, ctx.author.id, [user.id for user in users],
+                                  "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", ctx.guild.id, id, ctx.author.id, [user.id for user in users],
                                   punishment, time.time(), time.time() + sum(duration), reason,
-                                  f"https://discord.com/channels/{ctx.guild.id}/{ctx.channel.id}/{ctx.message.reference.message_id}" or
-                                  await ctx.channel.history(limit=1)[0].jump_url)
+                                  f"https://discord.com/channels/{ctx.guild.id}/{ctx.channel.id}/" +
+                                  str(ctx.message.reference.message_id if ctx.message.reference is not None else ctx.channel.last_message_id))
         
 
 def setup(bot):
