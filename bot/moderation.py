@@ -5,32 +5,31 @@ import time
 from discord.ext import commands
 from _util import Checks, set_db
 
-class parse_punishment_type(commands.Converter):
-    async def convert(self, ctx, argument):  
-        punishments = {
-            "none": 0,
-            "warn": 1,
-            "mute": 2,
-            "kick": 3,
-            "ban": 4
-        }
-        return punishments[argument.lower()]
+def parse_punishment(argument):  
+    punishments = {
+        "none": 0,
+        "warn": 1,
+        "mute": 2,
+        "kick": 3,
+        "ban": 4
+    }
+    return punishments[argument.lower()]
 
-class parse_time(commands.Converter):
-    async def convert(self, ctx, argument):
-        time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*", argument)
-        times = {
-            "s": 1,
-            "m": 60,
-            "h": 60**2,
-            "d": 60**3,
-            "w": 60**3 * 7,
-            "M": 60**3 * 30,
-            "y": 60**3 * 365
-        }
-        if time is None:
-            raise Exception
-        return time.group(1) * times[time.group(2)]
+
+def parse_time(argument):
+    time = re.match(r"(\d*)(s|m|h|d|w|M|y)\D*", argument)
+    times = {
+        "s": 1,
+        "m": 60,
+        "h": 60**2,
+        "d": 60**2 * 24,
+        "w": 60**2 * 24 * 7,
+        "M": 60**2 * 24 * 30,
+        "y": 60**2 * 24 * 365
+    }
+    if time is None:
+        raise Exception
+    return time.group(1) * times[time.group(2)]
 
 class moderation(commands.Cog):
     def __init__(self, bot):
@@ -39,7 +38,7 @@ class moderation(commands.Cog):
     
     @commands.command(aliases=["pu"])
     @commands.check(Checks.mod)
-    async def punish(self, ctx, users: commands.Greedy[discord.member], punishment: typing.Optional[parse_punishment_type] = 0, duration: commands.Greedy[parse_time] = [], *, reason):
+    async def punish(self, ctx, users: commands.Greedy[discord.Member], punishment: typing.Optional[parse_punishment] = 0, duration: commands.Greedy[parse_time] = [], *, reason):
         await ctx.message.delete()
 
         id = await self.bot.db.fetchval("SELECT incident_index FROM guilds WHERE id = $1", ctx.guild.id)
