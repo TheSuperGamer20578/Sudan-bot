@@ -29,7 +29,7 @@ def parse_time(argument):
     }
     if time is None:
         raise Exception
-    return time.group(1) * times[time.group(2)]
+    return int(time.group(1)) * times[time.group(2)]
 
 class moderation(commands.Cog):
     def __init__(self, bot):
