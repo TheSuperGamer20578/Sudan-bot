@@ -1,11 +1,12 @@
 from os import getenv, environ
 
-from flask import Flask, jsonify, request, Response, abort
+from flask import Flask, jsonify, request, abort
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 from dotenv import load_dotenv
 from emc import Town, Nation, Resident
 from emc.exceptions import TownNotFoundException, NationNotFoundException
+from emc.util import map_link
 from psycopg2 import connect
 
 app = Flask(__name__)
@@ -13,8 +14,8 @@ load_dotenv()
 if "DATABASE_URL" in environ:
     db = connect(getenv("DATABASE_URL"))
 else:
-    db = connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
-                 host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+    db = connect(user=getenv("DB_USERNAME"), password=getenv("DB_PASSWORD"),
+                 host=getenv("DB_HOST"), database=getenv("DB_DATABASE"))
 BLUE = 0x0a8cf0
 PURPLE = 0x6556FF
 GREEN = 0x36eb45
@@ -277,7 +278,7 @@ def resident(ctx, private):
             if resident.hidden:
                 resp += f"{resident} is currently not visible on the map```"
             else:
-                resp += f"{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))"
+                resp += f"{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({map_link(resident.position)}))"
         else:
             resp += f"{resident} is currently offline```"
         return {"content": resp}
@@ -310,7 +311,7 @@ def resident(ctx, private):
         else:
             embed["fields"].append({
                 "name": "Position",
-                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))",
+                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({map_link(resident.position)}))",
                 "inline": True
             })
     else:
@@ -329,7 +330,7 @@ def settings(ctx, private):
         if Checks.admin(ctx):
             with db.cursor() as curr:
                 curr.execute(
-                    "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash FROM guilds WHERE id = %s",
+                    "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role FROM guilds WHERE id = %s",
                     (ctx["guild_id"],))
                 settings = curr.fetchone()
             message += f"""
@@ -338,6 +339,7 @@ Admin roles: {', '.join([f'<@&{role}>' for role in settings[0]]) if len(settings
 Moderator roles: {', '.join([f'<@&{role}>' for role in settings[1]]) if len(settings[1]) > 0 else 'None'}
 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len(settings[2]) > 0 else 'None'}
 Chain break role: {f'<@&{settings[3]}>' if settings[3] is not None else 'None'}
+Mute role: {f'<@&{settings[6]}>' if settings[6] is not None else 'None'}
 Private commands: {'🟢' if settings[4] else '🔴'}
 Force slash commands: {'🟢' if settings[5] else '🔴'}"""
         with db.cursor() as curr:
@@ -355,7 +357,9 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
     }
     if Checks.admin(ctx):
         with db.cursor() as curr:
-            curr.execute("SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands FROM guilds WHERE id = %s", (ctx["guild_id"],))
+            curr.execute(
+                "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role FROM guilds WHERE id = %s",
+                (ctx["guild_id"],))
             settings = curr.fetchone()
         embed["fields"].append({
             "name": "Server settings",
@@ -364,7 +368,9 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
                 Moderator roles: {', '.join([f'<@&{role}>' for role in settings[1]]) if len(settings[1]) > 0 else 'None'}
                 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len(settings[2]) > 0 else 'None'}
                 Chain break role: {f'<@&{settings[3]}>' if settings[3] is not None else 'None'}
+                Mute role: {f'<@&{settings[5]}>' if settings[5] is not None else 'None'}
                 Private commands: {'🟢' if settings[4] else '🔴'}
+                Force slash commands: {'🟢' if settings[5] else '🔴'}
             """
         })
     with db.cursor() as curr:

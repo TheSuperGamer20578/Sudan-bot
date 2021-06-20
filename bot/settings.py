@@ -27,6 +27,7 @@ class settings(commands.Cog):
                 Moderator roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]]) if len(settings_['mod_roles']) > 0 else 'None'}
                 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["support_roles"]]) if len(settings_['support_roles']) > 0 else 'None'}
                 Chain break role: {f'<@&{settings_["chain_break_role"]}>' if settings_["chain_break_role"] is not None else 'None'}
+                Mute role: {f'<@&{settings_["mute_role"]}>' if settings_["mute_role"] is not None else 'None'}
                 Private commands: {'🟢' if settings_['private_commands'] else '🔴'}
                 Force slash commands: {'🟢' if settings_['force_slash'] else '🔴'}
             """)
@@ -159,6 +160,17 @@ class settings(commands.Cog):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET chain_break_role = $2 WHERE id = $1", ctx.guild.id, role.id)
         embed = discord.Embed(title="Settings updated", description=f"Set chain break role to {role.mention}", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.command()
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
+    async def muterole(self, ctx, role: discord.Role):
+        """Sets the mute role"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET mute_role = $2 WHERE id = $1", ctx.guild.id, role.id)
+        embed = discord.Embed(title="Settings updated", description=f"Set mute role to {role.mention}", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
