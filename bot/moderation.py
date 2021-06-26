@@ -2,8 +2,9 @@ import discord
 import typing
 import re
 import time
+import datetime
 from discord.ext import commands, tasks
-from _util import Checks, set_db
+from _util import Checks, set_db, RED
 
 
 def parse_punishment(argument):  
@@ -97,7 +98,7 @@ class moderation(commands.Cog):
             embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
             embed.add_field(name="Members involved", value=", ".join([member.mention for member in users]))
             embed.add_field(name="Punishemnt", value=type_)
-            if punishment in (1, 2, 4):
+            if punishment != 3:
                 embed.add_field(name="Duration", value=human_delta(duration))
             embed.add_field(name="Reason", value=f"{reason} ([ref]({ref}))", inline=False)
 
@@ -144,6 +145,43 @@ class moderation(commands.Cog):
         }
 
         await punishments[punishment]()
+
+    @commands.command(aliases=["i", "in", "inc"])
+    async def incident(self, ctx, id: int):
+        incident_ = await self.bot.db.fetchrow("SELECT users, time_, type_, comment, ref, moderator, expires, active, expires - time_ AS duration FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
+        await ctx.message.delete()
+        if incident_ is None:
+            embed = discord.Embed(title=f"Incident #{id} does not exist!", colour=RED)
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            await ctx.send(embed=embed)
+            return
+
+        punishments = {
+            0: "None",
+            1: "Warn",
+            2: "Mute",
+            3: "Kick",
+            4: "Ban"
+        }
+        colours = {
+            0: 0x787878,
+            1: 0xfc9003,
+            2: 0xc74c00,
+            3: 0xff0077,
+            4: 0xff0000
+        }
+
+        embed = discord.Embed(title=f"Incident #{id}{' (ACTIVE)' if incident_['active'] and incident_['type_'] != 3 else ''}", colour=colours[incident_["type_"]], timestamp=datetime.datetime.utcfromtimestamp(incident_["time_"]))
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        embed.add_field(name="Moderator", value=f"<@{incident_['moderator']}>")
+        embed.add_field(name="Members involved",
+                        value=", ".join([f"<@{member}>" for member in incident_["users"]]))
+        embed.add_field(name="Punishemnt", value=punishments[incident_["type_"]])
+        if incident_["type_"] != 3:
+            embed.add_field(name="Duration", value=human_delta(incident_["duration"]))
+        embed.add_field(name="Reason", value=f"{incident_['comment']} ([ref]({incident_['ref']}))",
+                        inline=False)
+        await ctx.send(embed=embed)
     
     @tasks.loop(seconds=1)
     async def auto_unpunish(self):
