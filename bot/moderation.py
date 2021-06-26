@@ -171,6 +171,7 @@ class moderation(commands.Cog):
         await punishments[punishment]()
 
     @commands.command(aliases=["i", "in", "inc"])
+    @commands.check(Checks.mod)
     async def incident(self, ctx, id: int):
         incident_ = await self.bot.db.fetchrow("SELECT users, time_, type_, comment, ref, moderator, expires, active, expires - time_ AS duration FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
         await ctx.message.delete()
