@@ -4,7 +4,7 @@ import re
 import time
 import datetime
 from discord.ext import commands, tasks
-from _util import Checks, set_db, RED
+from _util import Checks, set_db, RED, GREEN
 
 
 def parse_punishment(argument):  
@@ -56,6 +56,30 @@ def human_delta(duration):
     if len(delta) == 0:
         delta = ["Forever"]
     return ", ".join(delta)
+
+
+def human_delta_short(duration):
+    delta = []
+    if duration // (60**2 * 24 * 365) > 0:
+        delta.append(f"{duration // (60**2 * 24 * 365)}y")
+        duration %= 60**2 * 24 * 365
+    if duration // (60**2 * 24 * 30) > 0:
+        delta.append(f"{duration // (60**2 * 24 * 30)}M")
+        duration %= 60**2 * 24 * 30
+    if duration // (60**2 * 24) > 0:
+        delta.append(f"{duration // (60**2 * 24)}d")
+        duration %= 60**2 * 24
+    if duration // 60**2 > 0:
+        delta.append(f"{duration // 60**2}h")
+        duration %= 60**2
+    if duration // 60 > 0:
+        delta.append(f"{duration // 60}m")
+        duration %= 60
+    if duration > 0:
+        delta.append(f"{duration}s")
+    if len(delta) == 0:
+        delta = ["Forever"]
+    return "".join(delta)
 
 
 class moderation(commands.Cog):
@@ -182,7 +206,20 @@ class moderation(commands.Cog):
         embed.add_field(name="Reason", value=f"{incident_['comment']} ([ref]({incident_['ref']}))",
                         inline=False)
         await ctx.send(embed=embed)
-    
+
+    @commands.command()
+    async def warns(self, ctx):
+        records = await self.bot.db.fetch("SELECT id, comment, ref, expires, time_ FROM incidents WHERE active = TRUE AND type_ = 1 AND guild = $1 AND $2 = ANY(users) ORDER BY id", ctx.guild.id, ctx.author.id)
+        await ctx.message.delete()
+        if len(records) == 0:
+            embed = discord.Embed(title="You have no active warnings!", colour=GREEN)
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            await ctx.send(embed=embed)
+            return
+        embed = discord.Embed(title=f"You have {len(records)} active warnings!", description="\n".join([f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records]), colour=RED)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
     @tasks.loop(seconds=1)
     async def auto_unpunish(self):
         incidents = await self.bot.db.fetch("SELECT incidents.users, incidents.type_, incidents.comment, incidents.id, incidents.guild, guilds.mute_role " +
