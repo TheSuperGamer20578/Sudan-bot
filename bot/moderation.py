@@ -229,11 +229,6 @@ class moderation(commands.Cog):
     async def history(self, ctx, person: discord.User):
         records = await self.bot.db.fetch("SELECT id, comment, ref, expires, time_, type_, active FROM incidents WHERE guild = $1 AND $2 = ANY(users) ORDER BY id", ctx.guild.id, person.id)
         await ctx.message.delete()
-        if len(records) == 0:
-            embed = discord.Embed(title=f"{person.display_name} has always obeyed the rules!", colour=GREEN)
-            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            return
         types = {
             0: "Note",
             1: "Warn",
@@ -256,6 +251,10 @@ class moderation(commands.Cog):
             list_inactive = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']} {types[record['type_']]}: {record['comment']}]({record['ref']})" for record in records if not record['active'] and (record["type_"] > 0 or notes)]
             pages_active = ["\n".join(list_active[n : n+10]) for n in range(0, len(list_active), 10)]
             pages_inactive = ["\n".join(list_inactive[n: n + 10]) for n in range(0, len(list_inactive), 10)]
+            if len(pages_active) == 0:
+                pages_active = [""]
+            if len(pages_inactive) == 0:
+                pages_inactive = [""]
             length = len(list_active if active else list_inactive)
             pages = len(pages_active if active else pages_inactive)
 
@@ -263,10 +262,10 @@ class moderation(commands.Cog):
 
         def paged_embed():
             page = (pages_active if active else pages_inactive)[index]
-            embed_ = discord.Embed(title=f"{person.display_name} has {length} {'active' if active else 'inactive'} punishments{' and notes' if notes else ''}!", description=page, colour=RED)
-            embed_.set_footer(text=f"Page {index+1}/{pages}")
-            embed_.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-            return embed_
+            embed = discord.Embed(title=f"{person.display_name} has {length} {'active' if active else 'inactive'} punishments{' and notes' if notes else ''}!", description=page, colour=GREEN if length == 0 else RED)
+            embed.set_footer(text=f"Page {index+1}/{pages}")
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            return embed
 
         def components():
             return [
