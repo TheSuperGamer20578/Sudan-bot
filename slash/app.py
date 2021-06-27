@@ -330,7 +330,7 @@ def settings(ctx, private):
         if Checks.admin(ctx):
             with db.cursor() as curr:
                 curr.execute(
-                    "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role FROM guilds WHERE id = %s",
+                    "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role, mute_threshold, ban_threshold, bad_words FROM guilds WHERE id = %s",
                     (ctx["guild_id"],))
                 settings = curr.fetchone()
             message += f"""
@@ -341,7 +341,10 @@ Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len
 Chain break role: {f'<@&{settings[3]}>' if settings[3] is not None else 'None'}
 Mute role: {f'<@&{settings[6]}>' if settings[6] is not None else 'None'}
 Private commands: {'🟢' if settings[4] else '🔴'}
-Force slash commands: {'🟢' if settings[5] else '🔴'}"""
+Force slash commands: {'🟢' if settings[5] else '🔴'}
+Mute threshold: {settings[7] if settings[7] != 0 else 'Disabled'}
+Ban threshold: {settings[8] if settings[8] != 0 else 'Disabled'}
+Bad words: {', '.join([f'||{word}||' for word in settings[9]]) if len(settings[9]) > 0 else 'None'}"""
         with db.cursor() as curr:
             curr.execute("SELECT dad_mode FROM users WHERE id = %s",
                          (ctx["member"]["user"]["id"],))
@@ -358,7 +361,7 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
     if Checks.admin(ctx):
         with db.cursor() as curr:
             curr.execute(
-                "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role FROM guilds WHERE id = %s",
+                "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role, mute_threshold, ban_threshold, bad_words FROM guilds WHERE id = %s",
                 (ctx["guild_id"],))
             settings = curr.fetchone()
         embed["fields"].append({
@@ -371,6 +374,9 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
                 Mute role: {f'<@&{settings[5]}>' if settings[5] is not None else 'None'}
                 Private commands: {'🟢' if settings[4] else '🔴'}
                 Force slash commands: {'🟢' if settings[5] else '🔴'}
+                Mute threshold: {settings[7] if settings[7] != 0 else 'Disabled'}
+                Ban threshold: {settings[8] if settings[8] != 0 else 'Disabled'}
+                Bad words: {', '.join([f'||{word}||' for word in settings[9]]) if len(settings[9]) > 0 else 'None'}
             """
         })
     with db.cursor() as curr:
@@ -427,6 +433,67 @@ def set(ctx, private):
                 "embeds": [{
                     "title": "Settings updated",
                     "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles",
+                    "color": GREEN
+                }]
+            }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "badwords":
+            with db.cursor() as curr:
+                if ctx["data"]["options"][0]["options"][0]["options"][0]["value"]:
+                    curr.execute("UPDATE guilds SET bad_words = ARRAY_APPEND(bad_words, %s) WHERE id = %s", (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+                else:
+                    curr.execute("UPDATE guilds SET bad_words = ARRAY_REMOVE(bad_words, %s) WHERE id = %s", (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} {ctx['data']['options'][0]['options'][0]['options'][1]['value']} from bad words"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} {ctx['data']['options'][0]['options'][0]['options'][1]['value']} from bad words",
+                    "color": GREEN
+                }]
+            }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "mutethreshold":
+            with db.cursor() as curr:
+                curr.execute(
+                    "UPDATE guilds SET mute_threshold = %s WHERE id = %s",
+                    (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][0]["value"]),
+                        ctx["guild_id"]
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"Set mute threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"Set mute threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}",
+                    "color": GREEN
+                }]
+            }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "banthreshold":
+            with db.cursor() as curr:
+                curr.execute(
+                    "UPDATE guilds SET ban_threshold = %s WHERE id = %s",
+                    (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][0]["value"]),
+                        ctx["guild_id"]
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"Set ban threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"Set ban threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}",
                     "color": GREEN
                 }]
             }
