@@ -16,4 +16,4 @@ CREATE TABLE rules
 (name TEXT, guild_id BIGINT, punishment TEXT, description TEXT);
 
 CREATE TABLE incidents
-(guild BIGINT, id INT, moderator BIGINT, users BIGINT[], comment TEXT, expires BIGINT, type_ INT, time_ BIGINT, active BOOLEAN DEFAULT TRUE, ref TEXT);
+(guild BIGINT, id INT, moderator BIGINT, users BIGINT[], comment TEXT, expires BIGINT, type_ INT, time_ BIGINT, active BOOLEAN, ref TEXT);

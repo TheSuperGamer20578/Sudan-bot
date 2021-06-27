@@ -135,9 +135,9 @@ class moderation(commands.Cog):
         id = await self.bot.db.fetchval("SELECT incident_index FROM guilds WHERE id = $1", ctx.guild.id)
         await self.bot.db.execute("UPDATE guilds SET incident_index = incident_index + 1 WHERE id = $1", ctx.guild.id)
         
-        await self.bot.db.execute("INSERT INTO incidents (guild, id, moderator, users, type_, time_, expires, comment, ref)" +
-                                  "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", ctx.guild.id, id, ctx.author.id, [user.id for user in users],
-                                  punishment, time.time(), time.time() + duration, reason, ref)
+        await self.bot.db.execute("INSERT INTO incidents (guild, id, moderator, users, type_, time_, expires, comment, ref, active)" +
+                                  "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", ctx.guild.id, id, ctx.author.id, [user.id for user in users],
+                                  punishment, time.time(), time.time() + duration, reason, ref, punishment != 3)
         
         async def log(type_):
             colours = {
