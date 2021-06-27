@@ -432,6 +432,16 @@ class moderation(commands.Cog):
         for incident in incidents:
             await unpunish(self.bot, incident)
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        record = await self.bot.db.fetchrow("SELECT bad_words, bad_words_warn_duration FROM guilds WHERE id = $1", message.guild.id)
+
+        for word in record["bad_words"]:
+            if word in message.content:
+                await punish(message, self.bot.user, record["bad_words_warn_duration"], "Bad word usage", 1, [message.author], message.jump_url, self.bot.db)
+                await message.delete()
+                return
+
 
 def setup(bot):
     bot.add_cog(moderation(bot))
