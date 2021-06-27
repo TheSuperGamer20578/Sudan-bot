@@ -62,15 +62,6 @@ def human_delta(duration):
 
 def human_delta_short(duration):
     delta = []
-    if duration // (60**2 * 24 * 365) > 0:
-        delta.append(f"{duration // (60**2 * 24 * 365)}y")
-        duration %= 60**2 * 24 * 365
-    if duration // (60**2 * 24 * 30) > 0:
-        delta.append(f"{duration // (60**2 * 24 * 30)}M")
-        duration %= 60**2 * 24 * 30
-    if duration // (60**2 * 24) > 0:
-        delta.append(f"{duration // (60**2 * 24)}d")
-        duration %= 60**2 * 24
     if duration // 60**2 > 0:
         delta.append(f"{duration // 60**2}h")
         duration %= 60**2
@@ -81,7 +72,7 @@ def human_delta_short(duration):
         delta.append(f"{duration}s")
     if len(delta) == 0:
         delta = ["Forever"]
-    return "".join(delta)
+    return ", ".join(delta)
 
 
 async def unpunish(bot, incident):
@@ -264,9 +255,25 @@ class moderation(commands.Cog):
     async def warns(self, ctx):
         records = await self.bot.db.fetch("SELECT id, comment, ref, expires, time_ FROM incidents WHERE active = TRUE AND type_ = 1 AND guild = $1 AND $2 = ANY(users) ORDER BY id", ctx.guild.id, ctx.author.id)
         await ctx.message.delete()
+
+        def display(record):
+            if int(time.time()) - record["time_"] < 24 * 60**2:
+                time_ = human_delta_short(int(time.time()) - record["time_"]) + " ago"
+            else:
+                time_ = datetime.datetime.utcfromtimestamp(record["time_"]).strftime("%d/%m/%y")
+
+            if not record["expires"] > record["time_"]:
+                expires = ""
+            elif record["expires"] - int(time.time()) < 24 * 60**2:
+                expires = " expires in " + human_delta_short(record["expires"] - int(time.time()))
+            else:
+                expires = datetime.datetime.utcfromtimestamp(record["expires"]).strftime(", expires %d/%m/%y")
+
+            return f"[{time_}{expires}- #{record['id']}: {record['comment']}]({record['ref']})"
+
         index = 0
-        list_ = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records]
-        pages = ["\n".join(list_[n: n + 10]) for n in range(0, len(list_), 10)]
+        list_ = [display(record) for record in records]
+        pages = ["\n\n".join(list_[n: n + 10]) for n in range(0, len(list_), 10)]
         if len(pages) == 0:
             pages = [""]
         length = len(list_)
@@ -314,13 +321,6 @@ class moderation(commands.Cog):
     async def history(self, ctx, person: discord.User):
         records = await self.bot.db.fetch("SELECT id, comment, ref, expires, time_, type_, active FROM incidents WHERE guild = $1 AND $2 = ANY(users) ORDER BY id", ctx.guild.id, person.id)
         await ctx.message.delete()
-        types = {
-            0: "Note",
-            1: "Warn",
-            2: "Mute",
-            3: "Kick",
-            4: "Ban"
-        }
         pages_active: list
         pages_inactive: list
         length: int
@@ -332,10 +332,37 @@ class moderation(commands.Cog):
 
         def compute_lists():
             nonlocal length, pages, pages_active, pages_inactive
-            list_active = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']} {types[record['type_']]}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records if record["active"] and (record["type_"] > 0 or notes)]
-            list_inactive = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']} {types[record['type_']]}: {record['comment']}]({record['ref']})" for record in records if not record['active'] and (record["type_"] > 0 or notes)]
-            pages_active = ["\n".join(list_active[n : n+10]) for n in range(0, len(list_active), 10)]
-            pages_inactive = ["\n".join(list_inactive[n: n + 10]) for n in range(0, len(list_inactive), 10)]
+
+            def display(record):
+                types = {
+                    0: "Note",
+                    1: "Warn",
+                    2: "Mute",
+                    3: "Kick",
+                    4: "Ban"
+                }
+                if int(time.time()) - record["time_"] < 24 * 60 ** 2:
+                    time_ = human_delta_short(
+                        int(time.time()) - record["time_"]) + " ago"
+                else:
+                    time_ = datetime.datetime.utcfromtimestamp(
+                        record["time_"]).strftime("%d/%m/%y")
+
+                if not record["active"] or not record["expires"] > record["time_"]:
+                    expires = ""
+                elif record["expires"] - int(time.time()) < 24 * 60 ** 2:
+                    expires = " expires in " + human_delta_short(
+                        record["expires"] - int(time.time()))
+                else:
+                    expires = datetime.datetime.utcfromtimestamp(
+                        record["expires"]).strftime(", expires %d/%m/%y")
+
+                return f"[{time_}{expires}- #{record['id']} ({types[record['type_']]}): {record['comment']}]({record['ref']})"
+
+            list_active = [display(record) for record in records if record["active"] and (record["type_"] > 0 or notes)]
+            list_inactive = [display(record) for record in records if not record['active'] and (record["type_"] > 0 or notes)]
+            pages_active = ["\n\n".join(list_active[n : n+10]) for n in range(0, len(list_active), 10)]
+            pages_inactive = ["\n\n".join(list_inactive[n: n + 10]) for n in range(0, len(list_inactive), 10)]
             if len(pages_active) == 0:
                 pages_active = [""]
             if len(pages_inactive) == 0:
