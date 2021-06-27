@@ -264,14 +264,50 @@ class moderation(commands.Cog):
     async def warns(self, ctx):
         records = await self.bot.db.fetch("SELECT id, comment, ref, expires, time_ FROM incidents WHERE active = TRUE AND type_ = 1 AND guild = $1 AND $2 = ANY(users) ORDER BY id", ctx.guild.id, ctx.author.id)
         await ctx.message.delete()
-        if len(records) == 0:
-            embed = discord.Embed(title="You have no active warnings!", colour=GREEN)
+        index = 0
+        list_ = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records]
+        pages = ["\n".join(list_[n: n + 10]) for n in range(0, len(list_), 10)]
+        if len(pages) == 0:
+            pages = [""]
+        length = len(list_)
+        page_count = len(pages)
+
+        def paged_embed():
+            page = pages[index]
+            embed = discord.Embed(title=f"You have {length} active warnings!", description=page, colour=GREEN if length == 0 else RED)
+            embed.set_footer(text=f"Page {index + 1}/{page_count}")
             embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            return
-        embed = discord.Embed(title=f"You have {len(records)} active warnings!", description="\n".join([f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records]), colour=RED)
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
+            return embed
+
+        def components():
+            return [
+                [Button(label="<<", disabled=index == 0, style=ButtonStyle.blue, id="first"),
+                 Button(label="<", disabled=index == 0, style=ButtonStyle.blue, id="previous"),
+                 Button(label=">", disabled=index == page_count - 1, style=ButtonStyle.blue, id="next"),
+                 Button(label=">>", disabled=index == page_count - 1, style=ButtonStyle.blue, id="last")]
+            ]
+
+        message = await ctx.send(embed=paged_embed(), components=components())
+
+        try:
+            while True:
+                interaction = await self.bot.wait_for("button_click", timeout=5 * 60, check=lambda i: i.message == message)
+                if interaction.user != ctx.author:
+                    await interaction.respond(content="Only the person who triggered the command can push buttons!")
+                    continue
+                elif interaction.custom_id == "first":
+                    index = 0
+                elif interaction.custom_id == "previous":
+                    index -= 1
+                elif interaction.custom_id == "next":
+                    index += 1
+                elif interaction.custom_id == "last":
+                    index = page_count - 1
+                await message.edit(embed=paged_embed(), components=components())
+                await interaction.respond(type=6)
+
+        except TimeoutError:
+            await message.edit(embed=paged_embed(), components=[])
 
     @commands.command(aliases=["h", "hist"])
     @commands.check(Checks.mod)
