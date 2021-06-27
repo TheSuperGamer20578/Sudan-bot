@@ -225,17 +225,40 @@ class moderation(commands.Cog):
             4: 0xff0000
         }
 
-        embed = discord.Embed(title=f"Incident #{id}{' (ACTIVE)' if incident_['active'] and incident_['type_'] != 3 else ''}", colour=colours[incident_["type_"]], timestamp=datetime.datetime.utcfromtimestamp(incident_["time_"]))
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-        embed.add_field(name="Moderator", value=f"<@{incident_['moderator']}>")
-        embed.add_field(name="Members involved",
-                        value=", ".join([f"<@{member}>" for member in incident_["users"]]))
-        embed.add_field(name="Punishemnt", value=punishments[incident_["type_"]])
-        if incident_["type_"] != 3:
-            embed.add_field(name="Duration", value=human_delta(incident_["duration"]))
-        embed.add_field(name="Reason", value=f"{incident_['comment']} ([ref]({incident_['ref']}))",
-                        inline=False)
-        await ctx.send(embed=embed)
+        def embed(inactive=False):
+            embed_ = discord.Embed(title=f"Incident #{id}{' (ACTIVE)' if incident_['active'] and incident_['type_'] != 3 and not inactive else ''}", colour=colours[incident_["type_"]], timestamp=datetime.datetime.utcfromtimestamp(incident_["time_"]))
+            embed_.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            embed_.add_field(name="Moderator", value=f"<@{incident_['moderator']}>")
+            embed_.add_field(name="Members involved", value=", ".join([f"<@{member}>" for member in incident_["users"]]))
+            embed_.add_field(name="Punishemnt", value=punishments[incident_["type_"]])
+            if incident_["type_"] != 3:
+                embed_.add_field(name="Duration", value=human_delta(incident_["duration"]))
+            embed_.add_field(name="Reason", value=f"{incident_['comment']} ([ref]({incident_['ref']}))", inline=False)
+            return embed_
+
+        def components(inactive=False, deleted=False):
+            return [
+                [Button(label="Deactivate", style=ButtonStyle.grey, id="deactivate", disabled=inactive or not incident_["active"]),
+                 Button(label="DELETE", style=ButtonStyle.red, id="delete", disabled=deleted)]
+            ]
+
+        message = await ctx.send(embed=embed(), components=components())
+
+        try:
+            while True:
+                interaction = await self.bot.wait_for("button_click", timeout=5*60, check=lambda i: i.message == message)
+                if interaction.user != ctx.author:
+                    await interaction.respond(content="Only the person who triggered the command can push buttons!")
+                    continue
+                if incident_["active"]:
+                    await unpunish(self.bot, incident_)
+                if interaction.custom_id == "delete":
+                    await self.bot.db.execute("DELETE FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
+                await message.edit(embed=embed(True), components=components(True, interaction.custom_id == "delete"))
+                await interaction.respond(type=6)
+
+        except TimeoutError:
+            await message.edit(embed=embed(), components=[])
 
     @commands.command()
     async def warns(self, ctx):
