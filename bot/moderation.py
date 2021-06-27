@@ -84,6 +84,32 @@ def human_delta_short(duration):
     return "".join(delta)
 
 
+async def unpunish(incident):
+    guild = self.bot.get_guild(incident["guild"])
+
+    async def none():
+        pass
+
+    async def mute():
+        role = guild.get_role(await self.bot.db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", guild.id))
+        for user in [guild.get_member(member) for member in incident["users"]]:
+            await user.remove_roles(role, reason=f"Automatic unmute from incident #{incident['id']}: {incident['comment']}")
+
+    async def ban():
+        for user in [self.bot.fetch_user(user) for user in incident["users"]]:
+            await guild.unban(user, reason=f"Automatic unban from incident #{incident['id']}: {incident['comment']}")
+
+    punishments = {
+        0: none,
+        1: none,
+        2: mute,
+        3: none,
+        4: ban
+    }
+    await punishments[incident["type_"]]()
+    await self.bot.db.execute("UPDATE incidents SET active = FALSE WHERE guild = $1 AND id = $2", guild.id, incident["id"])
+
+
 class moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -313,34 +339,10 @@ class moderation(commands.Cog):
 
     @tasks.loop(seconds=1)
     async def auto_unpunish(self):
-        incidents = await self.bot.db.fetch("SELECT incidents.users, incidents.type_, incidents.comment, incidents.id, incidents.guild, guilds.mute_role " +
-                                            "FROM incidents " +
-                                            "LEFT JOIN guilds ON incidents.guild = guilds.id " +
-                                            "WHERE active = TRUE AND expires <= EXTRACT(EPOCH FROM NOW()) AND expires > time_")
-        await self.bot.db.execute("UPDATE incidents SET active = FALSE WHERE active = TRUE AND expires <= EXTRACT(EPOCH FROM NOW()) AND expires > time_")
+        incidents = await self.bot.db.fetch("SELECT users, type_, comment, id, guild FROM incidents WHERE active = TRUE AND expires <= EXTRACT(EPOCH FROM NOW()) AND expires > time_")
 
         for incident in incidents:
-            guild = self.bot.get_guild(incident["guild"])
-
-            async def none():
-                pass
-
-            async def mute():
-                role = guild.get_role(await self.bot.db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", guild.id))
-                for user in [guild.get_member(member) for member in incident["users"]]:
-                    await user.remove_roles(role, reason=f"Automatic unmute from incident #{incident['id']}: {incident['comment']}")
-
-            async def ban():
-                for user in [self.bot.fetch_user(user) for user in incident["users"]]:
-                    await guild.unban(user, reason=f"Automatic unban from incident #{incident['id']}: {incident['comment']}")
-
-            punishments = {
-                0: none,
-                1: none,
-                2: mute,
-                4: ban
-            }
-            await punishments[incident["type_"]]()
+            await unpunish(incident)
 
 
 def setup(bot):
