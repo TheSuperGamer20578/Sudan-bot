@@ -84,19 +84,19 @@ def human_delta_short(duration):
     return "".join(delta)
 
 
-async def unpunish(incident):
-    guild = self.bot.get_guild(incident["guild"])
+async def unpunish(bot, incident):
+    guild = bot.get_guild(incident["guild"])
 
     async def none():
         pass
 
     async def mute():
-        role = guild.get_role(await self.bot.db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", guild.id))
+        role = guild.get_role(await bot.db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", guild.id))
         for user in [guild.get_member(member) for member in incident["users"]]:
             await user.remove_roles(role, reason=f"Automatic unmute from incident #{incident['id']}: {incident['comment']}")
 
     async def ban():
-        for user in [self.bot.fetch_user(user) for user in incident["users"]]:
+        for user in [await bot.fetch_user(user) for user in incident["users"]]:
             await guild.unban(user, reason=f"Automatic unban from incident #{incident['id']}: {incident['comment']}")
 
     punishments = {
@@ -107,7 +107,7 @@ async def unpunish(incident):
         4: ban
     }
     await punishments[incident["type_"]]()
-    await self.bot.db.execute("UPDATE incidents SET active = FALSE WHERE guild = $1 AND id = $2", guild.id, incident["id"])
+    await bot.db.execute("UPDATE incidents SET active = FALSE WHERE guild = $1 AND id = $2", guild.id, incident["id"])
 
 
 class moderation(commands.Cog):
@@ -202,7 +202,7 @@ class moderation(commands.Cog):
     @commands.command(aliases=["i", "in", "inc"])
     @commands.check(Checks.mod)
     async def incident(self, ctx, id: int):
-        incident_ = await self.bot.db.fetchrow("SELECT users, time_, type_, comment, ref, moderator, expires, active, expires - time_ AS duration FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
+        incident_ = await self.bot.db.fetchrow("SELECT *, expires - time_ AS duration FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
         await ctx.message.delete()
         if incident_ is None:
             embed = discord.Embed(title=f"Incident #{id} does not exist!", colour=RED)
@@ -342,7 +342,7 @@ class moderation(commands.Cog):
         incidents = await self.bot.db.fetch("SELECT users, type_, comment, id, guild FROM incidents WHERE active = TRUE AND expires <= EXTRACT(EPOCH FROM NOW()) AND expires > time_")
 
         for incident in incidents:
-            await unpunish(incident)
+            await unpunish(self.bot, incident)
 
 
 def setup(bot):
