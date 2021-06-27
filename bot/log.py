@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from _util import Checks, GREEN, set_db
 
-logtypes = ["invites"]
+logtypes = ["invites", "moderation"]
 
 
 def find_invite_by_code(invite_list, code):
