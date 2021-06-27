@@ -4,6 +4,8 @@ import re
 import time
 import datetime
 from discord.ext import commands, tasks
+from discord_components import DiscordComponents, Button, ButtonStyle
+from asyncio.exceptions import TimeoutError
 from _util import Checks, set_db, RED, GREEN
 
 
@@ -86,6 +88,7 @@ class moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         set_db(bot.db)
+        DiscordComponents(bot)
         self.auto_unpunish.start()
     
     @commands.command(aliases=["pu"])
@@ -220,6 +223,94 @@ class moderation(commands.Cog):
         embed = discord.Embed(title=f"You have {len(records)} active warnings!", description="\n".join([f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records]), colour=RED)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=["h", "hist"])
+    @commands.check(Checks.mod)
+    async def history(self, ctx, person: discord.User):
+        records = await self.bot.db.fetch("SELECT id, comment, ref, expires, time_, type_, active FROM incidents WHERE guild = $1 AND $2 = ANY(users) ORDER BY id", ctx.guild.id, person.id)
+        await ctx.message.delete()
+        if len(records) == 0:
+            embed = discord.Embed(title=f"{person.display_name} has always obeyed the rules!", colour=GREEN)
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            await ctx.send(embed=embed)
+            return
+        types = {
+            0: "Note",
+            1: "Warn",
+            2: "Mute",
+            3: "Kick",
+            4: "Ban"
+        }
+        pages_active: list
+        pages_inactive: list
+        length: int
+        pages: int
+
+        index = 0
+        active = True
+        notes = False
+
+        def compute_lists():
+            nonlocal length, pages, pages_active, pages_inactive
+            list_active = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']} {types[record['type_']]}{(f' expires in ' + human_delta_short(record['expires'] - int(time.time()))) if record['expires'] > record['time_'] else ''}: {record['comment']}]({record['ref']})" for record in records if record["active"] and (record["type_"] > 0 or notes)]
+            list_inactive = [f"[{human_delta_short(int(time.time()) - record['time_'])} ago #{record['id']} {types[record['type_']]}: {record['comment']}]({record['ref']})" for record in records if not record['active'] and (record["type_"] > 0 or notes)]
+            pages_active = ["\n".join(list_active[n : n+10]) for n in range(0, len(list_active), 10)]
+            pages_inactive = ["\n".join(list_inactive[n: n + 10]) for n in range(0, len(list_inactive), 10)]
+            length = len(list_active if active else list_inactive)
+            pages = len(pages_active if active else pages_inactive)
+
+        compute_lists()
+
+        def paged_embed():
+            page = (pages_active if active else pages_inactive)[index]
+            embed_ = discord.Embed(title=f"{person.display_name} has {length} {'active' if active else 'inactive'} punishments{' and notes' if notes else ''}!", description=page, colour=RED)
+            embed_.set_footer(text=f"Page {index+1}/{pages}")
+            embed_.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            return embed_
+
+        def components():
+            return [
+                [Button(label="<<", disabled=index == 0, style=ButtonStyle.blue, id="first"),
+                 Button(label="<", disabled=index == 0, style=ButtonStyle.blue, id="previous"),
+                 Button(label=">", disabled=index == pages - 1, style=ButtonStyle.blue, id="next"),
+                 Button(label=">>", disabled=index == pages - 1, style=ButtonStyle.blue, id="last")],
+                [Button(label="Active", disabled=active, style=ButtonStyle.green, id="active"),
+                 Button(label="Inactive", disabled=not active, style=ButtonStyle.red, id="inactive")],
+                [Button(label="Show notes", style=ButtonStyle.grey, disabled=notes, id="notes")]
+            ]
+        message = await ctx.send(embed=paged_embed(), components=components())
+
+        try:
+            while True:
+                interaction = await self.bot.wait_for("button_click", timeout=5*60, check=lambda i: i.message == message)
+                if interaction.user != ctx.author:
+                    await interaction.respond(content="Only the person who triggered the command can push buttons!")
+                    continue
+                elif interaction.custom_id == "first":
+                    index = 0
+                elif interaction.custom_id == "previous":
+                    index -= 1
+                elif interaction.custom_id == "next":
+                    index += 1
+                elif interaction.custom_id == "last":
+                    index = pages - 1
+                elif interaction.custom_id == "active":
+                    active = True
+                    index = 0
+                    compute_lists()
+                elif interaction.custom_id == "inactive":
+                    active = False
+                    index = 0
+                    compute_lists()
+                elif interaction.custom_id == "notes":
+                    notes = True
+                    index = 0
+                    compute_lists()
+                await message.edit(embed=paged_embed(), components=components())
+                await interaction.respond(type=6)
+
+        except TimeoutError:
+            await message.edit(embed=paged_embed(), components=[])
 
     @tasks.loop(seconds=1)
     async def auto_unpunish(self):
