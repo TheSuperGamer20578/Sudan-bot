@@ -434,6 +434,9 @@ class moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if await Checks.admin(message) or await Checks.mod(message):
+            return
+
         record = await self.bot.db.fetchrow("SELECT bad_words, bad_words_warn_duration FROM guilds WHERE id = $1", message.guild.id)
 
         for word in record["bad_words"]:
