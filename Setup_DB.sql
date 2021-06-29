@@ -18,3 +18,7 @@ CREATE TABLE rules
 
 CREATE TABLE incidents
 (guild BIGINT, id INT, moderator BIGINT, users BIGINT[], comment TEXT, expires BIGINT, type_ INT, time_ BIGINT, active BOOLEAN, ref TEXT);
+
+CREATE TABLE mutes
+(guild BIGINT, member BIGINT, incidents JSON[] DEFAULT '{}', threshold_muted BOOLEAN DEFAULT FALSE, perm_incidents INT[] DEFAULT '{}');
+ALTER TABLE mutes ADD CONSTRAINT mutes_pkey PRIMARY KEY (guild, member)

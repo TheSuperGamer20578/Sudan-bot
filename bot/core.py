@@ -3,6 +3,7 @@ The core of the bot adds some essential commands and starts the bot you can load
 """
 import time
 import os
+import json
 from datetime import timezone
 
 import discord
@@ -17,9 +18,12 @@ load_dotenv()
 
 async def _load_db():
     if "DATABASE_URL" in os.environ:
-        return await asyncpg.connect(os.getenv("DATABASE_URL"), ssl="require")
-    return await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
-                                 host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+        db = await asyncpg.connect(os.getenv("DATABASE_URL"), ssl="require")
+    else:
+        db = await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
+                                   host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+    await db.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+    return db
 
 
 async def _close_db(database):
@@ -181,6 +185,10 @@ class core(commands.Cog):
                     await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
                 except asyncpg.UniqueViolationError:
                     pass
+                try:
+                    await self.bot.db.execute("INSERT INTO mutes (guild, member) VALUES ($1, $2)", guild.id, member.id)
+                except asyncpg.UniqueViolationError:
+                    pass
             for channel in guild.text_channels:
                 try:
                     await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
@@ -229,6 +237,10 @@ class core(commands.Cog):
                 await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
             except asyncpg.UniqueViolationError:
                 pass
+            try:
+                await self.bot.db.execute("INSERT INTO mutes (guild, member) VALUES ($1, $2)", guild.id, member.id)
+            except asyncpg.UniqueViolationError:
+                pass
         for channel in guild.text_channels:
             try:
                 await self.bot.db.execute("INSERT INTO channels (id, guild_id) VALUES ($1, $2)", channel.id, guild.id)
@@ -242,6 +254,10 @@ class core(commands.Cog):
         """
         try:
             await self.bot.db.execute("INSERT INTO users (id, trusted, dad_mode) VALUES ($1, false, false)", member.id)
+        except asyncpg.UniqueViolationError:
+            pass
+        try:
+            await self.bot.db.execute("INSERT INTO mutes (guild, member) VALUES ($1, $2)", guild.id, member.id)
         except asyncpg.UniqueViolationError:
             pass
 
