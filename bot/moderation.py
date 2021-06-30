@@ -12,6 +12,7 @@ from _util import Checks, set_db, RED, GREEN
 def parse_punishment(argument):  
     punishments = {
         "none": 0,
+        "note": 1,
         "warn": 1,
         "mute": 2,
         "kick": 3,
