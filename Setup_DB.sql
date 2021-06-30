@@ -21,4 +21,7 @@ CREATE TABLE incidents
 
 CREATE TABLE mutes
 (guild BIGINT, member BIGINT, incidents JSON[] DEFAULT '{}', threshold_muted BOOLEAN DEFAULT FALSE, perm_incidents INT[] DEFAULT '{}', threshold_banned BOOLEAN DEFAULT FALSE);
-ALTER TABLE mutes ADD CONSTRAINT mutes_pkey PRIMARY KEY (guild, member)
+ALTER TABLE mutes ADD CONSTRAINT mutes_pkey PRIMARY KEY (guild, member);
+
+CREATE TABLE embeds
+(id BIGINT PRIMARY KEY, guild BIGINT, colour INT);
