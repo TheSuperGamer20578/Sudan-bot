@@ -114,11 +114,26 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
         pass
 
     async def warn():
-        await dm("Warning!", f"You have been warned in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xfc9003)
         await log("Warn")
         await dm("Warning!", f"You have been warned in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xfc9003)
+        settings = await db.fetchrow("SELECT mute_threshold, ban_threshold, mute_role FROM guilds WHERE id = $1", ctx.guild.id)
+        role = ctx.guild.get_role(settings["mute_role"])
+        for user in users:
+            warns = await db.fetchval("SELECT count(*) FROM incidents WHERE type_ = 1 AND guild = $1 AND active AND $2 = ANY(users)", ctx.guild.id, user.id)
+            if warns >= settings["mute_threshold"] > 0 and not await db.fetchval("SELECT threshold_muted FROM mutes WHERE guild = $1 AND member = $2", ctx.guild.id, user.id):
+                await db.execute("UPDATE mutes SET threshold_muted = TRUE WHERE guild = $1 AND member = $2", ctx.guild.id, user.id)
+                await user.add_roles(role)
+                embed = discord.Embed(title="Warn threshold reached!", description=f"You have been muted in {ctx.guild.name} for reaching the warn threshold!\nYou will be un-muted when your warns expire and you are below the threshold", colour=RED)
+                await user.send(embed=embed)
+            if warns >= settings["ban_threshold"] > 0:
+                await db.execute("UPDATE mutes SET threshold_banned = TRUE WHERE guild = $1 AND member = $2", ctx.guild.id, user.id)
+                embed = discord.Embed(title="Warn threshold reached!", description=f"You have been banned in {ctx.guild.name} for reaching the warn threshold!\nYou will be unbanned when your warns expire and you are below the threshold", colour=RED)
+                await user.send(embed=embed)
+                await user.ban(reason="Reached warn threshold", delete_message_days=0)
 
     async def mute():
+        await log("Mute")
+        await dm("Muted!", f"You have been muted in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xc74c00)
         role = ctx.guild.get_role(await db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", ctx.guild.id))
         for user in users:
             await user.add_roles(role)
@@ -128,20 +143,18 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
                 await db.execute("UPDATE mutes SET incidents = ARRAY_APPEND(incidents, $3) WHERE guild = $1 AND member = $2", ctx.guild.id, user.id, {"id": id, "expires": int(expires)})
             else:
                 await db.execute("UPDATE mutes SET perm_incidents = ARRAY_APPEND(perm_incidents, $3) WHERE guild = $1 AND member = $2", ctx.guild.id, user.id, id)
-        await log("Mute")
-        await dm("Muted!", f"You have been muted in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xc74c00)
 
     async def kick():
-        for user in users:
-            await user.kick(reason=f"Incident #{id}: {reason}")
         await log("Kick")
         await dm("Kicked!", f"You have been kicked from {ctx.guild.name} for {reason}! Incident #{id} ([ref]({ref}))", 0xff0077)
+        for user in users:
+            await user.kick(reason=f"Incident #{id}: {reason}")
 
     async def ban():
-        for user in users:
-            await user.ban(reason=f"Duration: {human_delta(duration)}. Incident #{id}: {reason}", delete_message_days=0)
         await log("Ban")
         await dm("Banned!", f"You have been banned from {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xff0000)
+        for user in users:
+            await user.ban(reason=f"Duration: {human_delta(duration)}. Incident #{id}: {reason}", delete_message_days=0)
 
     punishments = {
         0: none,
@@ -159,6 +172,21 @@ async def unpunish(bot, incident):
 
     async def none():
         pass
+
+    async def warn():
+        settings = await bot.db.fetchrow("SELECT mute_threshold, ban_threshold FROM guilds WHERE id = $1", guild.id)
+        for user in [await bot.fetch_user(member) for member in incident["users"]]:
+            warns = await bot.db.fetchval("SELECT count(*) FROM incidents WHERE type_ = 1 AND guild = $1 AND active AND $2 = ANY(users)", guild.id, user.id)
+            if warns < settings["mute_threshold"] > 0 and await bot.db.fetchval("SELECT threshold_muted FROM mutes WHERE guild = $1 AND member = $2", guild.id, user.id):
+                await bot.db.execute("UPDATE mutes SET threshold_muted = FALSE WHERE guild = $1 AND member = $2", guild.id, user.id)
+                unmuted = await bot.db.fetchval("SELECT CASE WHEN ARRAY_LENGTH(incidents, 1) IS NULL AND ARRAY_LENGTH(perm_incidents, 1) IS NULL AND NOT threshold_muted THEN TRUE ELSE FALSE END FROM mutes WHERE guild = $1 AND member = $2", guild.id, user.id)
+                if unmuted:
+                    role = guild.get_role(await bot.db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", guild.id))
+                    user = guild.get_member(user.id)
+                    await user.remove_roles(role)
+            if warns < settings["ban_threshold"] > 0 and await bot.db.fetchval("SELECT threshold_banned FROM mutes WHERE guild = $1 AND member = $2", guild.id, user.id):
+                await guild.unban(user, reason="Below warn threshold")
+                await bot.db.execute("UPDATE mutes SET threshold_banned = FALSE WHERE guild = $1 AND member = $2", guild.id, user.id)
 
     async def mute():
         for user in [guild.get_member(member) for member in incident["users"]]:
@@ -191,13 +219,13 @@ async def unpunish(bot, incident):
 
     punishments = {
         0: none,
-        1: none,
+        1: warn,
         2: mute,
         3: none,
         4: ban
     }
-    await punishments[incident["type_"]]()
     await bot.db.execute("UPDATE incidents SET active = FALSE WHERE guild = $1 AND id = $2", guild.id, incident["id"])
+    await punishments[incident["type_"]]()
 
 
 class moderation(commands.Cog):
@@ -505,6 +533,8 @@ class moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if isinstance(message.channel, discord.DMChannel):
+            return
         if await Checks.admin(message) or await Checks.mod(message):
             return
 
