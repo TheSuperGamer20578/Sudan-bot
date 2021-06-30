@@ -241,7 +241,7 @@ class moderation(commands.Cog):
     async def punish(self, ctx, users: commands.Greedy[discord.Member], punishment: typing.Optional[parse_punishment] = 0, duration: commands.Greedy[parse_time] = None, *, reason):
         if duration is None:
             duration = []
-        if punishment == 3 and duration != []:
+        if (punishment == 3 and duration != []) or len(users) <= 0:
             raise commands.BadArgument
 
         duration = sum(duration)
