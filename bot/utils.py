@@ -77,7 +77,11 @@ class utils(commands.Cog):
 
     @commands.command()
     @commands.check(Checks.admin)
-    async def editembed(self, ctx, message: discord.Message, title, *, description: str = discord.embeds.EmptyEmbed):
+    async def editembed(self, ctx, message: Optional[discord.Message], title, *, description: str = discord.embeds.EmptyEmbed):
+        if message is None:
+            if ctx.message.reference is None:
+                raise discord.InvalidArgument
+            message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
         async with self.bot.pool.acquire() as db:
             colour = await db.fetchval("SELECT colour FROM embeds WHERE guild = $1 AND id = $2", ctx.guild.id, message.id)
         await ctx.message.delete()
