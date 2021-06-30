@@ -4,7 +4,7 @@ Logs stuff
 import discord
 from discord.ext import commands
 
-from _util import Checks, GREEN, set_db
+from _util import Checks, GREEN
 
 logtypes = ["invites", "moderation"]
 
@@ -26,7 +26,6 @@ class log(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.invites = {}
-        set_db(bot.db)
 
     @commands.Cog.listener()
     async def on_ready(self):

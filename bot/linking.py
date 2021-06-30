@@ -6,7 +6,7 @@ import requests
 import discord
 from discord.ext import commands
 
-from _util import Checks, BLUE, GREEN, set_db
+from _util import Checks, BLUE, GREEN
 
 
 class linking(commands.Cog):
@@ -15,7 +15,6 @@ class linking(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.command()
     @commands.check(Checks.trusted)

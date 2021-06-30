@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
-from _util import GREEN, RED, Checks, BLUE, set_db
+from _util import GREEN, RED, Checks, BLUE
 
 auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
@@ -34,7 +34,6 @@ class dev(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.Cog.listener()
     async def on_ready(self):

@@ -11,7 +11,7 @@ import asyncpg
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from _util import Checks, RED, GREEN, set_db, BLUE
+from _util import Checks, RED, GREEN, BLUE
 
 load_dotenv()
 
@@ -19,15 +19,19 @@ load_dotenv()
 async def _load_db():
     if "DATABASE_URL" in os.environ:
         db = await asyncpg.connect(os.getenv("DATABASE_URL"), ssl="require")
+        pool = await asyncpg.create_pool(os.getenv("DATABASE_URL"), ssl="require")
     else:
         db = await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
                                    host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+        pool = await asyncpg.create_pool(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
+                                         host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
     await db.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
-    return db
+    return db, pool
 
 
-async def _close_db(database):
+async def _close_db(database, pool):
     await database.close()
+    await pool.close()
 
 
 class core(commands.Cog):
@@ -36,7 +40,6 @@ class core(commands.Cog):
     """
     def __init__(self, b):
         self.bot = b
-        set_db(b.db)
         self.bot.remove_command("help")
 
     @commands.command()
@@ -286,10 +289,9 @@ if __name__ == '__main__':
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","),
                        intents=intents,
                        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
-    bot.db = bot.loop.run_until_complete(_load_db())
+    bot.db, bot.pool = bot.loop.run_until_complete(_load_db())
     bot.add_cog(core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "" and not cog.startswith("_"):
             bot.load_extension(cog)
     bot.run(os.getenv("BOT_TOKEN"))
-    bot.loop.run_until_complete(_close_db(bot.db))

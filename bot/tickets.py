@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from _util import RED, GREEN, Checks, set_db
+from _util import RED, GREEN, Checks
 
 _DB = None
 env = Environment(
@@ -31,7 +31,6 @@ class tickets(commands.Cog):
     def __init__(self, bot):
         global _DB  # pylint: disable=global-statement
         self.bot = bot
-        set_db(bot.db)
         _DB = bot.db
 
     @commands.command()

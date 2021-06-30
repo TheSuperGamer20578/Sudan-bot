@@ -8,7 +8,7 @@ from subprocess import call
 import discord
 from discord.ext import commands
 
-from _util import Checks, set_db
+from _util import Checks
 
 
 class update(commands.Cog):
@@ -17,7 +17,6 @@ class update(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.Cog.listener()
     async def on_message(self, message):

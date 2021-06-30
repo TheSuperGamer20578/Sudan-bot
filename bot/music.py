@@ -12,7 +12,7 @@ import youtube_dl
 from discord.ext import commands
 from discord.utils import get
 
-from _util import Checks, GREEN, RED, set_db
+from _util import Checks, GREEN, RED
 queue = {}
 np = {}
 if os.name != "nt":
@@ -80,7 +80,6 @@ class music(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.command(aliases=["j"])
     async def join(self, ctx):
