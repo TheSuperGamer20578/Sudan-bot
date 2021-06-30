@@ -127,11 +127,17 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
                 await user.add_roles(role)
                 embed = discord.Embed(title="Warn threshold reached!", description=f"You have been muted in {ctx.guild.name} for reaching the warn threshold!\nYou will be un-muted when your warns expire and you are below the threshold", colour=RED)
                 await user.send(embed=embed)
+                embed = discord.Embed(title="Threshold punishment", description=f"{user.mention} has been muted for having too many warns", colour=0xc74c00)
+                for channel in [ctx.guild.get_channel(record["id"]) for record in await db.fetch("SELECT id FROM channels WHERE log_type = 'moderation' AND guild_id = $1", ctx.guild.id)]:
+                    await channel.send(embed=embed)
             if warns >= settings["ban_threshold"] > 0:
                 await db.execute("UPDATE mutes SET threshold_banned = TRUE WHERE guild = $1 AND member = $2", ctx.guild.id, user.id)
                 embed = discord.Embed(title="Warn threshold reached!", description=f"You have been banned in {ctx.guild.name} for reaching the warn threshold!\nYou will be unbanned when your warns expire and you are below the threshold", colour=RED)
                 await user.send(embed=embed)
                 await user.ban(reason="Reached warn threshold", delete_message_days=0)
+                embed = discord.Embed(title="Threshold punishment", description=f"{user.mention} has been banned for having too many warns", colour=0xff0000)
+                for channel in [ctx.guild.get_channel(record["id"]) for record in await db.fetch("SELECT id FROM channels WHERE log_type = 'moderation' AND guild_id = $1", ctx.guild.id)]:
+                    await channel.send(embed=embed)
 
     async def mute():
         await log("Mute")
