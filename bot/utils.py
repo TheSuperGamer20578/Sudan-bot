@@ -1,13 +1,35 @@
 """
 Provides several utilities
 """
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from discord.ext import commands
 
-from _util import Checks, BLUE, RED
+from _util import Checks, BLUE, RED, GREEN
 from moderation import parse_time, human_delta
+
+
+def parse_purge_filter(arg):
+    filters = {}
+
+    def purge_filter(func):
+        filters[func.__name__] = func
+        return func
+
+    @purge_filter
+    def bots(message):
+        return message.author.bot
+
+    @purge_filter
+    def humans(message):
+        return not message.author.bot
+
+    @purge_filter
+    def embeds(message):
+        return len(message.embeds) > 0
+
+    return filters[arg]
 
 
 class utils(commands.Cog):
@@ -66,6 +88,28 @@ class utils(commands.Cog):
 
         embed = discord.Embed(title=title, description=description, colour=colour)
         await message.edit(embed=embed)
+
+    @commands.command()
+    @commands.check(Checks.mod)
+    async def purge(self, ctx, purge_filter: Optional[Union[parse_purge_filter, discord.Member]], limit: int):
+        def none(message):
+            return True
+
+        def user(member):
+            def predicate(message):
+                return message.author == member
+            return predicate
+
+        if purge_filter is None:
+            purge_filter = none
+        elif isinstance(purge_filter, discord.Member):
+            purge_filter = user(purge_filter)
+
+        await ctx.message.delete()
+        deleted = await ctx.channel.purge(limit=limit, check=purge_filter)
+        embed = discord.Embed(title=f"Purged {len(deleted)} messages", colour=GREEN)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed, delete_after=1)
 
 
 def setup(bot):
