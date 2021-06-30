@@ -257,7 +257,7 @@ class core(commands.Cog):
         except asyncpg.UniqueViolationError:
             pass
         try:
-            await self.bot.db.execute("INSERT INTO mutes (guild, member) VALUES ($1, $2)", guild.id, member.id)
+            await self.bot.db.execute("INSERT INTO mutes (guild, member) VALUES ($1, $2)", member.guild.id, member.id)
         except asyncpg.UniqueViolationError:
             pass
 
