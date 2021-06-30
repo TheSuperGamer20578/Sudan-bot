@@ -17,14 +17,17 @@ load_dotenv()
 
 
 async def _load_db():
+    async def init(conn):
+        await conn.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
+
     if "DATABASE_URL" in os.environ:
         db = await asyncpg.connect(os.getenv("DATABASE_URL"), ssl="require")
-        pool = await asyncpg.create_pool(os.getenv("DATABASE_URL"), ssl="require")
+        pool = await asyncpg.create_pool(os.getenv("DATABASE_URL"), ssl="require", init=init)
     else:
         db = await asyncpg.connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
                                    host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
         pool = await asyncpg.create_pool(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
-                                         host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+                                         host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"), init=init)
     await db.set_type_codec("json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
     return db, pool
 
