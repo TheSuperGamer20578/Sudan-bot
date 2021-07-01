@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from firebase_admin import firestore, credentials, initialize_app
 
-from core import admin
+from Core import admin
 
 try:
     cred = credentials.Certificate("Config/firebase.json")
@@ -18,7 +18,7 @@ db = firestore.client()
 fs_data = db.collection("settings")
 
 
-class moderation_config(commands.Cog):
+class ModerationConfig(commands.Cog):
     """
     Main class
     """
@@ -45,4 +45,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(moderation_config(bot))
+    bot.add_cog(ModerationConfig(bot))

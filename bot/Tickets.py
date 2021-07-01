@@ -5,12 +5,12 @@ import discord
 from discord.ext import commands
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from _util import RED, GREEN, Checks, set_db
+from _Util import RED, GREEN, Checks, set_db
 
 _DB = None
 env = Environment(
     loader=FileSystemLoader("."),
-    autoescape=select_autoescape(['html', 'xml'])
+    autoescape=select_autoescape(["html", "xml"])
 )
 
 
@@ -24,7 +24,7 @@ async def ticket_person(ctx):
     return False
 
 
-class tickets(commands.Cog):
+class Tickets(commands.Cog):
     """
     Main class
     """
@@ -149,4 +149,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(tickets(bot))
+    bot.add_cog(Tickets(bot))

@@ -17,7 +17,7 @@ with open("Config/attack.json", "r") as file:
     borders = DATA["borders"]
 
 
-class attack(commands.Cog):
+class Attack(commands.Cog):
     """
     Alerts when an enemy is within a set area
     """
@@ -116,4 +116,4 @@ def setup(bot):
     """
     Loads stuff so that it works
     """
-    bot.add_cog(attack(bot))
+    bot.add_cog(Attack(bot))

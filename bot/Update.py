@@ -8,10 +8,10 @@ from subprocess import call
 import discord
 from discord.ext import commands
 
-from _util import Checks, set_db
+from _Util import Checks, set_db
 
 
-class update(commands.Cog):
+class Update(commands.Cog):
     """
     Main class
     """
@@ -62,4 +62,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(update(bot))
+    bot.add_cog(Update(bot))

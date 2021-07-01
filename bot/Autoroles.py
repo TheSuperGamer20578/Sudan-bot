@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 
-class autoroles(commands.Cog):
+class Autoroles(commands.Cog):
     """
     Automatically assigns roles
     """
@@ -59,4 +59,4 @@ def setup(bot):
     """
     Load stuff so that stuff works
     """
-    bot.add_cog(autoroles(bot))
+    bot.add_cog(Autoroles(bot))

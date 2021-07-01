@@ -1,5 +1,5 @@
 """
-Requested by ogx#2920 i think it was to test how fast i could add stuff but idk
+Requested by ogx#2920 I think it was to test how fast I could add stuff but idk
 """
 from discord.ext import commands
 
@@ -12,9 +12,9 @@ class TheSuperGamer205IsTheWorstProgrammerOnEarth(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def TheSuperGamer205IsTheWorstProgrammerOnEarth(self, ctx):
+    async def thesupergamer205istheworstprogrammeronearth(self, ctx):
         """
-        Send that emoji dont ask me why
+        Send that emoji don't ask me why
         """
         await ctx.send("😳")
 
