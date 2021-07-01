@@ -11,6 +11,7 @@ from moderation import parse_time, human_delta
 
 
 def parse_purge_filter(arg):
+    """Returns the function for purge filter"""
     filters = {}
 
     def purge_filter(func):
@@ -65,6 +66,7 @@ class utils(commands.Cog):
     @commands.command()
     @commands.check(Checks.admin)
     async def embed(self, ctx, channel: Optional[discord.TextChannel], title, colour: discord.Colour, *, description: str = discord.embeds.EmptyEmbed):
+        """Makes an embed"""
         if channel is None:
             channel = ctx.channel
 
@@ -78,6 +80,7 @@ class utils(commands.Cog):
     @commands.command()
     @commands.check(Checks.admin)
     async def editembed(self, ctx, message: Optional[discord.Message], title, *, description: str = discord.embeds.EmptyEmbed):
+        """Edits an embed"""
         if message is None:
             if ctx.message.reference is None:
                 raise discord.InvalidArgument
@@ -96,7 +99,8 @@ class utils(commands.Cog):
     @commands.command()
     @commands.check(Checks.mod)
     async def purge(self, ctx, purge_filter: Optional[Union[parse_purge_filter, discord.Member]], limit: int):
-        def none(message):
+        """Bulk deletes messages"""
+        def none(message):  # pylint: disable=unused-argument
             return True
 
         def user(member):

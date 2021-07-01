@@ -1,16 +1,18 @@
 import asyncio
-import discord
 import typing
 import re
 import time
 import datetime
+
+import discord
 from discord.ext import commands, tasks
 from discord_components import DiscordComponents, Button, ButtonStyle
-from asyncio.exceptions import TimeoutError
+
 from _util import Checks, RED, GREEN
 
 
-def parse_punishment(argument):  
+def parse_punishment(argument):
+    """Converts a punishment name to its code"""
     punishments = {
         "none": 0,
         "note": 1,
@@ -23,6 +25,7 @@ def parse_punishment(argument):
 
 
 def parse_time(argument):
+    """Turn human-inputted time into seconds"""
     time_ = re.match(r"(\d*)([smhdwMy])", argument)
     times = {
         "s": 1,
@@ -39,6 +42,7 @@ def parse_time(argument):
 
 
 def human_delta(duration):
+    """Converts seconds into a human-readable delta"""
     delta = []
     if duration // (60**2 * 24 * 365) > 0:
         delta.append(f"{duration // (60**2 * 24 * 365)} years")
@@ -63,6 +67,7 @@ def human_delta(duration):
 
 
 def human_delta_short(duration):
+    """Convert seconds into a short-hand human-readable delta"""
     delta = []
     if duration // 60**2 > 0:
         delta.append(f"{duration // 60**2}h")
@@ -78,11 +83,12 @@ def human_delta_short(duration):
 
 
 async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
-    id = await db.fetchval("SELECT incident_index FROM guilds WHERE id = $1", ctx.guild.id)
+    """Punish someone for something"""
+    id_ = await db.fetchval("SELECT incident_index FROM guilds WHERE id = $1", ctx.guild.id)
     await db.execute("UPDATE guilds SET incident_index = incident_index + 1 WHERE id = $1", ctx.guild.id)
 
     await db.execute("INSERT INTO incidents (guild, id, moderator, users, type_, time_, expires, comment, ref, active)" +
-                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", ctx.guild.id, id, moderator.id, [user.id for user in users],
+                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", ctx.guild.id, id_, moderator.id, [user.id for user in users],
                      punishment, time.time(), time.time() + duration, reason, ref, punishment != 3)
 
     async def log(type_):
@@ -93,7 +99,7 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
             "Ban": 0xff0000
         }
 
-        embed = discord.Embed(title=f"Incident #{id}", colour=colours[type_])
+        embed = discord.Embed(title=f"Incident #{id_}", colour=colours[type_])
         embed.set_author(name=moderator.display_name, icon_url=moderator.avatar_url)
         embed.add_field(name="Members involved", value=", ".join([member.mention for member in users]))
         embed.add_field(name="Punishment", value=type_)
@@ -104,7 +110,7 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
         for channel in [ctx.guild.get_channel(record["id"]) for record in await db.fetch("SELECT id FROM channels WHERE log_type = 'moderation' AND guild_id = $1", ctx.guild.id)]:
             await channel.send(embed=embed)
 
-    async def dm(title, message, colour):
+    async def notify_users(title, message, colour):
         embed = discord.Embed(title=title, description=message, colour=colour)
         for user in users:
             try:
@@ -117,7 +123,7 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
 
     async def warn():
         await log("Warn")
-        await dm("Warning!", f"You have been warned in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xfc9003)
+        await notify_users("Warning!", f"You have been warned in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id_} ([ref]({ref}))", 0xfc9003)
         settings = await db.fetchrow("SELECT mute_threshold, ban_threshold, mute_role FROM guilds WHERE id = $1", ctx.guild.id)
         role = ctx.guild.get_role(settings["mute_role"])
         for user in users:
@@ -141,28 +147,28 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
 
     async def mute():
         await log("Mute")
-        await dm("Muted!", f"You have been muted in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xc74c00)
+        await notify_users("Muted!", f"You have been muted in {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id_} ([ref]({ref}))", 0xc74c00)
         role = ctx.guild.get_role(await db.fetchval("SELECT mute_role FROM guilds WHERE id = $1", ctx.guild.id))
         for user in users:
             await user.add_roles(role)
             if duration > 0:
                 mutes = await db.fetchval("SELECT incidents FROM mutes WHERE guild = $1 AND member = $2", ctx.guild.id, user.id)
                 expires = (mutes[-1]["expires"] if len(mutes) > 0 else time.time()) + duration
-                await db.execute("UPDATE mutes SET incidents = ARRAY_APPEND(incidents, $3) WHERE guild = $1 AND member = $2", ctx.guild.id, user.id, {"id": id, "expires": int(expires)})
+                await db.execute("UPDATE mutes SET incidents = ARRAY_APPEND(incidents, $3) WHERE guild = $1 AND member = $2", ctx.guild.id, user.id, {"id": id_, "expires": int(expires)})
             else:
-                await db.execute("UPDATE mutes SET perm_incidents = ARRAY_APPEND(perm_incidents, $3) WHERE guild = $1 AND member = $2", ctx.guild.id, user.id, id)
+                await db.execute("UPDATE mutes SET perm_incidents = ARRAY_APPEND(perm_incidents, $3) WHERE guild = $1 AND member = $2", ctx.guild.id, user.id, id_)
 
     async def kick():
         await log("Kick")
-        await dm("Kicked!", f"You have been kicked from {ctx.guild.name} for {reason}! Incident #{id} ([ref]({ref}))", 0xff0077)
+        await notify_users("Kicked!", f"You have been kicked from {ctx.guild.name} for {reason}! Incident #{id_} ([ref]({ref}))", 0xff0077)
         for user in users:
-            await user.kick(reason=f"Incident #{id}: {reason}")
+            await user.kick(reason=f"Incident #{id_}: {reason}")
 
     async def ban():
         await log("Ban")
-        await dm("Banned!", f"You have been banned from {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id} ([ref]({ref}))", 0xff0000)
+        await notify_users("Banned!", f"You have been banned from {ctx.guild.name} for {reason} for {human_delta(duration)}! Incident #{id_} ([ref]({ref}))", 0xff0000)
         for user in users:
-            await user.ban(reason=f"Duration: {human_delta(duration)}. Incident #{id}: {reason}", delete_message_days=0)
+            await user.ban(reason=f"Duration: {human_delta(duration)}. Incident #{id_}: {reason}", delete_message_days=0)
 
     punishments = {
         0: none,
@@ -176,6 +182,7 @@ async def punish(ctx, moderator, duration, reason, punishment, users, ref, db):
 
 
 async def unpunish(bot, incident):
+    """Revoke a punishment"""
     guild = bot.get_guild(incident["guild"])
 
     async def none():
@@ -200,15 +207,15 @@ async def unpunish(bot, incident):
         for user in [guild.get_member(member) for member in incident["users"]]:
             if incident["duration"] > 0:
                 mutes = await bot.db.fetchval("SELECT incidents FROM mutes WHERE guild = $1 AND member = $2", guild.id, user.id)
-                for i, mute_ in enumerate(mutes):
+                for iteration, mute_ in enumerate(mutes):
                     if mute_["id"] == incident["id"]:
-                        index = i
-                        del mutes[i]
+                        index = iteration
+                        del mutes[iteration]
                         break
                 else:
                     raise Exception("Could not unmute person")
-                for i in range(index, len(mutes)):
-                    mutes[i]["expires"] -= incident["duration"]
+                for iteration in range(index, len(mutes)):
+                    mutes[iteration]["expires"] -= incident["duration"]
                 await bot.db.execute("UPDATE mutes SET incidents = $3 WHERE guild = $1 AND member = $2", guild.id, user.id, mutes)
                 unmuted = await bot.db.fetchval("SELECT CASE WHEN ARRAY_LENGTH(incidents, 1) IS NULL AND ARRAY_LENGTH(perm_incidents, 1) IS NULL AND NOT threshold_muted THEN TRUE ELSE FALSE END FROM mutes WHERE guild = $1 AND member = $2", guild.id, user.id)
                 if unmuted:
@@ -240,11 +247,12 @@ class moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         DiscordComponents(bot)
-        self.auto_unpunish.start()
-    
+        self.auto_unpunish.start()  # pylint: disable=no-member
+
     @commands.command(aliases=["pu"])
     @commands.check(Checks.mod)
     async def punish(self, ctx, users: commands.Greedy[discord.Member], punishment: typing.Optional[parse_punishment] = 0, duration: commands.Greedy[parse_time] = None, *, reason):
+        """Punish someone for something"""
         if duration is None:
             duration = []
         if (punishment == 3 and duration != []) or len(users) <= 0:
@@ -253,21 +261,22 @@ class moderation(commands.Cog):
         duration = sum(duration)
         ref = (f"https://discord.com/channels/{ctx.guild.id}/{ctx.channel.id}/" +
                str(ctx.message.reference.message_id if ctx.message.reference is not None else ctx.channel.last_message_id))
-        
+
         await ctx.message.delete()
         async with self.bot.pool.acquire() as db:
             await punish(ctx, ctx.author, duration, reason, punishment, users, ref, db)
 
     @commands.command(aliases=["i", "in", "inc"])
     @commands.check(Checks.mod)
-    async def incident(self, ctx, id: int):
+    async def incident(self, ctx, id_: int):
+        """Lookup an incident"""
         async with self.bot.pool.acquire() as db:
-            incident_ = await db.fetchrow("SELECT *, expires - time_ AS duration FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
+            incident_ = await db.fetchrow("SELECT *, expires - time_ AS duration FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id_)
         await ctx.message.delete()
         if incident_ is None:
-            embed = discord.Embed(title=f"Incident #{id} does not exist!", colour=RED)
-            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
+            embed_ = discord.Embed(title=f"Incident #{id_} does not exist!", colour=RED)
+            embed_.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+            await ctx.send(embed=embed_)
             return
 
         punishments = {
@@ -300,7 +309,7 @@ class moderation(commands.Cog):
                         active_string[user] = " (ACTIVE)"
                     else:
                         active_string[user] = ""
-            embed_ = discord.Embed(title=f"Incident #{id}{' (ACTIVE)' if incident_['active'] and incident_['type_'] not in (2, 3) and not inactive else ''}", colour=colours[incident_["type_"]], timestamp=datetime.datetime.utcfromtimestamp(incident_["time_"]))
+            embed_ = discord.Embed(title=f"Incident #{id_}{' (ACTIVE)' if incident_['active'] and incident_['type_'] not in (2, 3) and not inactive else ''}", colour=colours[incident_["type_"]], timestamp=datetime.datetime.utcfromtimestamp(incident_["time_"]))
             embed_.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
             embed_.add_field(name="Moderator", value=f"<@{incident_['moderator']}>")
             embed_.add_field(name="Members involved", value="\n".join([f"<@{member}>{active_string[member]}" for member in incident_["users"]]))
@@ -328,15 +337,16 @@ class moderation(commands.Cog):
                     await unpunish(self.bot, incident_)
                 if interaction.custom_id == "delete":
                     async with self.bot.pool.acquire() as db:
-                        await db.execute("DELETE FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id)
+                        await db.execute("DELETE FROM incidents WHERE guild = $1 AND id = $2", ctx.guild.id, id_)
                 await message.edit(embed=await embed(True), components=components(True, interaction.custom_id == "delete"))
                 await interaction.respond(type=6)
 
-        except TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             await message.edit(embed=await embed(), components=[])
 
     @commands.command()
     async def warns(self, ctx):
+        """See your warns"""
         async with self.bot.pool.acquire() as db:
             records = await db.fetch("SELECT id, comment, ref, expires, time_ FROM incidents WHERE active = TRUE AND type_ = 1 AND guild = $1 AND $2 = ANY(users) ORDER BY id DESC", ctx.guild.id, ctx.author.id)
         await ctx.message.delete()
@@ -387,7 +397,7 @@ class moderation(commands.Cog):
                 if interaction.user != ctx.author:
                     await interaction.respond(content="Only the person who triggered the command can push buttons!")
                     continue
-                elif interaction.custom_id == "first":
+                if interaction.custom_id == "first":
                     index = 0
                 elif interaction.custom_id == "previous":
                     index -= 1
@@ -398,21 +408,22 @@ class moderation(commands.Cog):
                 await message.edit(embed=paged_embed(), components=components())
                 await interaction.respond(type=6)
 
-        except TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             await message.edit(embed=paged_embed(), components=[])
 
     @commands.command(aliases=["h", "hist"])
     @commands.check(Checks.mod)
     async def history(self, ctx, person: discord.User):
+        """Look at someone's history"""
         async with self.bot.pool.acquire() as db:
             records = [dict(record) for record in await db.fetch("SELECT id, comment, ref, expires, time_, type_, active FROM incidents WHERE guild = $1 AND $2 = ANY(users) ORDER BY id DESC", ctx.guild.id, person.id)]
             mutes = await db.fetchval("SELECT incidents FROM mutes WHERE guild = $1 AND member = $2", ctx.guild.id, person.id)
-        for i, record in enumerate(records):
+        for iteration, record in enumerate(records):
             if record["type_"] == 2 and record["time_"] < record["expires"]:
                 mute = next((mute for mute in mutes if mute["id"] == record["id"]), None)
-                records[i]["active"] = mute is not None
+                records[iteration]["active"] = mute is not None
                 if mute is not None:
-                    records[i]["expires"] = mute["expires"]
+                    records[iteration]["expires"] = mute["expires"]
 
         await ctx.message.delete()
         pages_active: list
@@ -491,7 +502,7 @@ class moderation(commands.Cog):
                 if interaction.user != ctx.author:
                     await interaction.respond(content="Only the person who triggered the command can push buttons!")
                     continue
-                elif interaction.custom_id == "first":
+                if interaction.custom_id == "first":
                     index = 0
                 elif interaction.custom_id == "previous":
                     index -= 1
@@ -514,11 +525,12 @@ class moderation(commands.Cog):
                 await message.edit(embed=paged_embed(), components=components())
                 await interaction.respond(type=6)
 
-        except TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             await message.edit(embed=paged_embed(), components=[])
 
     @tasks.loop(seconds=1)
     async def auto_unpunish(self):
+        """Remove punishments when they expire"""
         async with self.bot.pool.acquire() as db:
             incidents = await db.fetch("SELECT users, type_, comment, id, guild, expires - time_ AS duration FROM incidents WHERE active = TRUE AND expires <= EXTRACT(EPOCH FROM NOW()) AND expires > time_ AND type_ != 2")
 
@@ -547,6 +559,7 @@ class moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """Check if a word that is not to be spoken has been spoken"""
         if isinstance(message.channel, discord.DMChannel):
             return
         message.bot = self.bot
@@ -564,6 +577,7 @@ class moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        """Good riddance to mute evaders"""
         async with self.bot.pool.acquire() as db:
             muted = await db.fetchval("SELECT CASE WHEN ARRAY_LENGTH(incidents, 1) IS NULL AND ARRAY_LENGTH(perm_incidents, 1) IS NULL AND NOT threshold_muted THEN FALSE ELSE TRUE END FROM mutes WHERE guild = $1 AND member = $2", member.guild.id, member.id)
             if muted:
@@ -572,4 +586,5 @@ class moderation(commands.Cog):
 
 
 def setup(bot):
+    """Load moderation"""
     bot.add_cog(moderation(bot))
