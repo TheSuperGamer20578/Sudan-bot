@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from _Util import GREEN, BLUE, RED, Checks
-from moderation import parse_time, human_delta
+from Moderation import parse_time, human_delta
 
 
 class Settings(commands.Cog):
@@ -98,7 +98,7 @@ class Settings(commands.Cog):
         """Lists bad words"""
         words = await self.bot.db.fetchval("SELECT bad_words FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Bad words", colour=BLUE, description=', '.join([f'||{word}||' for word in words]) if len(words) > 0 else 'None')
+        embed = discord.Embed(title="Bad words", colour=BLUE, description=", ".join([f"||{word}||" for word in words]) if len(words) > 0 else "None")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

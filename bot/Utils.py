@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from _Util import Checks, BLUE, RED, GREEN
-from moderation import parse_time, human_delta
+from Moderation import parse_time, human_delta
 
 
 def parse_purge_filter(arg):

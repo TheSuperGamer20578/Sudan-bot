@@ -243,7 +243,7 @@ async def unpunish(bot, incident):
     await punishments[incident["type_"]]()
 
 
-class moderation(commands.Cog):
+class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         DiscordComponents(bot)
@@ -465,7 +465,7 @@ class moderation(commands.Cog):
                 return f"[{time_}{expires}- #{record['id']} ({types[record['type_']]}): {record['comment']}]({record['ref']})"
 
             list_active = [display(record) for record in records if record["active"] and (record["type_"] > 0 or notes)]
-            list_inactive = [display(record) for record in records if not record['active'] and (record["type_"] > 0 or notes)]
+            list_inactive = [display(record) for record in records if not record["active"] and (record["type_"] > 0 or notes)]
             pages_active = ["\n\n".join(list_active[n : n+10]) for n in range(0, len(list_active), 10)]
             pages_inactive = ["\n\n".join(list_inactive[n: n + 10]) for n in range(0, len(list_inactive), 10)]
             if len(pages_active) == 0:
@@ -587,4 +587,4 @@ class moderation(commands.Cog):
 
 def setup(bot):
     """Load moderation"""
-    bot.add_cog(moderation(bot))
+    bot.add_cog(Moderation(bot))
