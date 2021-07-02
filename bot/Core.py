@@ -10,7 +10,7 @@ import asyncpg
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from _util import Checks, RED, GREEN, set_db, BLUE
+from _Util import Checks, RED, GREEN, set_db, BLUE
 
 load_dotenv()
 
@@ -26,7 +26,7 @@ async def _close_db(database):
     await database.close()
 
 
-class core(commands.Cog):
+class Core(commands.Cog):
     """
     Contains essential commands
     """
@@ -261,17 +261,17 @@ def setup(setup_bot):
     """
     Initiate cog if loaded as extension
     """
-    bot.add_cog(core(setup_bot))
+    bot.add_cog(Core(setup_bot))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     intents = discord.Intents.default()
-    intents.members = True
+    intents.members = True  # pylint: disable=assigning-non-slot
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","),
                        intents=intents,
                        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
     bot.db = bot.loop.run_until_complete(_load_db())
-    bot.add_cog(core(bot))
+    bot.add_cog(Core(bot))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "" and not cog.startswith("_"):
             bot.load_extension(cog)

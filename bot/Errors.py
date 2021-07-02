@@ -11,14 +11,14 @@ import requests
 import discord
 from discord.ext import commands
 
-from _util import RED, BLUE
+from _Util import RED, BLUE
 
 AUTH = {"Authorization": f"GenieKey {os.getenv('OPSGENIE_TOKEN')}"}
 
 OPS = "https://api.eu.opsgenie.com/v2/"
 
 
-class errors(commands.Cog):
+class Errors(commands.Cog):
     """
     Error handling cog
     """
@@ -31,7 +31,7 @@ class errors(commands.Cog):
         The part that handles errors
         """
         # pylint: disable=too-many-statements
-        if hasattr(ctx.command, 'on_error'):
+        if hasattr(ctx.command, "on_error"):
             return
 
         # idk what this does but it might be important but pycharm doesnt like it
@@ -39,11 +39,11 @@ class errors(commands.Cog):
         # if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
         #     return
 
-        error = getattr(error, 'original', error)
+        error = getattr(error, "original", error)
 
         if isinstance(error, commands.NoPrivateMessage):
             try:
-                embed = discord.Embed(title=f'{ctx.command} can not be used in Private Messages.', colour=RED)
+                embed = discord.Embed(title=f"{ctx.command} can not be used in Private Messages.", colour=RED)
                 await ctx.author.send(embed=embed)
                 return
             except discord.HTTPException:
@@ -113,7 +113,7 @@ class errors(commands.Cog):
         await ctx.send(embed=embed)
 
 
-class log:
+class Log:
     """
     An attempt to redirect stout and stderr to discord it didnt work i might be able to make it work and goto Opsgenie
     """
@@ -140,6 +140,6 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(errors(bot))
-    # sys.stdout = log(bot, "info")
-    # sys.stderr = log(bot, "error")
+    bot.add_cog(Errors(bot))
+    # sys.stdout = Log(bot, "info")
+    # sys.stderr = Log(bot, "error")

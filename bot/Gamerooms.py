@@ -10,7 +10,7 @@ config = configparser.ConfigParser()
 config.read("Config/config.ini")
 
 
-class gamerooms(commands.Cog):
+class Gamerooms(commands.Cog):
     """
     Main cog
     """
@@ -37,4 +37,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(gamerooms(bot))
+    bot.add_cog(Gamerooms(bot))

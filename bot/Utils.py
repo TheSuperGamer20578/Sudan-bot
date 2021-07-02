@@ -4,10 +4,10 @@ Provides several utilities
 import discord
 from discord.ext import commands
 
-from _util import Checks, BLUE, set_db
+from _Util import Checks, BLUE, set_db
 
 
-class utils(commands.Cog):
+class Utils(commands.Cog):
     """
     Main class
     """
@@ -51,4 +51,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(utils(bot))
+    bot.add_cog(Utils(bot))

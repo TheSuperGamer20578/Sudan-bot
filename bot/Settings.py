@@ -4,10 +4,10 @@ A global config for the bot
 import discord
 from discord.ext import commands
 
-from _util import GREEN, BLUE, RED, Checks
+from _Util import GREEN, BLUE, RED, Checks
 
 
-class settings(commands.Cog):
+class Settings(commands.Cog):
     """
     Main class
     """
@@ -44,7 +44,7 @@ class settings(commands.Cog):
         """Lists admin roles"""
         roles = await self.bot.db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Admin roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]) if len(roles) > 0 else 'None')
+        embed = discord.Embed(title="Admin roles", colour=BLUE, description=", ".join([f"<@&{role}>" for role in roles]) if len(roles) > 0 else "None")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -92,7 +92,7 @@ class settings(commands.Cog):
         """Lists moderator roles"""
         roles = await self.bot.db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]) if len(roles) > 0 else 'None')
+        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f"<@&{role}>" for role in roles]) if len(roles) > 0 else "None")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -125,7 +125,7 @@ class settings(commands.Cog):
         """Lists ticket support roles"""
         roles = await self.bot.db.fetchval("SELECT support_roles FROM guilds WHERE id = $1", ctx.guild.id)
         await ctx.message.delete()
-        embed = discord.Embed(title="Ticket support roles", colour=BLUE, description=", ".join([f'<@&{role}>' for role in roles]) if len(roles) > 0 else 'None')
+        embed = discord.Embed(title="Ticket support roles", colour=BLUE, description=", ".join([f"<@&{role}>" for role in roles]) if len(roles) > 0 else "None")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -198,4 +198,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(settings(bot))
+    bot.add_cog(Settings(bot))
