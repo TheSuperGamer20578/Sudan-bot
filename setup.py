@@ -113,6 +113,74 @@ post(DISCORD + "/commands", headers=HEADERS, json={
                 },
                 {
                     "type": 1,
+                    "name": "mute",
+                    "description": "Set the role to be assigned to muted people",
+                    "options": [
+                        {
+                            "type": 8,
+                            "name": "role",
+                            "description": "The role to be assigned to muted people",
+                            "required": True
+                        }
+                    ]
+                },
+                {
+                    "type": 1,
+                    "name": "mutethreshold",
+                    "description": "Set how many warns a member can have before being muted",
+                    "options": [
+                        {
+                            "type": 4,
+                            "name": "threshold",
+                            "description": "How many warns can a member have before being muted",
+                            "required": True
+                        }
+                    ]
+                },
+                {
+                    "type": 1,
+                    "name": "banthreshold",
+                    "description": "Set how many warns a member can have before being banned",
+                    "options": [
+                        {
+                            "type": 4,
+                            "name": "threshold",
+                            "description": "How many warns can a member have before being banned",
+                            "required": True
+                        }
+                    ]
+                },
+                {
+                    "type": 1,
+                    "name": "badwords",
+                    "description": "Add or remove a bad word",
+                    "options": [
+                        {
+                            "type": 4,
+                            "name": "operation",
+                            "description": "Add or remove from bad words",
+                            "required": True,
+                            "choices": [
+                                {
+                                    "name": "add",
+                                    "value": 1
+                                },
+                                {
+                                    "name": "remove",
+                                    "value": 0
+                                }
+                            ]
+                        },
+                        {
+                            "type": 3,
+                            "name": "word",
+                            "description": "Word to add or remove from bad words",
+                            "required": True
+                        }
+                    ]
+                },
+                {
+                    "type": 1,
                     "name": "admin",
                     "description": "Add or remove an admin role",
                     "options": [

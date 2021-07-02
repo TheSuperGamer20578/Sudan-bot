@@ -4,7 +4,7 @@ Makes a rule embed will be used to set punishments when moderation is added
 import discord
 from discord.ext import commands
 
-from _Util import BLUE, Checks, set_db
+from _Util import BLUE, Checks
 
 
 class Rules(commands.Cog):
@@ -13,7 +13,6 @@ class Rules(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.group()
     @commands.check(Checks.admin)

@@ -6,7 +6,7 @@ import emc
 from emc.async_ import get_data
 from discord.ext import commands
 
-from _Util import RED, BLUE, Checks, set_db
+from _Util import RED, BLUE, Checks
 
 
 def _long_fields(embed, title, list_):
@@ -25,7 +25,6 @@ class Info(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.command(aliases=["t"])
     @commands.check(Checks.slash)

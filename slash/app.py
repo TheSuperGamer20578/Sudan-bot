@@ -1,11 +1,12 @@
 from os import getenv, environ
 
-from flask import Flask, jsonify, request, Response, abort
+from flask import Flask, jsonify, request, abort
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 from dotenv import load_dotenv
 from emc import Town, Nation, Resident
 from emc.exceptions import TownNotFoundException, NationNotFoundException
+from emc.util import map_link
 from psycopg2 import connect
 
 app = Flask(__name__)
@@ -13,8 +14,8 @@ load_dotenv()
 if "DATABASE_URL" in environ:
     db = connect(getenv("DATABASE_URL"))
 else:
-    db = connect(user=os.getenv("DB_USERNAME"), password=os.getenv("DB_PASSWORD"),
-                 host=os.getenv("DB_HOST"), database=os.getenv("DB_DATABASE"))
+    db = connect(user=getenv("DB_USERNAME"), password=getenv("DB_PASSWORD"),
+                 host=getenv("DB_HOST"), database=getenv("DB_DATABASE"))
 BLUE = 0x0a8cf0
 PURPLE = 0x6556FF
 GREEN = 0x36eb45
@@ -277,7 +278,7 @@ def resident(ctx, private):
             if resident.hidden:
                 resp += f"{resident} is currently not visible on the map```"
             else:
-                resp += f"{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))"
+                resp += f"{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({map_link(resident.position)}))"
         else:
             resp += f"{resident} is currently offline```"
         return {"content": resp}
@@ -310,7 +311,7 @@ def resident(ctx, private):
         else:
             embed["fields"].append({
                 "name": "Position",
-                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({emc.util.map_link(resident.position)}))",
+                "value": f"```{resident.position[0]}/{resident.position[1]}/{resident.position[2]}```([map]({map_link(resident.position)}))",
                 "inline": True
             })
     else:
@@ -329,7 +330,7 @@ def settings(ctx, private):
         if Checks.admin(ctx):
             with db.cursor() as curr:
                 curr.execute(
-                    "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash FROM guilds WHERE id = %s",
+                    "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role, mute_threshold, ban_threshold, bad_words FROM guilds WHERE id = %s",
                     (ctx["guild_id"],))
                 settings = curr.fetchone()
             message += f"""
@@ -338,8 +339,12 @@ Admin roles: {', '.join([f'<@&{role}>' for role in settings[0]]) if len(settings
 Moderator roles: {', '.join([f'<@&{role}>' for role in settings[1]]) if len(settings[1]) > 0 else 'None'}
 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len(settings[2]) > 0 else 'None'}
 Chain break role: {f'<@&{settings[3]}>' if settings[3] is not None else 'None'}
+Mute role: {f'<@&{settings[6]}>' if settings[6] is not None else 'None'}
 Private commands: {'🟢' if settings[4] else '🔴'}
-Force slash commands: {'🟢' if settings[5] else '🔴'}"""
+Force slash commands: {'🟢' if settings[5] else '🔴'}
+Mute threshold: {settings[7] if settings[7] != 0 else 'Disabled'}
+Ban threshold: {settings[8] if settings[8] != 0 else 'Disabled'}
+Bad words: {', '.join([f'||{word}||' for word in settings[9]]) if len(settings[9]) > 0 else 'None'}"""
         with db.cursor() as curr:
             curr.execute("SELECT dad_mode FROM users WHERE id = %s",
                          (ctx["member"]["user"]["id"],))
@@ -355,7 +360,9 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
     }
     if Checks.admin(ctx):
         with db.cursor() as curr:
-            curr.execute("SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands FROM guilds WHERE id = %s", (ctx["guild_id"],))
+            curr.execute(
+                "SELECT admin_roles, mod_roles, support_roles, chain_break_role, private_commands, force_slash, mute_role, mute_threshold, ban_threshold, bad_words FROM guilds WHERE id = %s",
+                (ctx["guild_id"],))
             settings = curr.fetchone()
         embed["fields"].append({
             "name": "Server settings",
@@ -364,7 +371,12 @@ Dad mode: {'🟢' if settings[0] else '🔴'}"""
                 Moderator roles: {', '.join([f'<@&{role}>' for role in settings[1]]) if len(settings[1]) > 0 else 'None'}
                 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings[2]]) if len(settings[2]) > 0 else 'None'}
                 Chain break role: {f'<@&{settings[3]}>' if settings[3] is not None else 'None'}
+                Mute role: {f'<@&{settings[5]}>' if settings[5] is not None else 'None'}
                 Private commands: {'🟢' if settings[4] else '🔴'}
+                Force slash commands: {'🟢' if settings[5] else '🔴'}
+                Mute threshold: {settings[7] if settings[7] != 0 else 'Disabled'}
+                Ban threshold: {settings[8] if settings[8] != 0 else 'Disabled'}
+                Bad words: {', '.join([f'||{word}||' for word in settings[9]]) if len(settings[9]) > 0 else 'None'}
             """
         })
     with db.cursor() as curr:
@@ -421,6 +433,67 @@ def set(ctx, private):
                 "embeds": [{
                     "title": "Settings updated",
                     "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} <@&{ctx['data']['options'][0]['options'][0]['options'][1]['value']}> from admin roles",
+                    "color": GREEN
+                }]
+            }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "badwords":
+            with db.cursor() as curr:
+                if ctx["data"]["options"][0]["options"][0]["options"][0]["value"]:
+                    curr.execute("UPDATE guilds SET bad_words = ARRAY_APPEND(bad_words, %s) WHERE id = %s", (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+                else:
+                    curr.execute("UPDATE guilds SET bad_words = ARRAY_REMOVE(bad_words, %s) WHERE id = %s", (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][1]["value"]),
+                        ctx["guild_id"]
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} {ctx['data']['options'][0]['options'][0]['options'][1]['value']} from bad words"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"{'Added' if ctx['data']['options'][0]['options'][0]['options'][0]['value'] else 'Removed'} {ctx['data']['options'][0]['options'][0]['options'][1]['value']} from bad words",
+                    "color": GREEN
+                }]
+            }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "mutethreshold":
+            with db.cursor() as curr:
+                curr.execute(
+                    "UPDATE guilds SET mute_threshold = %s WHERE id = %s",
+                    (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][0]["value"]),
+                        ctx["guild_id"]
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"Set mute threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"Set mute threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}",
+                    "color": GREEN
+                }]
+            }
+
+        elif ctx["data"]["options"][0]["options"][0]["name"] == "banthreshold":
+            with db.cursor() as curr:
+                curr.execute(
+                    "UPDATE guilds SET ban_threshold = %s WHERE id = %s",
+                    (
+                        int(ctx["data"]["options"][0]["options"][0]["options"][0]["value"]),
+                        ctx["guild_id"]
+                    ))
+                db.commit()
+            if private:
+                return {"content": f"Set ban threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}"}
+            return {
+                "embeds": [{
+                    "title": "Settings updated",
+                    "description": f"Set ban threshold to {ctx['data']['options'][0]['options'][0]['options'][0]['value']}",
                     "color": GREEN
                 }]
             }

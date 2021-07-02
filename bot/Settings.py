@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 
 from _Util import GREEN, BLUE, RED, Checks
+from Moderation import parse_time, human_delta
 
 
 class Settings(commands.Cog):
@@ -27,8 +28,13 @@ class Settings(commands.Cog):
                 Moderator roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]]) if len(settings_['mod_roles']) > 0 else 'None'}
                 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["support_roles"]]) if len(settings_['support_roles']) > 0 else 'None'}
                 Chain break role: {f'<@&{settings_["chain_break_role"]}>' if settings_["chain_break_role"] is not None else 'None'}
+                Mute role: {f'<@&{settings_["mute_role"]}>' if settings_["mute_role"] is not None else 'None'}
                 Private commands: {'🟢' if settings_['private_commands'] else '🔴'}
                 Force slash commands: {'🟢' if settings_['force_slash'] else '🔴'}
+                Mute threshold: {settings_["mute_threshold"] if settings_["mute_threshold"] != 0 else 'Disabled'}
+                Ban threshold: {settings_["ban_threshold"] if settings_["ban_threshold"] != 0 else 'Disabled'}
+                Bad words: {', '.join([f'||{word}||' for word in settings_["bad_words"]]) if len(settings_["bad_words"]) > 0 else 'None'}
+                Bad words warn duration: {human_delta(settings_["bad_words_warn_duration"])}
             """)
         settings_ = await self.bot.db.fetchrow("SELECT * FROM users WHERE id = $1", ctx.author.id)
         embed.add_field(name="User settings", inline=False, value=f"""
@@ -82,6 +88,39 @@ class Settings(commands.Cog):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET admin_roles = ARRAY_REMOVE(admin_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
         embed = discord.Embed(title="Settings updated", description=f"Removed {role.mention} from admin roles", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.group(invoke_without_command=True)
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
+    async def badwords(self, ctx):
+        """Lists bad words"""
+        words = await self.bot.db.fetchval("SELECT bad_words FROM guilds WHERE id = $1", ctx.guild.id)
+        await ctx.message.delete()
+        embed = discord.Embed(title="Bad words", colour=BLUE, description=", ".join([f"||{word}||" for word in words]) if len(words) > 0 else "None")
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @badwords.command(name="add")
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
+    async def badwords_add(self, ctx, word: str):
+        """Adds a bad word"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET bad_words = ARRAY_APPEND(bad_words, $2) WHERE id = $1", ctx.guild.id, word)
+        embed = discord.Embed(title="Settings updated", description=f"Added ||{word}|| to bad words", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @badwords.command(name="remove")
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
+    async def badwords_remove(self, ctx, word: str):
+        """Removes a bad word"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET bad_words = ARRAY_REMOVE(bad_words, $2) WHERE id = $1", ctx.guild.id, word)
+        embed = discord.Embed(title="Settings updated", description=f"Removed ||{word}|| from bad words", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -165,6 +204,17 @@ class Settings(commands.Cog):
     @settings.command()
     @commands.check(Checks.admin)
     @commands.check(Checks.slash)
+    async def muterole(self, ctx, role: discord.Role):
+        """Sets the mute role"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET mute_role = $2 WHERE id = $1", ctx.guild.id, role.id)
+        embed = discord.Embed(title="Settings updated", description=f"Set mute role to {role.mention}", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.command()
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def private(self, ctx, toggle: bool):
         """Enables or disables private commands"""
         await ctx.message.delete()
@@ -175,11 +225,44 @@ class Settings(commands.Cog):
 
     @settings.command()
     @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
     async def forceslash(self, ctx, toggle: bool):
         """Enables or disables forced slash command usage"""
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET force_slash = $2 WHERE id = $1", ctx.guild.id, toggle)
         embed = discord.Embed(title="Settings updated", description=f"{'Enabled' if toggle else 'Disabled'} forced slash commands", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.command()
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
+    async def mutethreshold(self, ctx, threshold: int):
+        """Set how many warns a member can have before being muted"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET mute_threshold = $2 WHERE id = $1", ctx.guild.id, threshold)
+        embed = discord.Embed(title="Settings updated", description=f"Set mute threshold to {threshold}", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.command()
+    @commands.check(Checks.admin)
+    @commands.check(Checks.slash)
+    async def banthreshold(self, ctx, threshold: int):
+        """Set how many warns a member can have before being banned"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET ban_threshold = $2 WHERE id = $1", ctx.guild.id, threshold)
+        embed = discord.Embed(title="Settings updated", description=f"Set ban threshold to {threshold}", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.command()
+    @commands.check(Checks.admin)
+    async def badwordswarn(self, ctx, duration: commands.Greedy[parse_time]):
+        """Sets how long the warning for saying a bad word should last"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET bad_words_warn_duration = $2 WHERE id = $1", ctx.guild.id, sum(duration))
+        embed = discord.Embed(title="Settings updated", description=f"Set bad words warn duration to {human_delta(sum(duration))}", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

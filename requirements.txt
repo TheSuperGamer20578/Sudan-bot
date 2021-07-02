@@ -9,3 +9,4 @@ flask
 gunicorn
 pynacl
 psycopg2-binary
+discord-components

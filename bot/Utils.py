@@ -1,10 +1,36 @@
 """
 Provides several utilities
 """
+from typing import Optional, Union
+
 import discord
 from discord.ext import commands
 
-from _Util import Checks, BLUE, set_db
+from _Util import Checks, BLUE, RED, GREEN
+from Moderation import parse_time, human_delta
+
+
+def parse_purge_filter(arg):
+    """Returns the function for purge filter"""
+    filters = {}
+
+    def purge_filter(func):
+        filters[func.__name__] = func
+        return func
+
+    @purge_filter
+    def bots(message):
+        return message.author.bot
+
+    @purge_filter
+    def humans(message):
+        return not message.author.bot
+
+    @purge_filter
+    def embeds(message):
+        return len(message.embeds) > 0
+
+    return filters[arg]
 
 
 class Utils(commands.Cog):
@@ -13,25 +39,16 @@ class Utils(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        set_db(bot.db)
 
     @commands.command()
     @commands.check(Checks.mod)
-    async def slowmode(self, ctx, *, length):
+    async def slowmode(self, ctx, time: commands.Greedy[parse_time]):
         """
         Sets the slowmode of a channel
         """
-        lens = length.split(" ")
-        time = 0
-        for period in lens:
-            if period.endswith("s"):
-                time += int(period[:-1])
-            if period.endswith("m"):
-                time += int(period[:-1])*60
-            if period.endswith("h"):
-                time += int(period[:-1])*60*60
+        time = sum(time)
         await ctx.message.delete()
-        embed = discord.Embed(title=f"Slowmode set to {time} seconds({length})")
+        embed = discord.Embed(title=f"Slowmode set to {human_delta(time)}")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.channel.edit(slowmode_delay=time)
         await ctx.send(embed=embed)
@@ -45,6 +62,62 @@ class Utils(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.check(Checks.admin)
+    async def embed(self, ctx, channel: Optional[discord.TextChannel], title, colour: discord.Colour, *, description: str = discord.embeds.EmptyEmbed):
+        """Makes an embed"""
+        if channel is None:
+            channel = ctx.channel
+
+        await ctx.message.delete()
+        embed = discord.Embed(title=title, description=description, colour=colour)
+        message = await channel.send(embed=embed)
+
+        async with self.bot.pool.acquire() as db:
+            await db.execute("INSERT INTO embeds (guild, id, colour) VALUES ($1, $2, $3)", ctx.guild.id, message.id, colour.value)
+
+    @commands.command()
+    @commands.check(Checks.admin)
+    async def editembed(self, ctx, message: Optional[discord.Message], title, *, description: str = discord.embeds.EmptyEmbed):
+        """Edits an embed"""
+        if message is None:
+            if ctx.message.reference is None:
+                raise discord.InvalidArgument
+            message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+        async with self.bot.pool.acquire() as db:
+            colour = await db.fetchval("SELECT colour FROM embeds WHERE guild = $1 AND id = $2", ctx.guild.id, message.id)
+        await ctx.message.delete()
+        if colour is None:
+            embed = discord.Embed(title="That embed does not exist!", colour=RED)
+            await ctx.send(embed=embed)
+            return
+
+        embed = discord.Embed(title=title, description=description, colour=colour)
+        await message.edit(embed=embed)
+
+    @commands.command()
+    @commands.check(Checks.mod)
+    async def purge(self, ctx, purge_filter: Optional[Union[parse_purge_filter, discord.Member]], limit: int):
+        """Bulk deletes messages"""
+        def none(message):  # pylint: disable=unused-argument
+            return True
+
+        def user(member):
+            def predicate(message):
+                return message.author == member
+            return predicate
+
+        if purge_filter is None:
+            purge_filter = none
+        elif isinstance(purge_filter, discord.Member):
+            purge_filter = user(purge_filter)
+
+        await ctx.message.delete()
+        deleted = await ctx.channel.purge(limit=limit, check=purge_filter)
+        embed = discord.Embed(title=f"Purged {len(deleted)} messages", colour=GREEN)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed, delete_after=1)
 
 
 def setup(bot):
