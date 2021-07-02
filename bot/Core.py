@@ -266,7 +266,7 @@ def setup(setup_bot):
 
 if __name__ == "__main__":
     intents = discord.Intents.default()
-    intents.members = True
+    intents.members = True  # pylint: disable=assigning-non-slot
     bot = commands.Bot(command_prefix=os.getenv("PREFIXES").split(","),
                        intents=intents,
                        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
