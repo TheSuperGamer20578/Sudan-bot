@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands, tasks
 from discord_components import DiscordComponents, Button, ButtonStyle
 
-from _util import Checks, RED, GREEN
+from _Util import Checks, RED, GREEN
 
 
 def parse_punishment(argument):
