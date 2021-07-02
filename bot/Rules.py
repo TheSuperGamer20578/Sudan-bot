@@ -4,10 +4,10 @@ Makes a rule embed will be used to set punishments when moderation is added
 import discord
 from discord.ext import commands
 
-from _util import BLUE, Checks
+from _Util import BLUE, Checks
 
 
-class rules(commands.Cog):
+class Rules(commands.Cog):
     """
     Main class
     """
@@ -95,4 +95,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(rules(bot))
+    bot.add_cog(Rules(bot))

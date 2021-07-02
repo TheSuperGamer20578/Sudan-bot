@@ -4,7 +4,7 @@ Logs stuff
 import discord
 from discord.ext import commands
 
-from _util import Checks, GREEN
+from _Util import Checks, GREEN
 
 logtypes = ["invites", "moderation"]
 
@@ -19,7 +19,7 @@ def find_invite_by_code(invite_list, code):
     return None
 
 
-class log(commands.Cog):
+class Log(commands.Cog):
     """
     Main class
     """
@@ -90,4 +90,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(log(bot))
+    bot.add_cog(Log(bot))

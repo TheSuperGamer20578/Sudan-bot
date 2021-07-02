@@ -6,10 +6,10 @@ import requests
 import discord
 from discord.ext import commands
 
-from _util import Checks, BLUE, GREEN
+from _Util import Checks, BLUE, GREEN
 
 
-class linking(commands.Cog):
+class Linking(commands.Cog):
     """
     Main class
     """
@@ -82,4 +82,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(linking(bot))
+    bot.add_cog(Linking(bot))

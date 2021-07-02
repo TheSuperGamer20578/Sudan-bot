@@ -6,7 +6,7 @@ from typing import Optional, Union
 import discord
 from discord.ext import commands
 
-from _util import Checks, BLUE, RED, GREEN
+from _Util import Checks, BLUE, RED, GREEN
 from moderation import parse_time, human_delta
 
 
@@ -33,7 +33,7 @@ def parse_purge_filter(arg):
     return filters[arg]
 
 
-class utils(commands.Cog):
+class Utils(commands.Cog):
     """
     Main class
     """
@@ -124,4 +124,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(utils(bot))
+    bot.add_cog(Utils(bot))

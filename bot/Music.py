@@ -1,24 +1,25 @@
 """
 Basic music functionality
 """
-from ctypes import util
 import os
 import threading
 import shutil
 import functools
+from ctypes import util
 
 import discord
 import youtube_dl
 from discord.ext import commands
 from discord.utils import get
 
-from _util import Checks, GREEN, RED
+from _Util import Checks, GREEN, RED
+
 queue = {}
 np = {}
 if os.name != "nt":
-    discord.opus.load_opus(util.find_library('opus'))
+    discord.opus.load_opus(util.find_library("opus"))
     if not discord.opus.is_loaded():
-        raise RuntimeError('Opus failed to load')
+        raise RuntimeError("Opus failed to load")
 
 
 def check_dj(ctx):
@@ -48,7 +49,7 @@ def add(key, *url):
     name = None
     for file in os.listdir():
         if file.endswith(".mp3"):
-            name = '-'.join(file.split('-')[:-1])
+            name = "-".join(file.split("-")[:-1])
             try:
                 os.rename(file, f"music/{key}/{name}.mp3")
             except FileExistsError:
@@ -74,7 +75,7 @@ def run(self, guild, key):
         np[str(key)] = None
 
 
-class music(commands.Cog):
+class Music(commands.Cog):
     """
     Discord.py cog
     """
@@ -212,4 +213,4 @@ def setup(bot):
     """
     Initiates cog
     """
-    bot.add_cog(music(bot))
+    bot.add_cog(Music(bot))

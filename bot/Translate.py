@@ -27,7 +27,7 @@ def dest_lang(arg):
     raise Exception
 
 
-class translate(commands.Cog):
+class Translate(commands.Cog):
     """
     translates stuff
     """
@@ -64,4 +64,4 @@ def setup(bot):
     """
     start stuff
     """
-    bot.add_cog(translate(bot))
+    bot.add_cog(Translate(bot))

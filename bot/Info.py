@@ -6,20 +6,20 @@ import emc
 from emc.async_ import get_data
 from discord.ext import commands
 
-from _util import RED, BLUE, Checks
+from _Util import RED, BLUE, Checks
 
 
 def _long_fields(embed, title, list_):
     all_comma_sep = ", ".join(list_)
     if len(all_comma_sep) > 1024-6:
-        list_a = all_comma_sep[:1024-6].split(', ')[:-1]
+        list_a = all_comma_sep[:1024-6].split(", ")[:-1]
         embed.add_field(name=title, value=f"```{', '.join(list_a)}```", inline=False)
         _long_fields(embed, "\N{zero width space}", list_[len(list_a):])
     else:
         embed.add_field(name=title, value=f"```{all_comma_sep}```", inline=False)
 
 
-class info(commands.Cog):
+class Info(commands.Cog):
     """
     Main class
     """
@@ -108,4 +108,4 @@ def setup(bot):
     """
     Initialize cog
     """
-    bot.add_cog(info(bot))
+    bot.add_cog(Info(bot))

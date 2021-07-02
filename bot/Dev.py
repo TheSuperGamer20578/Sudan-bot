@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
-from _util import GREEN, RED, Checks, BLUE
+from _Util import GREEN, RED, Checks, BLUE
 
 auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
@@ -28,7 +28,7 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 
-class dev(commands.Cog):
+class Dev(commands.Cog):
     """
     Main class for this file
     """
@@ -108,11 +108,11 @@ class dev(commands.Cog):
         body = parsed.body[0].body
         insert_returns(body)
         env = {
-            'bot': ctx.bot,
-            'discord': discord,
-            'commands': commands,
-            'ctx': ctx,
-            '__import__': __import__
+            "bot": ctx.bot,
+            "discord": discord,
+            "commands": commands,
+            "ctx": ctx,
+            "__import__": __import__
         }
         exec(compile(parsed, filename="<ast>", mode="exec"), env)
         result = (await eval(f"{fn_name}()", env))
@@ -141,4 +141,4 @@ def setup(bot):
     """
     Initializes the cog
     """
-    bot.add_cog(dev(bot))
+    bot.add_cog(Dev(bot))

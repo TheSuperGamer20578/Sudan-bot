@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 
-class fun(commands.Cog):
+class Fun(commands.Cog):
     """
     The main class for this file
     """
@@ -128,4 +128,4 @@ def setup(bot):
     """
     Load extension
     """
-    bot.add_cog(fun(bot))
+    bot.add_cog(Fun(bot))
