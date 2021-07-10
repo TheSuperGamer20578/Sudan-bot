@@ -6,7 +6,9 @@ import emc
 from emc.async_ import get_data
 from discord.ext import commands
 
-from _Util import RED, BLUE, Checks
+from _Util import RED, BLUE, GREEN, Checks
+
+last_townless = []
 
 
 def _long_fields(embed, title, list_):
@@ -101,6 +103,28 @@ class Info(commands.Cog):
         else:
             embed.add_field(name="Position", value=f"```{resident} is currently offline```")
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.check(Checks.admin)
+    async def townless(self, ctx, channel: discord.TextChannel = None):
+        """Sends a message in the specified channel with all the townless people on it, updates automatically"""
+        await ctx.message.delete()
+        if channel is not None:
+            townless = last_townless
+            townless_display = "\n".join(townless)
+            if len(townless) == 0:
+                townless_display = "There are currently no townless players :("
+            embed = discord.Embed(title=f"Townless players [{len(townless)}]", description=f"```\n{townless_display}```", colour=BLUE)
+            message = await channel.send(embed=embed)
+            async with self.bot.pool.acquire() as db:
+                await db.execute("UPDATE guilds SET townless_channel = $2, townless_message = $3 WHERE id = $1", ctx.guild.id, channel.id, message.id)
+            embed = discord.Embed(title=f"Set townless channel to #{channel.name}", colour=GREEN)
+        else:
+            async with self.bot.pool.acquire() as db:
+                await db.execute("UPDATE guilds SET townless_channel = NULL, townless_message = NULL WHERE id = $1", ctx.guild.id)
+            embed = discord.Embed(title="Disabled townless", colour=GREEN)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
 
