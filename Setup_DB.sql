@@ -4,7 +4,8 @@ ticket_category BIGINT, ticket_log_channel BIGINT, support_roles BIGINT[],
 ticket_ban_role BIGINT, ticket_index INT, chain_break_role BIGINT,
 private_commands BOOLEAN, force_slash BOOLEAN, incident_index INT DEFAULT 1,
 mute_role BIGINT, mute_threshold INT DEFAULT 0, ban_threshold INT DEFAULT 0,
-bad_words TEXT[] DEFAULT '{}', bad_words_warn_duration BIGINT DEFAULT 0);
+bad_words TEXT[] DEFAULT '{}', bad_words_warn_duration BIGINT DEFAULT 0,
+townless_message BIGINT, townless_channel BIGINT);
 
 CREATE TABLE users
 (id BIGINT PRIMARY KEY, trusted BOOLEAN, dad_mode BOOLEAN, mc_uuid TEXT);
