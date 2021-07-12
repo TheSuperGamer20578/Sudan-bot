@@ -141,7 +141,8 @@ class Info(commands.Cog):
             async with self.bot.pool.acquire() as db:
                 for message in await db.fetch("SELECT id, townless_channel, townless_message FROM guilds WHERE townless_message IS NOT NULL"):
                     channel = self.bot.get_guild(message["id"]).get_channel(message["townless_channel"])
-                    await channel.fetch_message(message["townless_message"]).edit(embed=embed)
+                    message = await channel.fetch_message(message["townless_message"])
+                    await message.edit(embed=embed)
 
 
 def setup(bot):
