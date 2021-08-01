@@ -45,14 +45,14 @@ class Fun(commands.Cog):
         """
         Starts a chain
         """
-        await self.bot.db.execute("UPDATE channels SET last_chain = NULL WHERE id = $1", ctx.channel.id)
-        await self.bot.db.execute(
-            "UPDATE channels SET chain = $2 WHERE id = $1", ctx.channel.id,
-            thing)
         if thing.startswith("$counting:"):
-            await ctx.send(f"Counting started at: {thing.split(':')[1]}")
+            if thing.split(":", 1)[1] == "" or any(char not in "0123456789" for char in thing.split(":", 1)[1]) or thing.split(":", 1)[1][0] == "0":
+                raise commands.BadArgument
+            await ctx.send(f"Counting started at: {thing.split(':', 1)[1]}")
         else:
             await ctx.send(f"New chain: {thing}")
+        await self.bot.db.execute("UPDATE channels SET last_chain = NULL WHERE id = $1", ctx.channel.id)
+        await self.bot.db.execute("UPDATE channels SET chain = $2 WHERE id = $1", ctx.channel.id, thing)
 
     async def chain_check(self, msg):
         """
