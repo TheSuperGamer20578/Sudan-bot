@@ -10,6 +10,12 @@ from discord.ext import commands
 from _Util import Checks, GREEN, RED
 
 
+async def check_no_chain_forever(ctx):
+    """Check that chainforever is not active"""
+    async with ctx.bot.pool.acquire() as db:
+        return await db.fetchval("SELECT chain_forever FROM channels WHERE id = $1", ctx.channel.id) is None
+
+
 class Fun(commands.Cog):
     """
     The main class for this file
@@ -43,6 +49,7 @@ class Fun(commands.Cog):
                            avatar_url=user.avatar_url)
         await webhook.delete()
 
+    @commands.check(check_no_chain_forever)
     @commands.command()
     async def chain(self, ctx, *, thing):
         """
