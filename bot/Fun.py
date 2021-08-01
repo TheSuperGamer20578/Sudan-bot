@@ -80,18 +80,18 @@ class Fun(commands.Cog):
             if chain.startswith("$counting:"):
                 num = int(chain.split(":")[1])
                 if msg.content != str(num + 1):
-                    await cbreak()
-                else:
-                    num += 1
-                    await db.execute("UPDATE channels SET chain = $2 WHERE id = $1", msg.channel.id, f"$counting:{num}")
-            elif msg.content != chain or msg.author.id == await db.fetchval("SELECT last_chain FROM channels WHERE id = $1", msg.channel.id):
-                await cbreak()
+                    return await cbreak()
+                num += 1
+                await db.execute("UPDATE channels SET chain = $2 WHERE id = $1", msg.channel.id, f"$counting:{num}")
+            elif msg.content != chain:
+                return await cbreak()
+            if msg.author.id == await db.fetchval("SELECT last_chain FROM channels WHERE id = $1", msg.channel.id):
+                return await cbreak()
+            await db.execute("UPDATE channels SET last_chain = $2, chain_length = chain_length + 1 WHERE id = $1", msg.channel.id, msg.author.id)
+            if msg.content == "100" or length == 100:
+                await msg.add_reaction("💯")
             else:
-                await db.execute("UPDATE channels SET last_chain = $2, chain_length = chain_length + 1 WHERE id = $1", msg.channel.id, msg.author.id)
-                if msg.content == "100":
-                    await msg.add_reaction("💯")
-                else:
-                    await msg.add_reaction("✅")
+                await msg.add_reaction("✅")
 
     async def dad_mode(self, message):
         """
