@@ -111,7 +111,7 @@ class Fun(commands.Cog):
                 break_role = await db.fetchval("SELECT chain_break_role FROM guilds WHERE id = $1", msg.guild.id)
                 if break_role is not None:
                     await msg.author.add_roles(msg.guild.get_role(break_role))
-                await db.execute("UPDATE channels SET chain = $2, chain_length = 0 WHERE id = $1", msg.channel.id, forever)
+                await db.execute("UPDATE channels SET chain = $2, chain_length = 0, last_chain = NULL WHERE id = $1", msg.channel.id, forever)
 
             if chain is None or msg.author.bot:
                 return
