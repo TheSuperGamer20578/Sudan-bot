@@ -18,9 +18,9 @@ async def check_no_chain_forever(ctx):
         return await db.fetchval("SELECT chain_forever FROM channels WHERE id = $1", ctx.channel.id) is None
 
 
-async def check_trivia_role(ctx):
+async def check_trivia_role(ctx, bot=None):
     """Checks if someone is allowed to do trivia stuff"""
-    async with ctx.bot.pool.acquire() as db:
+    async with (bot or ctx.bot).pool.acquire() as db:
         for role in await db.fetchval("SELECT trivia_roles FROM guilds WHERE id = $1", ctx.guild.id):
             if role in [r.id for r in ctx.author.roles]:
                 return True
@@ -181,7 +181,7 @@ class Fun(commands.Cog):
         options = [SelectOption(label=option, value=f"-{option}") for option in answers]
         options.append(SelectOption(label=answer, value=f"+{answer}"))
         shuffle(options)
-        await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options, custom_id="trivia"), Button(label="Info", style=ButtonStyle.grey, id="info", emoji="ℹ")])
+        await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options, custom_id="trivia"), Button(label="Info", style=ButtonStyle.grey, id="trivia.info", emoji="ℹ")])
 
     @commands.Cog.listener()
     async def on_select_option(self, interaction):
@@ -199,6 +199,22 @@ class Fun(commands.Cog):
                 await interaction.respond(content=f"`{answer[1:]}` is the correct answer!")
             else:
                 await interaction.respond(content=f"`{answer[1:]}` is not the correct answer :(")
+
+    @commands.Cog.listener()
+    async def on_button_click(self, interaction):
+        """Give info about trivia question when info button pushed"""
+        if not interaction.custom_id.startswith("trivia"):
+            return
+        if interaction.custom_id == "trivia.info":
+            async with self.bot.pool.acquire() as db:
+                answer = await db.fetchrow("SELECT answer, correct FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id)
+                if answer is None:
+                    await interaction.respond(content="You have not submitted an answer yet!")
+                info = await db.fetchrow("SELECT count(correct = TRUE) as correct, count(*) as total FROM trivia WHERE id = $1", interaction.message.id)
+            await interaction.respond(content=f"Your answer was {'correct' if answer['correct'] else 'incorrect'}: `{answer['answer']}`\n"
+                                      f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['total']/info['correct'] * 100:.1f}%)")
+        else:
+            raise NameError(f"No handler writen for {interaction.custom_id!r}")
 
 
 def setup(bot):
