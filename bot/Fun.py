@@ -16,6 +16,15 @@ async def check_no_chain_forever(ctx):
         return await db.fetchval("SELECT chain_forever FROM channels WHERE id = $1", ctx.channel.id) is None
 
 
+async def check_trivia_role(ctx):
+    """Checks if someone is allowed to do trivia stuff"""
+    async with ctx.bot.pool.acquire() as db:
+        for role in await db.fetchval("SELECT trivia_roles FROM guilds WHERE id = $1", ctx.guild.id):
+            if role in [r.id for r in ctx.author.roles]:
+                return True
+        return False
+
+
 class Fun(commands.Cog):
     """
     The main class for this file
