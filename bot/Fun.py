@@ -3,9 +3,11 @@ Contains fun stuff
 """
 import re
 from os import getenv
+from random import shuffle
 
 import discord
 from discord.ext import commands
+from discord_components import DiscordComponents, Select, SelectOption, Button, ButtonStyle
 
 from _Util import Checks, GREEN, RED
 
@@ -32,6 +34,7 @@ class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        DiscordComponents(bot)
 
     @commands.command()
     async def lmgtfy(self, ctx, *, query):
@@ -167,6 +170,18 @@ class Fun(commands.Cog):
         """
         await self.dad_mode(message)
         await self.chain_check(message)
+
+    @commands.command()
+    @commands.check(check_trivia_role)
+    async def trivia(self, ctx, title, question, answer, *answers):
+        """Starts a trivia"""
+        await ctx.message.delete()
+        embed = discord.Embed(title=title, description=question, colour=0xff564a)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        options = [SelectOption(label=option, value=f"-{option}") for option in answers]
+        options.append(SelectOption(label=answer, value=f"+{answer}"))
+        shuffle(options)
+        await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options), Button(label="Info", style=ButtonStyle.grey, id="info", emoji="ℹ")])
 
 
 def setup(bot):
