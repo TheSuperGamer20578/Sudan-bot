@@ -24,12 +24,17 @@
       "description": "The region for Microsoft translate, only required for the translate cog",
       "required": false
     },
+    "CHAIN_PIN_THRESHOLD": {
+      "description": "Threshold to pin break messages for chainforever, only required for the fun cog",
+      "value": "25",
+      "required": false
+    },
     "LOG_CHANNEL": {
       "description": "The ID of the channel you want the bot to use to say that it is online"
     },
     "AUTOLOAD_COGS": {
       "description": "Comma seperated list of cogs to load when the bot starts",
-      "value": "tickets,fun,gamerooms,utils,dev,settings,rules,linking,log,info"
+      "value": "Tickets,Fun,Utils,Dev,Settings,Rules,Linking,Log,Info,Moderation"
     },
     "ACTIVITY_TYPE": {
       "description": "The type of activity, must be playing, watching, streaming, listening, competing or custom",

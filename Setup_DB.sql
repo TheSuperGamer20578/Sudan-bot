@@ -12,7 +12,8 @@ CREATE TABLE users
 
 CREATE TABLE channels
 (id BIGINT PRIMARY KEY, guild_id BIGINT, chain TEXT,
-chain_length INTEGER, log_type TEXT, last_chain BIGINT);
+chain_length INTEGER, log_type TEXT, last_chain BIGINT,
+chain_forever TEXT);
 
 CREATE TABLE rules
 (name TEXT, guild_id BIGINT, punishment TEXT, description TEXT);

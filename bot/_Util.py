@@ -13,39 +13,39 @@ class Checks:
     Permission checks
     """
     @staticmethod
-    async def trusted(ctx):
+    async def trusted(ctx, bot=None):
         """
         Check to see if the user is trusted
         """
-        async with ctx.bot.pool.acquire() as db:
+        async with (bot if bot is not None else ctx.bot).pool.acquire() as db:
             return await db.fetchval("SELECT trusted FROM users WHERE id = $1", ctx.author.id)
 
     @staticmethod
-    async def mod(ctx):
+    async def mod(ctx, bot=None):
         """
         Check to see if the user is a mod
         """
-        async with ctx.bot.pool.acquire() as db:
+        async with (bot if bot is not None else ctx.bot).pool.acquire() as db:
             for role in await db.fetchval("SELECT mod_roles FROM guilds WHERE id = $1", ctx.guild.id):
                 if role in [r.id for r in ctx.author.roles]:
                     return True
             return False
 
     @staticmethod
-    async def admin(ctx):
+    async def admin(ctx, bot=None):
         """
         Check to see if the user is an admin
         """
-        async with ctx.bot.pool.acquire() as db:
+        async with (bot if bot is not None else ctx.bot).pool.acquire() as db:
             for role in await db.fetchval("SELECT admin_roles FROM guilds WHERE id = $1", ctx.guild.id):
                 if role in [r.id for r in ctx.author.roles]:
                     return True
             return False
 
     @staticmethod
-    async def slash(ctx):
+    async def slash(ctx, bot=None):
         """
         Check to see if command has slash command alternative
         """
-        async with ctx.bot.pool.acquire() as db:
+        async with (bot if bot is not None else ctx.bot).pool.acquire() as db:
             return not await db.fetchval("SELECT force_slash FROM guilds WHERE id = $1", ctx.guild.id)
