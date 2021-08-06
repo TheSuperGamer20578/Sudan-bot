@@ -181,7 +181,24 @@ class Fun(commands.Cog):
         options = [SelectOption(label=option, value=f"-{option}") for option in answers]
         options.append(SelectOption(label=answer, value=f"+{answer}"))
         shuffle(options)
-        await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options), Button(label="Info", style=ButtonStyle.grey, id="info", emoji="ℹ")])
+        await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options, custom_id="trivia"), Button(label="Info", style=ButtonStyle.grey, id="info", emoji="ℹ")])
+
+    @commands.Cog.listener()
+    async def on_select_option(self, interaction):
+        """Process trivia answers"""
+        if not interaction.custom_id == "trivia":
+            return
+        async with self.bot.pool.acquire() as db:
+            if await db.fetchval("SELECT TRUE FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id):
+                await interaction.respond(content="You have already answered this question, press the info button to see your answer")
+                return
+            answer = interaction.raw_data["d"]["data"]["values"][0]
+            await db.execute("INSERT INTO trivia (id, guild, member, correct, answer) VALUES ($1, $2, $3, $4, $5)",
+                             interaction.message.id, interaction.guild.id, interaction.user.id, answer[0] == "+", answer[1:])
+            if answer[0] == "+":
+                await interaction.respond(content=f"`{answer[1:]}` is the correct answer!")
+            else:
+                await interaction.respond(content=f"`{answer[1:]}` is not the correct answer :(")
 
 
 def setup(bot):
