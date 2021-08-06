@@ -183,6 +183,24 @@ class Fun(commands.Cog):
         shuffle(options)
         await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options, custom_id="trivia"), Button(label="Info", style=ButtonStyle.grey, id="trivia.info", emoji="ℹ")])
 
+    @commands.command()
+    @commands.check(check_trivia_role)
+    async def triviaanswers(self, ctx, message: discord.Message):
+        """Shows how everyone answered a question"""
+        await ctx.message.delete()
+        async with self.bot.pool.acquire() as db:
+            answers = await db.fetch("SELECT member, answer, correct FROM trivia WHERE id = $1", message.id)
+        if len(answers) == 0:
+            embed = discord.Embed(title="The selected message does not have any answers or is not a trivia message", colour=RED)
+        else:
+            embed = discord.Embed(title=message.embeds[0].title, description=message.embeds[0].description, colour=0x4287f5)
+            for option in set(answers):
+                tick = ":white_check_mark: " if option["correct"] else ""
+                embed.add_field(name=tick + option["answer"], value="\n".join(f"<@{answer['member']}>" for answer in answers if answer == option))
+            embed.set_footer(text=f"ID: {message.id}")
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
     @commands.Cog.listener()
     async def on_select_option(self, interaction):
         """Process trivia answers"""
