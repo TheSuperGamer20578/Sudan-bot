@@ -194,10 +194,10 @@ class Fun(commands.Cog):
             embed = discord.Embed(title="The selected message does not have any answers or is not a trivia message", colour=RED)
         else:
             embed = discord.Embed(title=message.embeds[0].title, description=message.embeds[0].description, colour=0x4287f5)
-            options = {answer["answer"] for answer in answers}
+            options = {(answer["answer"], answer["correct"]) for answer in answers}
             for option in options:
-                tick = ":white_check_mark: " if option["correct"] else ""
-                embed.add_field(name=tick + option, value="\n".join(f"<@{answer['member']}>" for answer in answers if answer["answer"] == option))
+                tick = ":white_check_mark: " if option[1] else ""
+                embed.add_field(name=tick + option[0], value="\n".join(f"<@{answer['member']}>" for answer in answers if answer["answer"] == option[0]))
             embed.set_footer(text=f"ID: {message.id}")
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -229,7 +229,7 @@ class Fun(commands.Cog):
                 answer = await db.fetchrow("SELECT answer, correct FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id)
                 if answer is None:
                     await interaction.respond(content="You have not submitted an answer yet!")
-                info = await db.fetchrow("SELECT count(correct = TRUE) as correct, count(*) as total FROM trivia WHERE id = $1", interaction.message.id)
+                info = await db.fetchrow("SELECT COUNT(CASE correct WHEN TRUE THEN 1 ELSE NULL END) as correct, COUNT(*) AS total FROM trivia WHERE id = $1", interaction.message.id)
             await interaction.respond(content=f"Your answer was {'correct' if answer['correct'] else 'incorrect'}: `{answer['answer']}`\n"
                                       f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['total']/info['correct'] * 100:.1f}%)")
         else:
