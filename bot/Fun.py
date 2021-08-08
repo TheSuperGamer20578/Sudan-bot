@@ -194,9 +194,10 @@ class Fun(commands.Cog):
             embed = discord.Embed(title="The selected message does not have any answers or is not a trivia message", colour=RED)
         else:
             embed = discord.Embed(title=message.embeds[0].title, description=message.embeds[0].description, colour=0x4287f5)
-            for option in set(answers):
+            options = {answer["answer"] for answer in answers}
+            for option in options:
                 tick = ":white_check_mark: " if option["correct"] else ""
-                embed.add_field(name=tick + option["answer"], value="\n".join(f"<@{answer['member']}>" for answer in answers if answer == option))
+                embed.add_field(name=tick + option, value="\n".join(f"<@{answer['member']}>" for answer in answers if answer["answer"] == option))
             embed.set_footer(text=f"ID: {message.id}")
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
