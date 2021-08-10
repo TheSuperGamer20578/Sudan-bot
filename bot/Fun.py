@@ -185,7 +185,7 @@ class Fun(commands.Cog):
 
     @commands.command()
     @commands.check(check_trivia_role)
-    async def triviaanswers(self, ctx, message):
+    async def triviaanswers(self, ctx, message: int):
         """Shows how everyone answered a question"""
         await ctx.message.delete()
         async with self.bot.pool.acquire() as db:
