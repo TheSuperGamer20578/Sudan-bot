@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 
 from _Util import RED
+from Moderation import human_delta
 
 
 class Errors(commands.Cog):
@@ -59,20 +60,7 @@ class Errors(commands.Cog):
             embed = discord.Embed(title=f"Invalid argument for {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.CommandOnCooldown):
-            unit = "seconds"
             time = error.retry_after
-            if time >= 60:
-                time /= 60
-                unit = "minutes"
-                if time >= 60:
-                    time /= 60
-                    unit = "hours"
-                    if time >= 24:
-                        time /= 24
-                        unit = "days"
-                        if time >= 7:
-                            time /= 7
-                            unit = "weeks"
             types = {
                 commands.BucketType.default: "global",
                 commands.BucketType.guild: "server",
@@ -82,7 +70,7 @@ class Errors(commands.Cog):
                 commands.BucketType.role: "role",
                 commands.BucketType.user: "user"
             }
-            embed = discord.Embed(title=f"{ctx.command} is on {types[error.cooldown.type]} cooldown for {time:,.2f} {unit}", colour=RED)
+            embed = discord.Embed(title=f"{ctx.command} is on {types[error.cooldown.type]} cooldown for {human_delta(time)}", colour=RED)
 
         else:
             embed = discord.Embed(title="An unexpected error has occurred", colour=RED)
