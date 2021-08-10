@@ -4,6 +4,7 @@ Handles command errors
 import traceback
 import os
 import sys
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -18,6 +19,16 @@ class Errors(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        if bot.is_ready():
+            sys.stdout = Redirect(bot.loop, bot.log.info)
+            sys.stderr = Redirect(bot.loop, bot.log.error)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Redirects stdout and stderr when bot is ready"""
+        await asyncio.sleep(1)
+        sys.stdout = Redirect(self.bot.loop, self.bot.log.info)
+        sys.stderr = Redirect(self.bot.loop, self.bot.log.error)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -112,5 +123,3 @@ def setup(bot):
     Initialize cog
     """
     bot.add_cog(Errors(bot))
-    sys.stdout = Redirect(bot.loop, bot.log.info)
-    sys.stderr = Redirect(bot.loop, bot.log.error)
