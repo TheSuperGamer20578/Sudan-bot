@@ -5,7 +5,7 @@ ticket_ban_role BIGINT, ticket_index INT, chain_break_role BIGINT,
 private_commands BOOLEAN, force_slash BOOLEAN, incident_index INT DEFAULT 1,
 mute_role BIGINT, mute_threshold INT DEFAULT 0, ban_threshold INT DEFAULT 0,
 bad_words TEXT[] DEFAULT '{}', bad_words_warn_duration BIGINT DEFAULT 0,
-townless_message BIGINT, townless_channel BIGINT);
+townless_message BIGINT, townless_channel BIGINT, trivia_roles BIGINT[]);
 
 CREATE TABLE users
 (id BIGINT PRIMARY KEY, trusted BOOLEAN, dad_mode BOOLEAN, mc_uuid TEXT);
@@ -27,3 +27,7 @@ ALTER TABLE mutes ADD CONSTRAINT mutes_pkey PRIMARY KEY (guild, member);
 
 CREATE TABLE embeds
 (id BIGINT PRIMARY KEY, guild BIGINT, colour INT);
+
+CREATE TABLE trivia
+(id BIGINT, guild BIGINT, member BIGINT, correct BOOLEAN, answer TEXT);
+ALTER TABLE trivia ADD CONSTRAINT trivia_pkey PRIMARY KEY (id, member);
