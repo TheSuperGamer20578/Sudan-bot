@@ -3,6 +3,7 @@ Handles command errors
 """
 import traceback
 import os
+import sys
 
 import discord
 from discord.ext import commands
@@ -110,8 +111,23 @@ class Errors(commands.Cog):
         await ctx.send(embed=embed)
 
 
+class Redirect:
+    """Redirects stdout and stderr to discord"""
+    def __init__(self, loop, method):
+        self.loop = loop
+        self.method = method
+
+    def write(self, text):
+        """Logs error or info"""
+        if len(text.strip()) == 0:
+            return
+        self.loop.create_task(self.method(f"REDIRECTED!!!: {text.strip()}"))
+
+
 def setup(bot):
     """
     Initialize cog
     """
     bot.add_cog(Errors(bot))
+    sys.stdout = Redirect(bot.loop, bot.log.info)
+    sys.stderr = Redirect(bot.loop, bot.log.error)
