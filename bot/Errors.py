@@ -1,21 +1,13 @@
 """
 Handles command errors
 """
-import sys
 import traceback
-import asyncio
 import os
-from json import dumps
-import requests
 
 import discord
 from discord.ext import commands
 
-from _Util import RED, BLUE
-
-AUTH = {"Authorization": f"GenieKey {os.getenv('OPSGENIE_TOKEN')}"}
-
-OPS = "https://api.eu.opsgenie.com/v2/"
+from _Util import RED
 
 
 class Errors(commands.Cog):
@@ -94,16 +86,21 @@ class Errors(commands.Cog):
         else:
             embed = discord.Embed(title="You caused an error!", colour=RED)
             trace = traceback.format_exception(type(error), error, error.__traceback__)
-            resp = requests.post(OPS+"alerts", dumps({
-                "message": f"Error in {ctx.command}",
-                "description": "\n".join(trace),
-                "alias": f"{type(error)} in {ctx.command} with {len(ctx.args)} arguments",
-                "entity": "Sudan bot",
-                "source": f"{ctx.guild.name} #{ctx.channel.name}",
-                "details": {"user": f"{ctx.author.name}({ctx.author.nick})", "message": ctx.message.content}
-            }), headers={**AUTH, "Content-Type": "application/json"})
-            if resp.status_code != 202:
-                sys.stderr.write(str(resp.content)+"\n")
+            hidden = 0
+            final_trace = []
+            for frame in trace:
+                if "site-packages" in frame:
+                    hidden += 1
+                    continue
+                if hidden > 0:
+                    final_trace.append(f"\n{hidden} library frames hidden\n\n")
+                    hidden = 0
+                final_trace.append(frame.replace(os.getcwd(), ""))
+            await self.bot.log.exception(f"Exception in command: `{ctx.command}`\n"
+                                         f"Message: `{ctx.message.content}`\n"
+                                         f"User: `{ctx.author.name}#{ctx.author.discriminator}`\n"
+                                         f"Server: `{ctx.guild.name}`\n"
+                                         f"```py\n{''.join(final_trace)}```")
 
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         try:
@@ -113,33 +110,8 @@ class Errors(commands.Cog):
         await ctx.send(embed=embed)
 
 
-class Log:
-    """
-    An attempt to redirect stout and stderr to discord it didnt work i might be able to make it work and goto Opsgenie
-    """
-    colour = {"error": RED, "info": BLUE}
-    title = {"error": "Error(non-command)", "info": "Info"}
-
-    def __init__(self, bot, t):
-        self.type = t
-        self.bot = bot
-
-    def write(self, buf):
-        """
-        The part that was supposed to send stuff to discord
-        """
-        text = buf.rstrip()
-        colour = self.colour[self.type]
-        title = self.title[self.type]
-        embed = discord.Embed(title=title, description=f"```python\n{text}\n```", colour=colour)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.bot.get_channel(753495157332246548).send(embed=embed))
-
-
 def setup(bot):
     """
     Initialize cog
     """
     bot.add_cog(Errors(bot))
-    # sys.stdout = Log(bot, "info")
-    # sys.stderr = Log(bot, "error")
