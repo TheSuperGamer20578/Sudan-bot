@@ -27,6 +27,7 @@ class Settings(commands.Cog):
                 Admin roles: {', '.join([f'<@&{role}>' for role in settings_["admin_roles"]]) if len(settings_['admin_roles']) > 0 else 'None'}
                 Moderator roles: {', '.join([f'<@&{role}>' for role in settings_["mod_roles"]]) if len(settings_['mod_roles']) > 0 else 'None'}
                 Ticket support roles: {', '.join([f'<@&{role}>' for role in settings_["support_roles"]]) if len(settings_['support_roles']) > 0 else 'None'}
+                Trivia roles: {', '.join([f'<@&{role}>' for role in settings_["trivia_roles"]]) if len(settings_['trivia_roles']) > 0 else 'None'}
                 Chain break role: {f'<@&{settings_["chain_break_role"]}>' if settings_["chain_break_role"] is not None else 'None'}
                 Mute role: {f'<@&{settings_["mute_role"]}>' if settings_["mute_role"] is not None else 'None'}
                 Private commands: {'🟢' if settings_['private_commands'] else '🔴'}
@@ -154,6 +155,36 @@ class Settings(commands.Cog):
         await ctx.message.delete()
         await self.bot.db.execute("UPDATE guilds SET mod_roles = ARRAY_REMOVE(mod_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
         embed = discord.Embed(title="Settings updated", description=f"Removed {role.mention} from moderator roles", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @settings.group(invoke_without_command=True)
+    @commands.check(Checks.admin)
+    async def trivia(self, ctx):
+        """Lists trivia roles"""
+        roles = await self.bot.db.fetchval("SELECT trivia_roles FROM guilds WHERE id = $1", ctx.guild.id)
+        await ctx.message.delete()
+        embed = discord.Embed(title="Moderator roles", colour=BLUE, description=", ".join([f"<@&{role}>" for role in roles]) if len(roles) > 0 else "None")
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @trivia.command(name="add")
+    @commands.check(Checks.admin)
+    async def trivia_add(self, ctx, role: discord.Role):
+        """Adds a trivia role"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET trivia_roles = ARRAY_APPEND(trivia_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
+        embed = discord.Embed(title="Settings updated", description=f"Added {role.mention} to trivia roles", colour=GREEN)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @trivia.command(name="remove")
+    @commands.check(Checks.admin)
+    async def trivia_remove(self, ctx, role: discord.Role):
+        """Removes a trivia role"""
+        await ctx.message.delete()
+        await self.bot.db.execute("UPDATE guilds SET trivia_roles = ARRAY_REMOVE(trivia_roles, $2) WHERE id = $1", ctx.guild.id, role.id)
+        embed = discord.Embed(title="Settings updated", description=f"Removed {role.mention} from trivia roles", colour=GREEN)
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

@@ -3,9 +3,11 @@ Contains fun stuff
 """
 import re
 from os import getenv
+from random import shuffle
 
 import discord
 from discord.ext import commands
+from discord_components import DiscordComponents, Select, SelectOption, Button, ButtonStyle
 
 from _Util import Checks, GREEN, RED
 
@@ -16,6 +18,15 @@ async def check_no_chain_forever(ctx):
         return await db.fetchval("SELECT chain_forever FROM channels WHERE id = $1", ctx.channel.id) is None
 
 
+async def check_trivia_role(ctx, bot=None):
+    """Checks if someone is allowed to do trivia stuff"""
+    async with (bot or ctx.bot).pool.acquire() as db:
+        for role in await db.fetchval("SELECT trivia_roles FROM guilds WHERE id = $1", ctx.guild.id):
+            if role in [r.id for r in ctx.author.roles]:
+                return True
+        return False
+
+
 class Fun(commands.Cog):
     """
     The main class for this file
@@ -23,6 +34,7 @@ class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        DiscordComponents(bot)
 
     @commands.command()
     async def lmgtfy(self, ctx, *, query):
@@ -158,6 +170,70 @@ class Fun(commands.Cog):
         """
         await self.dad_mode(message)
         await self.chain_check(message)
+
+    @commands.command()
+    @commands.check(check_trivia_role)
+    async def trivia(self, ctx, title, question, answer, *answers):
+        """Starts a trivia"""
+        await ctx.message.delete()
+        embed = discord.Embed(title=title, description=question, colour=0xff564a)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        options = [SelectOption(label=option, value=f"-{option}") for option in answers]
+        options.append(SelectOption(label=answer, value=f"+{answer}"))
+        shuffle(options)
+        await ctx.send(embed=embed, components=[Select(placeholder="Select an answer", options=options, custom_id="trivia"), Button(label="Info", style=ButtonStyle.grey, id="trivia.info", emoji="ℹ")])
+
+    @commands.command()
+    @commands.check(check_trivia_role)
+    async def triviaanswers(self, ctx, message: int):
+        """Shows how everyone answered a question"""
+        await ctx.message.delete()
+        async with self.bot.pool.acquire() as db:
+            answers = await db.fetch("SELECT member, answer, correct FROM trivia WHERE id = $1", message)
+        if len(answers) == 0:
+            embed = discord.Embed(title="The selected message does not have any answers or is not a trivia message", colour=RED)
+        else:
+            embed = discord.Embed(title="Trivia answers", colour=0x4287f5)
+            options = {(answer["answer"], answer["correct"]) for answer in answers}
+            for option in options:
+                tick = ":white_check_mark: " if option[1] else ""
+                embed.add_field(name=tick + option[0], value="\n".join(f"<@{answer['member']}>" for answer in answers if answer["answer"] == option[0]))
+            embed.set_footer(text=f"ID: {message}")
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_select_option(self, interaction):
+        """Process trivia answers"""
+        if not interaction.custom_id == "trivia":
+            return
+        async with self.bot.pool.acquire() as db:
+            if await db.fetchval("SELECT TRUE FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id):
+                await interaction.respond(content="You have already answered this question, press the info button to see your answer")
+                return
+            answer = interaction.raw_data["d"]["data"]["values"][0]
+            await db.execute("INSERT INTO trivia (id, guild, member, correct, answer) VALUES ($1, $2, $3, $4, $5)",
+                             interaction.message.id, interaction.guild.id, interaction.user.id, answer[0] == "+", answer[1:])
+            if answer[0] == "+":
+                await interaction.respond(content=f"`{answer[1:]}` is the correct answer!")
+            else:
+                await interaction.respond(content=f"`{answer[1:]}` is not the correct answer :(")
+
+    @commands.Cog.listener()
+    async def on_button_click(self, interaction):
+        """Give info about trivia question when info button pushed"""
+        if not interaction.custom_id.startswith("trivia"):
+            return
+        if interaction.custom_id == "trivia.info":
+            async with self.bot.pool.acquire() as db:
+                answer = await db.fetchrow("SELECT answer, correct FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id)
+                if answer is None:
+                    await interaction.respond(content="You have not submitted an answer yet!")
+                info = await db.fetchrow("SELECT COUNT(CASE correct WHEN TRUE THEN 1 ELSE NULL END) as correct, COUNT(*) AS total FROM trivia WHERE id = $1", interaction.message.id)
+            await interaction.respond(content=f"Your answer was {'correct' if answer['correct'] else 'incorrect'}: `{answer['answer']}`\n"
+                                      f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['total']/info['correct'] * 100:.1f}%)")
+        else:
+            raise NameError(f"No handler writen for {interaction.custom_id!r}")
 
 
 def setup(bot):
