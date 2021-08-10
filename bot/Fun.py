@@ -185,20 +185,20 @@ class Fun(commands.Cog):
 
     @commands.command()
     @commands.check(check_trivia_role)
-    async def triviaanswers(self, ctx, message: discord.Message):
+    async def triviaanswers(self, ctx, message):
         """Shows how everyone answered a question"""
         await ctx.message.delete()
         async with self.bot.pool.acquire() as db:
-            answers = await db.fetch("SELECT member, answer, correct FROM trivia WHERE id = $1", message.id)
+            answers = await db.fetch("SELECT member, answer, correct FROM trivia WHERE id = $1", message)
         if len(answers) == 0:
             embed = discord.Embed(title="The selected message does not have any answers or is not a trivia message", colour=RED)
         else:
-            embed = discord.Embed(title=message.embeds[0].title, description=message.embeds[0].description, colour=0x4287f5)
+            embed = discord.Embed(title="Trivia answers", colour=0x4287f5)
             options = {(answer["answer"], answer["correct"]) for answer in answers}
             for option in options:
                 tick = ":white_check_mark: " if option[1] else ""
                 embed.add_field(name=tick + option[0], value="\n".join(f"<@{answer['member']}>" for answer in answers if answer["answer"] == option[0]))
-            embed.set_footer(text=f"ID: {message.id}")
+            embed.set_footer(text=f"ID: {message}")
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
