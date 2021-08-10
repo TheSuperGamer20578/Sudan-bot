@@ -47,7 +47,7 @@ class Logger:
         if isinstance(destination, discord.Webhook):
             await destination.send(text, avatar_url=avatar, username=f"[{level}] {self._name}")
         else:
-            await destination.send(discord.Embed(title=text))
+            await destination.send(embed=discord.Embed(title=text))
         if destination == self._log_hook:
             self._file.write(f"{datetime.now():%d/%m/%Y %H:%M:%S} [{level}] {text}\n")
             self._file.flush()
