@@ -12,6 +12,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from _Util import Checks, RED, GREEN, BLUE
+from _Logger import Logger
 
 load_dotenv()
 
@@ -41,8 +42,9 @@ class Core(commands.Cog):
     """
     Contains essential commands
     """
-    def __init__(self, b):
+    def __init__(self, b, log_file_):
         self.bot = b
+        self._log_file = log_file_
         self.bot.remove_command("help")
 
     @commands.command()
@@ -179,8 +181,24 @@ class Core(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """
-        Sets the status of the bot and adds stuff to the db
+        Sets the status of the bot, instantiates the logger and adds stuff to the db
         """
+        public_log_channel = self.bot.get_channel(int(os.getenv("PUBLIC_LOG_CHANNEL")))
+        log_channel = self.bot.get_channel(int(os.getenv("LOG_CHANNEL")))
+        error_channel = self.bot.get_channel(int(os.getenv("ERROR_CHANNEL")))
+        hooks = await log_channel.webhooks()
+        if len(hooks) == 0:
+            log_hook = await log_channel.create_webhook(name=f"{self.bot.user.name} logs")
+        else:
+            log_hook = hooks[0]
+        hooks = await error_channel.webhooks()
+        if len(hooks) == 0:
+            error_hook = await error_channel.create_webhook(name=f"{self.bot.user.name} errors")
+        else:
+            error_hook = hooks[0]
+        self.bot.log = Logger(log_hook, error_hook, public_log_channel, self._log_file, self.bot.user.name)
+        await self.bot.log.change_level(int(os.getenv("LOG_LEVEL")), self.bot.user.name)
+
         for guild in self.bot.guilds:
             try:
                 await self.bot.db.execute("INSERT INTO guilds (id) VALUES ($1)", guild.id)
@@ -217,6 +235,9 @@ class Core(commands.Cog):
             "invisible": discord.Status.invisible
         }
         await self.bot.change_presence(status=statuses[os.getenv("STATUS")], activity=activity)
+
+        await self.bot.log.info("Bot online")
+        await self.bot.log.public("Bot online!")
 
     @commands.command()
     @commands.check(Checks.slash)
@@ -279,11 +300,19 @@ class Core(commands.Cog):
                 pass
 
 
+log_file = open("log", "a+")  # pylint: disable=consider-using-with
+
+
 def setup(setup_bot):
     """
     Initiate cog if loaded as extension
     """
-    bot.add_cog(Core(setup_bot))
+    bot.add_cog(Core(setup_bot, log_file))
+
+
+def teardown(setup_bot):  # pylint: disable=unused-argument
+    """Close the file if loaded as extension"""
+    log_file.close()
 
 
 if __name__ == "__main__":
@@ -293,8 +322,9 @@ if __name__ == "__main__":
                        intents=intents,
                        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
     bot.db, bot.pool = bot.loop.run_until_complete(_load_db())
-    bot.add_cog(Core(bot))
+    bot.add_cog(Core(bot, log_file))
     for cog in os.getenv("AUTOLOAD_COGS").split(","):
         if cog != "" and not cog.startswith("_"):
             bot.load_extension(cog)
     bot.run(os.getenv("BOT_TOKEN"))
+    log_file.close()
