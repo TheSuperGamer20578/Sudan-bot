@@ -28,11 +28,6 @@ class Errors(commands.Cog):
         if hasattr(ctx.command, "on_error"):
             return
 
-        # idk what this does but it might be important but pycharm doesnt like it
-        # cog = ctx.cog
-        # if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
-        #     return
-
         error = getattr(error, "original", error)
 
         if isinstance(error, commands.NoPrivateMessage):
