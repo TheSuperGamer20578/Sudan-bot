@@ -85,7 +85,7 @@ class Errors(commands.Cog):
             embed = discord.Embed(title=f"{ctx.command} is on {types[error.cooldown.type]} cooldown for {time:,.2f} {unit}", colour=RED)
 
         else:
-            embed = discord.Embed(title="You caused an error!", colour=RED)
+            embed = discord.Embed(title="An unexpected error has occurred", colour=RED)
             trace = traceback.format_exception(type(error), error, error.__traceback__)
             hidden = 0
             final_trace = []
