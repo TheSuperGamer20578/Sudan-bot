@@ -1,8 +1,9 @@
 """Contains stuff for logging"""
-from typing import Dict, TextIO
+from typing import Dict, List, TextIO
 from datetime import datetime
 
 import discord
+from discord.ext.tasks import loop
 
 _AVATARS: Dict[str, str] = {
     "debug": "https://cdn.discordapp.com/embed/avatars/1.png",
@@ -35,6 +36,8 @@ class Logger:
     _level: int = 2
     _file: TextIO
     _name: str
+    _stdout: List[str] = []
+    _stderr: List[str] = []
 
     def __init__(self, log_webhook: discord.Webhook, error_webhook: discord.Webhook, public_log_channel: discord.TextChannel, file: TextIO, name: str):
         self._log_hook = log_webhook
@@ -42,6 +45,7 @@ class Logger:
         self._public = public_log_channel
         self._file = file
         self._name = name
+        self._log_cached.start()  # pylint: disable=no-member
 
     async def _log(self, avatar: str, level: str, text: str, destination: discord.abc.Messageable):
         if isinstance(destination, discord.Webhook):
@@ -51,6 +55,15 @@ class Logger:
         if destination == self._log_hook:
             self._file.write(f"{datetime.now():%d/%m/%Y %H:%M:%S} [{level}] {text}\n")
             self._file.flush()
+
+    @loop(seconds=5)
+    async def _log_cached(self):
+        if len(self._stderr) > 0:
+            await self._log_hook.send("\n".join(self._stderr[:100]), avatar_url=_AVATARS["error"], username=f"[STDERR] {self._name}")
+            del self._stderr[:100]
+        if len(self._stdout) > 0:
+            await self._log_hook.send("\n".join(self._stdout[:100]), avatar_url=_AVATARS["info"], username=f"[STDOUT] {self._name}")
+            del self._stdout[:100]
 
     async def change_level(self, level: int, user: str):
         """Changes the log level"""
@@ -85,3 +98,15 @@ class Logger:
     async def public(self, message: str):
         """Sends a message to the public logs"""
         await self._log(None, None, message, self._public)
+
+    def stdout(self, message: str):
+        """Log info after caching"""
+        self._file.write(f"{datetime.now():%d/%m/%Y %H:%M:%S} [STDOUT] {message}\n")
+        self._file.flush()
+        self._stdout.append(message)
+
+    def stderr(self, message: str):
+        """Log error after caching"""
+        self._file.write(f"{datetime.now():%d/%m/%Y %H:%M:%S} [STDERR] {message}\n")
+        self._file.flush()
+        self._stderr.append(message)

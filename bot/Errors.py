@@ -20,15 +20,15 @@ class Errors(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         if bot.is_ready():
-            sys.stdout = Redirect(bot.loop, bot.log.info)
-            sys.stderr = Redirect(bot.loop, bot.log.error)
+            sys.stdout = Redirect(bot.log.stdout)
+            sys.stderr = Redirect(bot.log.stderr)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Redirects stdout and stderr when bot is ready"""
         await asyncio.sleep(1)
-        sys.stdout = Redirect(self.bot.loop, self.bot.log.info)
-        sys.stderr = Redirect(self.bot.loop, self.bot.log.error)
+        sys.stdout = Redirect(self.bot.log.stdout)
+        sys.stderr = Redirect(self.bot.log.stderr)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -107,15 +107,14 @@ class Errors(commands.Cog):
 
 class Redirect:
     """Redirects stdout and stderr to discord"""
-    def __init__(self, loop, method):
-        self.loop = loop
+    def __init__(self, method):
         self.method = method
 
     def write(self, text):
         """Logs error or info"""
         if len(text.strip()) == 0:
             return
-        self.loop.create_task(self.method(f"REDIRECTED!!!: {text.strip()}"))
+        self.method(text.strip())
 
 
 def setup(bot):
