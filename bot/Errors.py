@@ -19,6 +19,7 @@ class Errors(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        bot.on_error = self.on_error
         if bot.is_ready():
             sys.stdout = Redirect(bot.log.stdout)
             sys.stderr = Redirect(bot.log.stderr)
@@ -84,7 +85,7 @@ class Errors(commands.Cog):
             hidden = 0
             final_trace = []
             for frame in trace:
-                if "site-packages" in frame:
+                if "site-packages" in frame or "dist-packages" in frame:
                     hidden += 1
                     continue
                 if hidden > 0:
@@ -92,9 +93,9 @@ class Errors(commands.Cog):
                     hidden = 0
                 final_trace.append(frame.replace(os.getcwd(), ""))
             await self.bot.log.exception(f"Exception in command: `{ctx.command}`\n"
-                                         f"Message: `{ctx.message.content}`\n"
-                                         f"User: `{ctx.author.name}#{ctx.author.discriminator}`\n"
-                                         f"Server: `{ctx.guild.name}`\n"
+                                         f"Message: `{ctx.message.content}` | `{ctx.message.id}`\n"
+                                         f"User: `{ctx.author.name}#{ctx.author.discriminator}` | `{ctx.author.id}`\n"
+                                         f"Server: `{ctx.guild.name}` | `{ctx.guild.id}`\n"
                                          f"```py\n{''.join(final_trace)}```")
 
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -103,6 +104,41 @@ class Errors(commands.Cog):
         except discord.NotFound:
             pass
         await ctx.send(embed=embed)
+
+    async def on_error(self, event, error, *args, **_):
+        """Handle event errors"""
+        if isinstance(error, BaseException):
+            trace = traceback.format_exception(type(error), error, error.__traceback__)
+        else:
+            args = (error, *args)
+            trace = traceback.format_exception(*sys.exc_info())
+        if event == "on_message":
+            message = args[0]
+            info = (f"User: `{message.author.name}#{message.author.discriminator}` | `{message.author.id}`\n"
+                    f"Server: `{message.guild.name}` | `{message.guild.id}`\n"
+                    f"Message ID: `{message.id}`")
+            await message.reply("An unknown error has occurred")
+        elif event in ("on_button_click", "on_select_option"):
+            interaction = args[0]
+            info = (f"User: `{interaction.user.name}#{interaction.user.discriminator}` | `{interaction.user.id}`\n"
+                    f"Server: `{interaction.guild.name}` | `{interaction.guild.id}`\n"
+                    f"Custom ID: `{interaction.custom_id}`\n"
+                    f"Message ID: `{interaction.message.id}`")
+            await interaction.respond(content="An unknown error has occurred")
+        else:
+            info = f"**Unknown event**\nArgs: `{args!r}`"
+
+        hidden = 0
+        final_trace = []
+        for frame in trace:
+            if "site-packages" in frame or "dist-packages" in frame:
+                hidden += 1
+                continue
+            if hidden > 0:
+                final_trace.append(f"\n{hidden} library frames hidden\n\n")
+                hidden = 0
+            final_trace.append(frame.replace(os.getcwd(), ""))
+        await self.bot.log.exception(f"Exception in event: `{event}`\n{info}\n```py\n{''.join(final_trace)}```")
 
 
 class Redirect:
