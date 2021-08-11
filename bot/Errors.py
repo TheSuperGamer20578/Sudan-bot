@@ -62,7 +62,7 @@ class Errors(commands.Cog):
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
                                   colour=RED)
 
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (commands.BadArgument, AssertionError)):
             embed = discord.Embed(title=f"Invalid argument for {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.CommandOnCooldown):
