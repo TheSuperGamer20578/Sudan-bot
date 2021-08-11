@@ -10,6 +10,7 @@ from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
 from _Util import GREEN, RED, Checks, BLUE
+from _Logger import LEVELS
 
 auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
@@ -83,6 +84,14 @@ class Dev(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
+
+    @commands.command(hidden=True)
+    @commands.check(Checks.trusted)
+    async def loglevel(self, ctx, level):
+        """Changes the log level"""
+        assert level in LEVELS
+        await self.bot.log.change_level(level, ctx.author.name)
+        await ctx.send(f"Set log level to {level}")
 
     @commands.command(hidden=True)
     @commands.check(Checks.trusted)
