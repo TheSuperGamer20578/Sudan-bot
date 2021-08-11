@@ -2,10 +2,8 @@
 Automatically updates the bot when there are changes to master
 """
 import time
-import os
 from subprocess import call
 
-import discord
 from discord.ext import commands
 
 from _Util import Checks
@@ -25,11 +23,13 @@ class Update(commands.Cog):
         """
         if message.channel.id == 761747494693765151 and message.embeds:
             if " new commit" in message.embeds[0].title and message.embeds[0].title.startswith("[Sudan-bot:master] "):
-                embed = discord.Embed(title="Update detected pulling...")
-                await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
+                await self.bot.log.info("Updating...")
+                await self.bot.log.public("Update detected, pulling...")
+                start_time = time.time()
                 call(["git", "pull"])
-                embed = discord.Embed(title="Restarting/stopping...")
-                await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
+                await self.bot.log.debug(f"Update took {time.time() - start_time}ms")
+                await self.bot.log.error("Restarting after update...")
+                await self.bot.log.public("Restarting...")
                 await self.bot.close()
 
     @commands.command()
@@ -38,22 +38,20 @@ class Update(commands.Cog):
         """
         Forces the bot to download an update
         """
+        msg = await ctx.send("Updating...")
+        await self.bot.log.info(f"Update started by {ctx.author.name}")
         start_time = time.time()
-        msg = await ctx.send("updating...")
-        embed = discord.Embed(title="Pulling update...")
-        await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
         call(["git", "pull"])
-        await msg.edit(f"updating... DONE!(took {time.time()-start_time}ms)")
+        await self.bot.log.debug(f"Update took {time.time() - start_time}ms")
+        await msg.edit(f"Updating... DONE!(took {time.time()-start_time}ms)")
 
     @commands.command()
     @commands.check(Checks.trusted)
-    async def stopbot(self, ctx):
-        """
-        Stops the bot
-        """
-        await ctx.send("stopping...")
-        embed = discord.Embed(title="Restarting/stopping...")
-        await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
+    async def restartbot(self, ctx):
+        """Restarts the bot"""
+        await ctx.send("Restarting...")
+        await self.bot.log.error(f"Restart initiated by {ctx.author.name}")
+        await self.bot.log.public("Restarting...")
         await self.bot.close()
 
 

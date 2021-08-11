@@ -87,6 +87,7 @@ class Core(commands.Cog):
             embed = discord.Embed(title=f"\"{extension}\" was not  found", colour=RED)
         else:
             embed = discord.Embed(title=f"\"{extension}\" was successfully loaded!", colour=GREEN)
+            await self.bot.log.info(f"{ctx.author.name} loaded {extension}")
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -103,6 +104,7 @@ class Core(commands.Cog):
             embed = discord.Embed(title=f"The cog \"{extension}\" is not loaded", colour=RED)
         else:
             embed = discord.Embed(title=f"The cog \"{extension}\" was successfully unloaded!", colour=GREEN)
+            await self.bot.log.info(f"{ctx.author.name} unloaded {extension}")
         embed.set_author(name=ctx.author.nick, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -147,9 +149,11 @@ class Core(commands.Cog):
         if await self.bot.db.fetchval("SELECT trusted FROM users WHERE id = $1", user.id):
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is no longer trusted")
             await self.bot.db.execute("UPDATE users SET trusted = FALSE WHERE id = $1", user.id)
+            await self.bot.log.warning(f"**:warning: <@{self.bot.owner_id}> {ctx.author.name} made {user.name} not trusted!!! :warning:**")
         else:
             embed = discord.Embed(title=f"{user.nick if user.nick else user.name} is now trusted")
             await self.bot.db.execute("UPDATE users SET trusted = TRUE WHERE id = $1", user.id)
+            await self.bot.log.warning(f"**:warning: <@{self.bot.owner_id}> {ctx.author.name} made {user.name} trusted!!! :warning:**")
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
