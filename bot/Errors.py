@@ -124,7 +124,10 @@ class Errors(commands.Cog):
                     f"Server: `{interaction.guild.name}` | `{interaction.guild.id}`\n"
                     f"Custom ID: `{interaction.custom_id}`\n"
                     f"Message ID: `{interaction.message.id}`")
-            await interaction.respond(content="An unknown error has occurred")
+            try:
+            	await interaction.respond(content="An unknown error has occurred")
+            except discord.NotFound:
+                pass
         else:
             info = f"**Unknown event**\nArgs: `{args!r}`"
 
