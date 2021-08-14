@@ -125,7 +125,7 @@ class Errors(commands.Cog):
                     f"Custom ID: `{interaction.custom_id}`\n"
                     f"Message ID: `{interaction.message.id}`")
             try:
-            	await interaction.respond(content="An unknown error has occurred")
+                await interaction.respond(content="An unknown error has occurred")
             except discord.NotFound:
                 pass
         else:
@@ -154,6 +154,9 @@ class Redirect:
         if len(text.strip()) == 0:
             return
         self.method(text.strip())
+
+    def flush(self):
+        """Does nothing, exists to stop bot from crashing"""
 
 
 def setup(bot):
