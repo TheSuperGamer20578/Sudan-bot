@@ -1,4 +1,3 @@
-// TODO: Add logging stuff
 {
   "name": "sudan-bot",
   "logo": "https://cdn.discordapp.com/attachments/743718127207972867/831044575354683402/nation_flag.jpg",
@@ -30,8 +29,17 @@
       "value": "25",
       "required": false
     },
+    "PUBLIC_LOG_CHANNEL": {
+      "description": "Channel(id) to log public stuff"
+    },
     "LOG_CHANNEL": {
-      "description": "The ID of the channel you want the bot to use to say that it is online"
+      "description": "Channel(id) to log stuff"
+    },
+    "ERROR_CHANNEL": {
+      "description": "Channel(id) to log errors"
+    },
+    "LOG_LEVEL": {
+      "description": "Default log level\n 0: none\n 1: error\n 2: warning\n 3: info\n 4: debug"
     },
     "AUTOLOAD_COGS": {
       "description": "Comma seperated list of cogs to load when the bot starts",
