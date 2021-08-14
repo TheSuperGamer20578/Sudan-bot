@@ -18,7 +18,10 @@ class Checks:
         Check to see if the user is trusted
         """
         async with (bot if bot is not None else ctx.bot).pool.acquire() as db:
-            return await db.fetchval("SELECT trusted FROM users WHERE id = $1", ctx.author.id)
+            trusted = await db.fetchval("SELECT trusted FROM users WHERE id = $1", ctx.author.id)
+            if trusted:
+                await ctx.bot.log.warning(f"`{ctx.author.name}#{ctx.author.discriminator}` passed the trusted check for `{ctx.command}` message: `{ctx.message.content}`")
+            return trusted
 
     @staticmethod
     async def mod(ctx, bot=None):

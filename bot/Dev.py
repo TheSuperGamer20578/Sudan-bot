@@ -10,6 +10,7 @@ from discord.ext import commands
 from requests.auth import HTTPBasicAuth
 
 from _Util import GREEN, RED, Checks, BLUE
+from _Logger import LEVELS
 
 auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
@@ -34,14 +35,6 @@ class Dev(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """
-        Sends message when the bot is ready
-        """
-        embed = discord.Embed(title="Bot online!")
-        await self.bot.get_channel(int(os.getenv("LOG_CHANNEL"))).send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
@@ -79,7 +72,6 @@ class Dev(commands.Cog):
         await ctx.message.delete()
         await ctx.send("Make a suggestion: https://github.com/TheSuperGamer20578/Sudan-bot/issues/new?labels=Enhancement&template=feature_request.md")
 
-
     @commands.command(hidden=True)
     @commands.check(Checks.trusted)
     async def leaveserver(self, ctx, guild: int):
@@ -92,6 +84,15 @@ class Dev(commands.Cog):
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
+
+    @commands.command(hidden=True)
+    @commands.check(Checks.trusted)
+    async def loglevel(self, ctx, level):
+        """Changes the log level"""
+        level = level.lower()
+        assert level in LEVELS
+        await self.bot.log.change_level(LEVELS[level], ctx.author.name)
+        await ctx.send(f"Set log level to {level.upper()}")
 
     @commands.command(hidden=True)
     @commands.check(Checks.trusted)
@@ -116,23 +117,36 @@ class Dev(commands.Cog):
         }
         exec(compile(parsed, filename="<ast>", mode="exec"), env)
         result = (await eval(f"{fn_name}()", env))
-        embed = (discord.Embed(title="Evaluation", colour=BLUE)
-                 .set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-                 .add_field(name="Input", value=f"```python\n{ecmd}\n```")
-                 .add_field(name="Output", value=f"```python\n{result}\n```"))
+        embed = discord.Embed(title="Evaluation", colour=BLUE)
+        embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
+        embed.add_field(name="Input", value=f"```python\n{ecmd}\n```", inline=False)
+        embed.add_field(name="Output", value=f"```python\n{result}\n```", inline=False)
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
     @eval.error
     async def eval_error(self, ctx, error):
         """
-        Handles errors in eval and stops them from going to Opsgenie
+        Handles errors in eval
         """
-        cmd = ctx.message.content.split(" ", maxsplit=1)[1].strip("` ")
-        trace = "\n".join(traceback.format_exception(type(error), error, error.__traceback__))
-        embed = (discord.Embed(title="Evaluation", description=f"**Error**\n```python\n{trace}\n```", colour=RED)
-                 .set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
-                 .add_field(name="Input", value=f"```python\n{cmd}\n```"))
+        if isinstance(error, commands.CheckFailure):
+            embed = discord.Embed(title="You do not have permission to use eval", colour=RED)
+        else:
+            cmd = ctx.message.content.split(" ", maxsplit=1)[1].strip("` ")
+            trace = traceback.format_exception(type(error), error, error.__traceback__)
+            hidden = 0
+            final_trace = []
+            for frame in trace:
+                if "site-packages" in frame or "dist-packages" in frame:
+                    hidden += 1
+                    continue
+                if hidden > 0:
+                    final_trace.append(f"\n{hidden} library frames hidden\n\n")
+                    hidden = 0
+                final_trace.append(frame.replace(os.getcwd(), ""))
+            embed = discord.Embed(title="Evaluation", description=f"**Error**\n```python\n{final_trace}```", colour=RED)
+            embed.add_field(name="Input", value=f"```python\n{cmd}\n```", inline=False)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
 

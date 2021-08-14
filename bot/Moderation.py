@@ -560,7 +560,7 @@ class Moderation(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         """Check if a word that is not to be spoken has been spoken"""
-        if isinstance(message.channel, discord.DMChannel):
+        if isinstance(message.channel, discord.DMChannel) or isinstance(message.author, discord.User):
             return
         message.bot = self.bot
         if await Checks.admin(message) or await Checks.mod(message):

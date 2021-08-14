@@ -1,21 +1,16 @@
 """
 Handles command errors
 """
-import sys
 import traceback
-import asyncio
 import os
-from json import dumps
-import requests
+import sys
+import asyncio
 
 import discord
 from discord.ext import commands
 
-from _Util import RED, BLUE
-
-AUTH = {"Authorization": f"GenieKey {os.getenv('OPSGENIE_TOKEN')}"}
-
-OPS = "https://api.eu.opsgenie.com/v2/"
+from _Util import RED
+from Moderation import human_delta
 
 
 class Errors(commands.Cog):
@@ -24,6 +19,17 @@ class Errors(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        bot.on_error = self.on_error
+        if bot.is_ready():
+            sys.stdout = Redirect(bot.log.stdout)
+            sys.stderr = Redirect(bot.log.stderr)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Redirects stdout and stderr when bot is ready"""
+        await asyncio.sleep(1)
+        sys.stdout = Redirect(self.bot.log.stdout)
+        sys.stderr = Redirect(self.bot.log.stderr)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -33,11 +39,6 @@ class Errors(commands.Cog):
         # pylint: disable=too-many-statements
         if hasattr(ctx.command, "on_error"):
             return
-
-        # idk what this does but it might be important but pycharm doesnt like it
-        # cog = ctx.cog
-        # if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
-        #     return
 
         error = getattr(error, "original", error)
 
@@ -62,24 +63,11 @@ class Errors(commands.Cog):
             embed = discord.Embed(title=f"{ctx.message.content.split(' ')[0][1:]} doesnt exist or isn't loaded",
                                   colour=RED)
 
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, (commands.BadArgument, AssertionError)):
             embed = discord.Embed(title=f"Invalid argument for {ctx.command}", colour=RED)
 
         elif isinstance(error, commands.CommandOnCooldown):
-            unit = "seconds"
             time = error.retry_after
-            if time >= 60:
-                time /= 60
-                unit = "minutes"
-                if time >= 60:
-                    time /= 60
-                    unit = "hours"
-                    if time >= 24:
-                        time /= 24
-                        unit = "days"
-                        if time >= 7:
-                            time /= 7
-                            unit = "weeks"
             types = {
                 commands.BucketType.default: "global",
                 commands.BucketType.guild: "server",
@@ -89,21 +77,26 @@ class Errors(commands.Cog):
                 commands.BucketType.role: "role",
                 commands.BucketType.user: "user"
             }
-            embed = discord.Embed(title=f"{ctx.command} is on {types[error.cooldown.type]} cooldown for {time:,.2f} {unit}", colour=RED)
+            embed = discord.Embed(title=f"{ctx.command} is on {types[error.cooldown.type]} cooldown for {human_delta(time)}", colour=RED)
 
         else:
-            embed = discord.Embed(title="You caused an error!", colour=RED)
+            embed = discord.Embed(title="An unexpected error has occurred", colour=RED)
             trace = traceback.format_exception(type(error), error, error.__traceback__)
-            resp = requests.post(OPS+"alerts", dumps({
-                "message": f"Error in {ctx.command}",
-                "description": "\n".join(trace),
-                "alias": f"{type(error)} in {ctx.command} with {len(ctx.args)} arguments",
-                "entity": "Sudan bot",
-                "source": f"{ctx.guild.name} #{ctx.channel.name}",
-                "details": {"user": f"{ctx.author.name}({ctx.author.nick})", "message": ctx.message.content}
-            }), headers={**AUTH, "Content-Type": "application/json"})
-            if resp.status_code != 202:
-                sys.stderr.write(str(resp.content)+"\n")
+            hidden = 0
+            final_trace = []
+            for frame in trace:
+                if "site-packages" in frame or "dist-packages" in frame:
+                    hidden += 1
+                    continue
+                if hidden > 0:
+                    final_trace.append(f"\n{hidden} library frames hidden\n\n")
+                    hidden = 0
+                final_trace.append(frame.replace(os.getcwd(), ""))
+            await self.bot.log.exception(f"Exception in command: `{ctx.command}`\n"
+                                         f"Message: `{ctx.message.content}` | `{ctx.message.id}`\n"
+                                         f"User: `{ctx.author.name}#{ctx.author.discriminator}` | `{ctx.author.id}`\n"
+                                         f"Server: `{ctx.guild.name}` | `{ctx.guild.id}`\n"
+                                         f"```py\n{''.join(final_trace)}```")
 
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         try:
@@ -112,28 +105,58 @@ class Errors(commands.Cog):
             pass
         await ctx.send(embed=embed)
 
+    async def on_error(self, event, error, *args, **_):
+        """Handle event errors"""
+        if isinstance(error, BaseException):
+            trace = traceback.format_exception(type(error), error, error.__traceback__)
+        else:
+            args = (error, *args)
+            trace = traceback.format_exception(*sys.exc_info())
+        if event == "on_message":
+            message = args[0]
+            info = (f"User: `{message.author.name}#{message.author.discriminator}` | `{message.author.id}`\n"
+                    f"Server: `{message.guild.name}` | `{message.guild.id}`\n"
+                    f"Message ID: `{message.id}`")
+            await message.reply("An unknown error has occurred")
+        elif event in ("on_button_click", "on_select_option"):
+            interaction = args[0]
+            info = (f"User: `{interaction.user.name}#{interaction.user.discriminator}` | `{interaction.user.id}`\n"
+                    f"Server: `{interaction.guild.name}` | `{interaction.guild.id}`\n"
+                    f"Custom ID: `{interaction.custom_id}`\n"
+                    f"Message ID: `{interaction.message.id}`")
+            try:
+                await interaction.respond(content="An unknown error has occurred")
+            except discord.NotFound:
+                pass
+        else:
+            info = f"**Unknown event**\nArgs: `{args!r}`"
 
-class Log:
-    """
-    An attempt to redirect stout and stderr to discord it didnt work i might be able to make it work and goto Opsgenie
-    """
-    colour = {"error": RED, "info": BLUE}
-    title = {"error": "Error(non-command)", "info": "Info"}
+        hidden = 0
+        final_trace = []
+        for frame in trace:
+            if "site-packages" in frame or "dist-packages" in frame:
+                hidden += 1
+                continue
+            if hidden > 0:
+                final_trace.append(f"\n{hidden} library frames hidden\n\n")
+                hidden = 0
+            final_trace.append(frame.replace(os.getcwd(), ""))
+        await self.bot.log.exception(f"Exception in event: `{event}`\n{info}\n```py\n{''.join(final_trace)}```")
 
-    def __init__(self, bot, t):
-        self.type = t
-        self.bot = bot
 
-    def write(self, buf):
-        """
-        The part that was supposed to send stuff to discord
-        """
-        text = buf.rstrip()
-        colour = self.colour[self.type]
-        title = self.title[self.type]
-        embed = discord.Embed(title=title, description=f"```python\n{text}\n```", colour=colour)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.bot.get_channel(753495157332246548).send(embed=embed))
+class Redirect:
+    """Redirects stdout and stderr to discord"""
+    def __init__(self, method):
+        self.method = method
+
+    def write(self, text):
+        """Logs error or info"""
+        if len(text.strip()) == 0:
+            return
+        self.method(text.strip())
+
+    def flush(self):
+        """Does nothing, exists to stop bot from crashing"""
 
 
 def setup(bot):
@@ -141,5 +164,3 @@ def setup(bot):
     Initialize cog
     """
     bot.add_cog(Errors(bot))
-    # sys.stdout = Log(bot, "info")
-    # sys.stderr = Log(bot, "error")
