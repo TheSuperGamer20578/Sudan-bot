@@ -89,9 +89,10 @@ class Dev(commands.Cog):
     @commands.check(Checks.trusted)
     async def loglevel(self, ctx, level):
         """Changes the log level"""
+        level = level.lower()
         assert level in LEVELS
-        await self.bot.log.change_level(level, ctx.author.name)
-        await ctx.send(f"Set log level to {level}")
+        await self.bot.log.change_level(LEVELS[level], ctx.author.name)
+        await ctx.send(f"Set log level to {level.upper()}")
 
     @commands.command(hidden=True)
     @commands.check(Checks.trusted)
