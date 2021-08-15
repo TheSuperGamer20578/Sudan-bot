@@ -6,7 +6,7 @@ import datetime
 
 import discord
 from discord.ext import commands, tasks
-from discord_components import DiscordComponents, Button, ButtonStyle
+from discord_components import Button, ButtonStyle
 
 from _Util import Checks, RED, GREEN
 
@@ -246,7 +246,6 @@ async def unpunish(bot, incident):
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        DiscordComponents(bot)
         self.auto_unpunish.start()  # pylint: disable=no-member
 
     @commands.command(aliases=["pu"])

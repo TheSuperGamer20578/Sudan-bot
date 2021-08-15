@@ -7,7 +7,7 @@ from random import shuffle
 
 import discord
 from discord.ext import commands
-from discord_components import DiscordComponents, Select, SelectOption, Button, ButtonStyle
+from discord_components import Select, SelectOption, Button, ButtonStyle
 
 from _Util import Checks, GREEN, RED
 
@@ -34,7 +34,6 @@ class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        DiscordComponents(bot)
 
     @commands.command()
     async def lmgtfy(self, ctx, *, query):
