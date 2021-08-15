@@ -229,9 +229,10 @@ class Fun(commands.Cog):
                 answer = await db.fetchrow("SELECT answer, correct FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id)
                 if answer is None:
                     await interaction.respond(content="You have not submitted an answer yet!")
-                info = await db.fetchrow("SELECT COUNT(CASE correct WHEN TRUE THEN 1 ELSE NULL END) as correct, COUNT(*) AS total FROM trivia WHERE id = $1", interaction.message.id)
+                    return
+                info = await db.fetchrow("SELECT COUNT(CASE correct WHEN TRUE THEN 1 END) as correct, COUNT(*) AS total FROM trivia WHERE id = $1", interaction.message.id)
             await interaction.respond(content=f"Your answer was {'correct' if answer['correct'] else 'incorrect'}: `{answer['answer']}`\n"
-                                      f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['total']/info['correct'] * 100:.1f}%)")
+                                      f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['correct']/info['total'] * 100:.1f}%)")
         else:
             raise NameError(f"No handler writen for {interaction.custom_id!r}")
 
