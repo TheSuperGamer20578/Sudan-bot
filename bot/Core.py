@@ -10,6 +10,7 @@ import discord
 import asyncpg
 from discord.ext import commands
 from dotenv import load_dotenv
+from discord_components import DiscordComponents
 
 from _Util import Checks, RED, GREEN, BLUE
 from _Logger import Logger
@@ -187,6 +188,8 @@ class Core(commands.Cog):
         """
         Sets the status of the bot, instantiates the logger and adds stuff to the db
         """
+        DiscordComponents(self.bot)
+
         public_log_channel = self.bot.get_channel(int(os.getenv("PUBLIC_LOG_CHANNEL")))
         log_channel = self.bot.get_channel(int(os.getenv("LOG_CHANNEL")))
         error_channel = self.bot.get_channel(int(os.getenv("ERROR_CHANNEL")))

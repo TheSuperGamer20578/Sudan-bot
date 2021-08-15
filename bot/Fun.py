@@ -7,7 +7,7 @@ from random import shuffle
 
 import discord
 from discord.ext import commands
-from discord_components import DiscordComponents, Select, SelectOption, Button, ButtonStyle
+from discord_components import Select, SelectOption, Button, ButtonStyle
 
 from _Util import Checks, GREEN, RED
 
@@ -34,7 +34,6 @@ class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        DiscordComponents(bot)
 
     @commands.command()
     async def lmgtfy(self, ctx, *, query):
@@ -229,9 +228,10 @@ class Fun(commands.Cog):
                 answer = await db.fetchrow("SELECT answer, correct FROM trivia WHERE id = $1 AND member = $2", interaction.message.id, interaction.user.id)
                 if answer is None:
                     await interaction.respond(content="You have not submitted an answer yet!")
-                info = await db.fetchrow("SELECT COUNT(CASE correct WHEN TRUE THEN 1 ELSE NULL END) as correct, COUNT(*) AS total FROM trivia WHERE id = $1", interaction.message.id)
+                    return
+                info = await db.fetchrow("SELECT COUNT(CASE correct WHEN TRUE THEN 1 END) as correct, COUNT(*) AS total FROM trivia WHERE id = $1", interaction.message.id)
             await interaction.respond(content=f"Your answer was {'correct' if answer['correct'] else 'incorrect'}: `{answer['answer']}`\n"
-                                      f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['total']/info['correct'] * 100:.1f}%)")
+                                      f"Out of {info['total']} who answered, {info['correct']} answered correctly ({info['correct']/info['total'] * 100:.1f}%)")
         else:
             raise NameError(f"No handler writen for {interaction.custom_id!r}")
 

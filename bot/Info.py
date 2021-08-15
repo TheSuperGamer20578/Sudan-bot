@@ -27,6 +27,12 @@ class Info(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        if bot.is_ready():
+            self.update_townless.start()  # pylint: disable=no-member
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Starts townless updating if bot not ready when cog loaded"""
         self.update_townless.start()  # pylint: disable=no-member
 
     @commands.command(aliases=["t"])
