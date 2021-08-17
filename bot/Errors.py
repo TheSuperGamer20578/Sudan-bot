@@ -105,7 +105,7 @@ class Errors(commands.Cog):
             pass
         await ctx.send(embed=embed)
 
-    async def on_error(self, event, error, *args, **_):
+    async def on_error(self, event, *args, error=None, **_):
         """Handle event errors"""
         if isinstance(error, BaseException):
             trace = traceback.format_exception(type(error), error, error.__traceback__)
