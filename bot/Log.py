@@ -58,7 +58,7 @@ class Log(commands.Cog):
         for invite in invites_before_join:
             if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
                 embed = discord.Embed(title="Member joined", description=f"{member.mention}({member.name}) was invited by {invite.inviter.mention}({invite.inviter}) using invite https://discord.gg/{invite.code}")
-                for channel in channels
+                for channel in channels:
                     await self.bot.get_channel(channel["id"]).send(embed=embed)
                 self.invites[member.guild.id] = invites_after_join
                 return
