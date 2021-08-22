@@ -3,17 +3,13 @@ Several tools to help with development and to track growth
 """
 import ast
 import traceback
-import os
 
 import discord
 from discord.ext import commands
-from requests.auth import HTTPBasicAuth
 
 from _Util import GREEN, RED, Checks, BLUE
 from _Logger import LEVELS
 from Errors import format_traceback
-
-auth = HTTPBasicAuth(os.getenv("JIRA_EMAIL"), os.getenv("JIRA_TOKEN"))
 
 
 def insert_returns(body):
