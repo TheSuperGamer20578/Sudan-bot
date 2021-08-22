@@ -49,14 +49,16 @@ class Log(commands.Cog):
         """
         Finds who invited a user
         """
-        if await self.bot.db.fetchval("SELECT count(*) FROM channels WHERE guild_id = $1 AND log_type = 'invites'") <= 0:
+        async with self.bot.pool.acquire() as db:
+            channels =  await db.fetchval("SELECT count(*) FROM channels WHERE guild_id = $1 AND log_type = 'invites'")
+        if len(channels) == 0:
             return
         invites_before_join = self.invites[member.guild.id]
         invites_after_join = await member.guild.invites()
         for invite in invites_before_join:
             if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
                 embed = discord.Embed(title="Member joined", description=f"{member.mention}({member.name}) was invited by {invite.inviter.mention}({invite.inviter}) using invite https://discord.gg/{invite.code}")
-                for channel in await self.bot.db.fetch("SELECT id FROM channels WHERE guild_id = $1 AND log_type = 'invites'", member.guild.id):
+                for channel in channels:
                     await self.bot.get_channel(channel["id"]).send(embed=embed)
                 self.invites[member.guild.id] = invites_after_join
                 return

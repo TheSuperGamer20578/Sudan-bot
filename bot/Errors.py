@@ -13,6 +13,21 @@ from _Util import RED
 from Moderation import human_delta
 
 
+def format_traceback(trace):
+    """Does some formatting on a traceback"""
+    hidden = 0
+    final_trace = []
+    for frame in trace:
+        if "site-packages" in frame or "dist-packages" in frame:
+            hidden += 1
+            continue
+        if hidden > 0:
+            final_trace.append(f"\n{hidden} library frames hidden\n\n")
+            hidden = 0
+        final_trace.append(frame.replace(os.getcwd(), ""))
+    return "".join(final_trace)
+
+
 class Errors(commands.Cog):
     """
     Error handling cog
@@ -81,22 +96,12 @@ class Errors(commands.Cog):
 
         else:
             embed = discord.Embed(title="An unexpected error has occurred", colour=RED)
-            trace = traceback.format_exception(type(error), error, error.__traceback__)
-            hidden = 0
-            final_trace = []
-            for frame in trace:
-                if "site-packages" in frame or "dist-packages" in frame:
-                    hidden += 1
-                    continue
-                if hidden > 0:
-                    final_trace.append(f"\n{hidden} library frames hidden\n\n")
-                    hidden = 0
-                final_trace.append(frame.replace(os.getcwd(), ""))
+            trace = format_traceback(traceback.format_exception(type(error), error, error.__traceback__))
             await self.bot.log.exception(f"Exception in command: `{ctx.command}`\n"
                                          f"Message: `{ctx.message.content}` | `{ctx.message.id}`\n"
                                          f"User: `{ctx.author.name}#{ctx.author.discriminator}` | `{ctx.author.id}`\n"
                                          f"Server: `{ctx.guild.name}` | `{ctx.guild.id}`\n"
-                                         f"```py\n{''.join(final_trace)}```")
+                                         f"```py\n{trace}```")
 
         embed.set_author(name=ctx.author.nick if ctx.author.nick else ctx.author.name, icon_url=ctx.author.avatar_url)
         try:
@@ -105,13 +110,14 @@ class Errors(commands.Cog):
             pass
         await ctx.send(embed=embed)
 
-    async def on_error(self, event, error, *args, **_):
+    async def on_error(self, event, *args, error=None, **_):
         """Handle event errors"""
         if isinstance(error, BaseException):
             trace = traceback.format_exception(type(error), error, error.__traceback__)
         else:
             args = (error, *args)
             trace = traceback.format_exception(*sys.exc_info())
+        trace = format_traceback(trace)
         if event == "on_message":
             message = args[0]
             info = (f"User: `{message.author.name}#{message.author.discriminator}` | `{message.author.id}`\n"
@@ -130,18 +136,7 @@ class Errors(commands.Cog):
                 pass
         else:
             info = f"**Unknown event**\nArgs: `{args!r}`"
-
-        hidden = 0
-        final_trace = []
-        for frame in trace:
-            if "site-packages" in frame or "dist-packages" in frame:
-                hidden += 1
-                continue
-            if hidden > 0:
-                final_trace.append(f"\n{hidden} library frames hidden\n\n")
-                hidden = 0
-            final_trace.append(frame.replace(os.getcwd(), ""))
-        await self.bot.log.exception(f"Exception in event: `{event}`\n{info}\n```py\n{''.join(final_trace)}```")
+        await self.bot.log.exception(f"Exception in event: `{event}`\n{info}\n```py\n{trace}```")
 
 
 class Redirect:
