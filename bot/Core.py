@@ -246,6 +246,11 @@ class Core(commands.Cog):
         await self.bot.log.info("Bot online")
         await self.bot.log.public("Bot online!")
 
+    @commands.Cog.listener()
+    async def on_resumed(self):
+        """Logs an error when reconnecting to discord"""
+        await self.bot.log.error("Reconnected to discord")
+
     @commands.command()
     @commands.check(Checks.slash)
     async def github(self, ctx):
