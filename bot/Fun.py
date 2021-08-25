@@ -286,6 +286,7 @@ class Fun(commands.Cog):
     async def tictactoe(self, ctx, user: discord.Member, bet: int = 0, time: parse_time = 60, large: bool = False):
         """Tic tac toe"""
         assert 5 <= time <= 600
+        assert 0 <= bet <= 1000000
         await ctx.message.delete()
         message = await ctx.send(f"{user.mention} You have been invited to play {'large ' if large else ''}tic tac toe with a {human_delta(time)} time limit for {bet}{GOLD} by {ctx.author.mention}",
                                  components=[Button(label="Join", style=ButtonStyle.green)])
