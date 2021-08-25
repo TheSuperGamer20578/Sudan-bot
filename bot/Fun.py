@@ -2,14 +2,16 @@
 Contains fun stuff
 """
 import re
+import asyncio
 from os import getenv
-from random import shuffle
+from random import shuffle, choice
 
 import discord
 from discord.ext import commands
 from discord_components import Select, SelectOption, Button, ButtonStyle
 
 from _Util import Checks, GREEN, RED, BLUE
+from Moderation import parse_time, human_delta
 
 GOLD = getenv("GOLD_EMOJI")
 BAMBOO = getenv("BAMBOO_EMOJI")
@@ -28,6 +30,13 @@ async def check_trivia_role(ctx, bot=None):
             if role in [r.id for r in ctx.author.roles]:
                 return True
         return False
+
+
+async def transfer_gold(bot, user_a, user_b, amount):
+    """Transfers gold from one user to another"""
+    async with bot.pool.acquire() as db:
+        await db.execute("UPDATE users SET gold = gold - $2 WHERE id = $1", user_a.id, amount)
+        await db.execute("UPDATE users SET gold = gold + $2 WHERE id = $1", user_b.id, amount)
 
 
 class Fun(commands.Cog):
@@ -215,6 +224,99 @@ class Fun(commands.Cog):
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.message.delete()
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def tictactoe(self, ctx, user: discord.Member, bet: int = 0, time: parse_time = 60, large: bool = False):
+        """Tic tac toe"""
+        assert 5 <= time <= 600
+        await ctx.message.delete()
+        message = await ctx.send(f"{user.mention} You have been invited to play {'large ' if large else ''}tic tac toe with a {human_delta(time)} time limit for {bet}{GOLD} by {ctx.author.mention}",
+                                 components=[Button(label="Join", style=ButtonStyle.green)])
+        try:
+            while True:
+                interaction = await self.bot.wait_for("button_click", timeout=5 * 60, check=lambda i: i.message == message)
+                if interaction.user != user:
+                    await interaction.respond(content="Only the person who was invited can accept!")
+                    continue
+                await transfer_gold(self.bot, ctx.author, self.bot.user, bet)
+                await transfer_gold(self.bot, user, self.bot.user, bet)
+                await interaction.respond(type=6)
+                break
+        except asyncio.exceptions.TimeoutError:
+            await message.edit(f"~~{user.mention} You have been invited to play tic tac toe for {bet}{GOLD} by {ctx.author.mention}~~\n**Invite expired**", components=[])
+            return
+
+        grid = [[None] * (5 if large else 3) for _ in range(5 if large else 3)]
+        turn = choice((True, False))
+        styles = {
+            True: ButtonStyle.blue,
+            False: ButtonStyle.red,
+            None: ButtonStyle.grey
+        }
+        users = {
+            True: ctx.author,
+            False: user
+        }
+
+        def msg(active, message=None):
+            if message is None:
+                message = f"It's {users[turn].mention}'s turn"
+            embed = discord.Embed(title="Tic tac toe", description=f"{message}\n:blue_square:{ctx.author.mention}\n:red_square:{user.mention}", colour=BLUE)
+            embed.set_footer(text=f"{bet}{GOLD}")
+            components = [
+                [Button(label="\N{zero width space}", style=styles[button], disabled=not (active and button is None) or (large and row_number == 2 == column),
+                        custom_id=f"{row_number},{column}") for column, button in enumerate(row)] for row_number, row in enumerate(grid)]
+            return {
+                "embed": embed,
+                "components": components
+            }
+
+        def check_space():
+            for row in grid:
+                yield None in row
+
+        def check_win(board):
+            if [True, True, True] in board:
+                return True
+            if [False, False, False] in board:
+                return False
+            if board[0][0] is not None and len(set(board[row][row] == board[0][0] for row in range(3))) == 1:
+                return board[0][0]
+            if board[0][0] is not None and len(set(board[-(row + 1)][row] == board[-1][0] for row in range(3))) == 1:
+                return board[-1][0]
+            for column in range(3):
+                if board[0][column] is not None and len(set(board[row][column] == board[0][column] for row in range(3))) == 1:
+                    return board[0][column]
+            return None
+
+        await message.edit("", **msg(True))
+        try:
+            while True:
+                interaction = await self.bot.wait_for("button_click", timeout=time, check=lambda i: i.message == message)
+                if interaction.user != users[turn]:
+                    await interaction.respond(content="It's not your turn!")
+                    continue
+                await interaction.respond(type=6)
+                button = interaction.custom_id.split(",")
+                grid[int(button[0])][int(button[1])] = turn
+                turn = not turn
+                if True not in check_space():
+                    await message.edit(**msg(False, "**It's a draw!**"))
+                    await transfer_gold(self.bot, self.bot.user, ctx.author, bet)
+                    await transfer_gold(self.bot, self.bot.user, user, bet)
+                    return
+                for offset_y in range(len(grid) - 2):
+                    for offset_x in range(len(grid[0]) - 2):
+                        winner = check_win([board[offset_x : offset_x+3] for board in grid[offset_y : offset_y+3]])
+                        if winner is not None:
+                            winner = users[winner]
+                            await message.edit(**msg(False, f"**{winner.mention} won!**"))
+                            await transfer_gold(self.bot, self.bot.user, winner, bet * 2)
+                            return
+                await message.edit(**msg(True))
+        except asyncio.exceptions.TimeoutError:
+            await message.edit(**msg(False, f"**{users[turn].mention} ran out of time!**"))
+            await transfer_gold(self.bot, self.bot.user, users[turn].mention, bet * 2)
 
     @commands.Cog.listener()
     async def on_select_option(self, interaction):
