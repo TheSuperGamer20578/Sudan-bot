@@ -291,7 +291,7 @@ class Fun(commands.Cog):
                                  components=[Button(label="Join", style=ButtonStyle.green)])
         try:
             while True:
-                interaction = await self.bot.wait_for("button_click", timeout=5 * 60, check=lambda i: i.message == message)
+                interaction = await self.bot.wait_for("button_click", timeout=30, check=lambda i: i.message == message)
                 if interaction.user != user:
                     await interaction.respond(content="Only the person who was invited can accept!")
                     continue
