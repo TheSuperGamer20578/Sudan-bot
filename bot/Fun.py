@@ -39,6 +39,24 @@ async def transfer_gold(bot, user_a, user_b, amount):
         await db.execute("UPDATE users SET gold = gold + $2 WHERE id = $1", user_b.id, amount)
 
 
+class NotEnoughCurrencyException(commands.CheckFailure):
+    """Error for when someone doesnt have enough currency"""
+    def __init__(self, currency, required):
+        self.currency = currency
+        self.required = required
+        super().__init__()
+
+
+def require_gold(amount):
+    """Check that the user invoking the command has enough gold"""
+    async def predicate(ctx):
+        async with ctx.bot.pool.acquire() as db:
+            if await db.fetchval("SELECT gold FROM users WHERE id = $1", ctx.author.id) < amount:
+                raise NotEnoughCurrencyException(GOLD, amount)
+            return True
+    return commands.check(predicate)
+
+
 class Fun(commands.Cog):
     """
     The main class for this file
@@ -264,6 +282,7 @@ class Fun(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @require_gold(-10)
     async def tictactoe(self, ctx, user: discord.Member, bet: int = 0, time: parse_time = 60, large: bool = False):
         """Tic tac toe"""
         assert 5 <= time <= 600

@@ -11,6 +11,7 @@ from discord.ext import commands
 
 from _Util import RED
 from Moderation import human_delta
+from Fun import NotEnoughCurrencyException
 
 
 def format_traceback(trace):
@@ -70,6 +71,9 @@ class Errors(commands.Cog):
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             embed = discord.Embed(title=f"{ctx.command} needs more arguments", colour=RED)
+
+        elif isinstance(error, NotEnoughCurrencyException):
+            embed = discord.Embed(title=f"You need to have at least {error.required}{error.currency} to use this command", colour=RED)
 
         elif isinstance(error, commands.errors.CheckFailure):
             embed = discord.Embed(title=f"You do not have permission to use {ctx.command}", colour=RED)
