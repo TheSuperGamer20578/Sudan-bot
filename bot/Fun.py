@@ -339,7 +339,7 @@ class Fun(commands.Cog):
                 await message.edit(**msg(True))
         except asyncio.exceptions.TimeoutError:
             await message.edit(**msg(False, f"**{users[turn].mention} ran out of time!**"))
-            await transfer_gold(self.bot, self.bot.user, users[turn].mention, bet * 2)
+            await transfer_gold(self.bot, self.bot.user, users[turn], bet * 2)
 
     @commands.Cog.listener()
     async def on_select_option(self, interaction):
