@@ -9,7 +9,10 @@ import discord
 from discord.ext import commands
 from discord_components import Select, SelectOption, Button, ButtonStyle
 
-from _Util import Checks, GREEN, RED
+from _Util import Checks, GREEN, RED, BLUE
+
+GOLD = getenv("GOLD_EMOJI")
+BAMBOO = getenv("BAMBOO_EMOJI")
 
 
 async def check_no_chain_forever(ctx):
@@ -199,6 +202,18 @@ class Fun(commands.Cog):
                 embed.add_field(name=tick + option[0], value="\n".join(f"<@{answer['member']}>" for answer in answers if answer["answer"] == option[0]))
             embed.set_footer(text=f"ID: {message}")
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["bal"])
+    async def balance(self, ctx, user: discord.Member = None):
+        """Shows a user's balance"""
+        if user is None:
+            user = ctx.author
+        async with self.bot.pool.acquire() as db:
+            data = await db.fetchrow("SELECT gold, bamboo FROM users WHERE id = $1", user.id)
+        embed = discord.Embed(title=f"{user.display_name}'s balance", description=f"Gold: {data['gold']}{GOLD}\nBamboo: {data['bamboo']}{BAMBOO}", colour=BLUE)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.message.delete()
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
