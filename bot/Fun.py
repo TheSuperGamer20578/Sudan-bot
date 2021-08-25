@@ -225,6 +225,29 @@ class Fun(commands.Cog):
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=["lb"])
+    async def leaderboard(self, ctx, no_mentions: bool = False):
+        """Shows a leaderboard"""
+        await ctx.message.delete()
+        async with self.bot.pool.acquire() as db:
+            gold = await db.fetch("SELECT id, gold FROM users ORDER BY gold DESC LIMIT 10")
+            bamboo = await db.fetch("SELECT id, bamboo FROM users ORDER BY bamboo DESC LIMIT 10")
+        embed = discord.Embed(title="Leaderboard", colour=BLUE)
+        for iteration, record in enumerate(gold):
+            record = dict(record)
+            user = self.bot.get_user(record["id"])
+            record["user"] = f"{user.name}#{user.discriminator}: " if no_mentions else user.mention
+            gold[iteration] = record
+        for iteration, record in enumerate(bamboo):
+            record = dict(record)
+            user = self.bot.get_user(record["id"])
+            record["user"] = f"{user.name}#{user.discriminator}: " if no_mentions else user.mention
+            bamboo[iteration] = record
+        embed.add_field(name="Gold", value="\n".join(f"{record['user']}{record['gold']}{GOLD}" for record in gold), inline=False)
+        embed.add_field(name="Bamboo", value="\n".join(f"{record['user']}{record['bamboo']}{BAMBOO}" for record in bamboo), inline=False)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
     @commands.command()
     async def tictactoe(self, ctx, user: discord.Member, bet: int = 0, time: parse_time = 60, large: bool = False):
         """Tic tac toe"""
