@@ -8,7 +8,8 @@ bad_words TEXT[] DEFAULT '{}', bad_words_warn_duration BIGINT DEFAULT 0,
 townless_message BIGINT, townless_channel BIGINT, trivia_roles BIGINT[]);
 
 CREATE TABLE users
-(id BIGINT PRIMARY KEY, trusted BOOLEAN, dad_mode BOOLEAN, mc_uuid TEXT);
+(id BIGINT PRIMARY KEY, trusted BOOLEAN, dad_mode BOOLEAN, mc_uuid TEXT,
+gold INT DEFAULT 0 NOT NULL, bamboo INT DEFAULT 0 NOT NULL);
 
 CREATE TABLE channels
 (id BIGINT PRIMARY KEY, guild_id BIGINT, chain TEXT,
