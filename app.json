@@ -12,8 +12,12 @@
     "PUBLIC_KEY": {
       "description": "The public key for the Discord API application"
     },
-    "OPSGENIE_TOKEN": {
-      "description": "The API token for Opsgenie, only required for the errors cog",
+    "GOLD_EMOJI": {
+      "description": "Gold emoji, only required for the Fun cog",
+      "required": false
+    },
+    "BAMBOO_EMOJI": {
+      "description": "Bamboo emoji, only required for the Fun cog",
       "required": false
     },
     "MICROSOFT_TRANSLATE_KEY": {
