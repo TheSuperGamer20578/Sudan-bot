@@ -225,6 +225,21 @@ class Fun(commands.Cog):
         await ctx.message.delete()
         await ctx.send(embed=embed)
 
+    @commands.group()
+    @commands.check(Checks.trusted)
+    async def eco(self, ctx):
+        """Manages the economy"""
+
+    @eco.group()
+    async def gold(self, ctx):
+        """Manages gold stuff"""
+
+    @gold.command()
+    async def transfer(self, ctx, user_a: discord.User, user_b: discord.User, amount: int):
+        """Transfers gold from one user to another"""
+        await transfer_gold(self.bot, user_a, user_b, amount)
+        await ctx.send(f"Transferred {amount}{GOLD} from {user_a.name} to {user_b.name}")
+
     @commands.command(aliases=["lb"])
     async def leaderboard(self, ctx, no_mentions: bool = False):
         """Shows a leaderboard"""
