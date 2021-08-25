@@ -318,8 +318,7 @@ class Fun(commands.Cog):
         def msg(active, message=None):
             if message is None:
                 message = f"It's {users[turn].mention}'s turn"
-            embed = discord.Embed(title="Tic tac toe", description=f"{message}\n:blue_square:{ctx.author.mention}\n:red_square:{user.mention}", colour=BLUE)
-            embed.set_footer(text=f"{bet}{GOLD}")
+            embed = discord.Embed(title="Tic tac toe", description=f"{message}\n:blue_square:{ctx.author.mention}\n:red_square:{user.mention}\n\n{bet}{GOLD}", colour=BLUE)
             components = [
                 [Button(label="\N{zero width space}", style=styles[button], disabled=not (active and button is None) or (large and row_number == 2 == column),
                         custom_id=f"{row_number},{column}") for column, button in enumerate(row)] for row_number, row in enumerate(grid)]
