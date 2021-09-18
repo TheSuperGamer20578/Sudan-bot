@@ -1,4 +1,5 @@
 # Sudan-bot
+**Due to the [discontinuation of Discord.py](https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1), this is being rewriten in a [new repository](https://github.com/emc-sudan/Sudan-Bot).**
 ## Installation
 1. Clone this repo.
 2. In `bot/` rename `.env.sample` to `.env`.
